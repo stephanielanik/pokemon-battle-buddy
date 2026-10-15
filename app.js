@@ -50,14 +50,19 @@ async function api(path){let r=await fetch('https://pokeapi.co/api/v2/'+path);if
 async function search(name,manual=false){name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-f').replace('♂','-m');if(!name)return;if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);$('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;try{const p=await api('pokemon/'+name);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=p.sprites.other['official-artwork'].front_default||p.sprites.front_default;current={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);refreshMoveAdvisor(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
 
 function showCollection(view){
-  collectionView=view==='box'?'box':'party';
+  collectionView=['party','box','bank'].includes(view)?view:'party';
   $('teamCards').hidden=collectionView!=='party';
   $('boxCards').hidden=collectionView!=='box';
+  $('machineBank').hidden=collectionView!=='bank';
   $('partyView').classList.toggle('active',collectionView==='party');
   $('boxView').classList.toggle('active',collectionView==='box');
+  $('bankView').classList.toggle('active',collectionView==='bank');
   $('partyView').setAttribute('aria-pressed',String(collectionView==='party'));
   $('boxView').setAttribute('aria-pressed',String(collectionView==='box'));
+  $('bankView').setAttribute('aria-pressed',String(collectionView==='bank'));
+  if(collectionView==='bank')renderMachineBank();
   $('teamAnalyzer').hidden=collectionView!=='party';
+  $('collectionHint').hidden=collectionView==='bank';
   $('collectionHint').textContent=collectionView==='party'?
     'Your active party. Move Pokémon to the Box to keep their profiles.':
     'Stored Pokémon keep their profiles. Bring one back when your party has room.';
@@ -98,6 +103,7 @@ function movePokemon(recordId,location){
 }
 $('partyView').addEventListener('click',()=>showCollection('party'));
 $('boxView').addEventListener('click',()=>showCollection('box'));
+$('bankView').addEventListener('click',()=>showCollection('bank'));
 $('add').onclick=()=>{
   if(!current)return;
   const newRecord={...current,recordId:newPokemonId()};
@@ -183,7 +189,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.0.0';
+const APP_VERSION='1.1.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -220,8 +226,8 @@ window.addEventListener('pageshow',()=>checkForUpdates());
 
 // v0.6.2: portable backups. Never clear device storage during an app update.
 function backupPayload(){
-  return {format:'pokemon-battle-buddy-backup',schemaVersion:2,exportedAt:new Date().toISOString(),
-    team,box,game:localStorage.getItem('battleBuddyGame')||'shield',
+  return {format:'pokemon-battle-buddy-backup',schemaVersion:3,exportedAt:new Date().toISOString(),
+    team,box,machineBanks,game:localStorage.getItem('battleBuddyGame')||'shield',
     theme:localStorage.getItem('battleBuddyTheme')||'battle'};
 }
 $('exportTeam').addEventListener('click',()=>{
@@ -240,7 +246,7 @@ $('backupFile').addEventListener('change',async event=>{
   try{
     if(file.size>1024*1024)throw Error('Backup is too large.');
     const data=JSON.parse(await file.text());
-    if(data.format!=='pokemon-battle-buddy-backup'||![1,2].includes(data.schemaVersion))throw Error('This is not a supported Battle Buddy backup.');
+    if(data.format!=='pokemon-battle-buddy-backup'||![1,2,3].includes(data.schemaVersion))throw Error('This is not a supported Battle Buddy backup.');
     if(!Array.isArray(data.team)||data.team.length>6|| (data.schemaVersion===2&&(!Array.isArray(data.box)||data.box.length>500)))throw Error('Backup contains an invalid party or Box.');
     const validTypes=Object.keys(colors);
     const restoreRecords=records=>records.map(p=>{
@@ -261,18 +267,20 @@ $('backupFile').addEventListener('change',async event=>{
         moves:(p.moves||[]).slice(0,4),tags:[]};
     });
     const restored=restoreRecords(data.team);
-    const restoredBox=restoreRecords(data.schemaVersion===2?data.box:[]);
+    const restoredBox=restoreRecords(data.schemaVersion>=2?data.box:[]);
     ensureRecordIds([...restored,...restoredBox]);
+    const importedBanks=data.schemaVersion===3?validateMachineBanks(data.machineBanks):{};
     const allowedGames=['shield','sword','lets-go-pikachu','lets-go-eevee','legends-za'];
     if(!allowedGames.includes(data.game)||!['battle','cozy'].includes(data.theme))throw Error('Backup settings are invalid.');
     if(!confirm('Replace your current party and Box with '+restored.length+' party Pokémon and '+restoredBox.length+' boxed Pokémon from this backup?')){status.textContent='Import cancelled.';return}
     // Write only after the entire backup has been checked and confirmed.
     localStorage.setItem('battleBuddyTeam',JSON.stringify(restored));
     localStorage.setItem('battleBuddyBox',JSON.stringify(restoredBox));
+    localStorage.setItem('battleBuddyMachineBanks',JSON.stringify(importedBanks));
     localStorage.setItem('battleBuddyGame',data.game);
-    team=restored;box=restoredBox;game=data.game;$('game').value=game;updateGameLabel();
+    team=restored;box=restoredBox;machineBanks=importedBanks;game=data.game;$('game').value=game;updateGameLabel();
     setTheme(data.theme);renderTeam();editingRecordId=null;
-    status.textContent='Restored '+team.length+' party Pokémon, '+box.length+' boxed Pokémon, and your preferences.';
+    status.textContent='Restored your party, Box, TM/TR bank, and preferences.';
   }catch(error){status.textContent='Import failed: '+error.message}
   finally{event.target.value=''}
 });
@@ -495,3 +503,85 @@ $('analyzeTeam').addEventListener('click',async()=>{
   status.textContent='Party analysis ready.'+(failures?' '+failures+' move(s) could not be checked.':'');
   button.disabled=false;
 });
+
+// v1.1 Sword/Shield machine collection. TR quantities are tracked; no automatic spending.
+const MACHINE_NAMES={TM:["Mega Punch","Mega Kick","Pay Day","Fire Punch","Ice Punch","Thunder Punch","Fly","Pin Missile","Hyper Beam","Giga Impact","Magical Leaf","Solar Beam","Solar Blade","Fire Spin","Thunder Wave","Dig","Screech","Light Screen","Reflect","Safeguard","Self-Destruct","Rest","Rock Slide","Thief","Snore","Protect","Scary Face","Icy Wind","Giga Drain","Charm","Steel Wing","Attract","Sandstorm","Rain Dance","Sunny Day","Hail","Whirlpool","Beat Up","Will-O-Wisp","Facade","Swift","Helping Hand","Revenge","Brick Break","Imprison","Dive","Weather Ball","Fake Tears","Rock Tomb","Sand Tomb","Bullet Seed","Icicle Spear","Bounce","Mud Shot","Rock Blast","Brine","U-turn","Payback","Assurance","Fling","Power Swap","Guard Swap","Speed Swap","Drain Punch","Avalanche","Shadow Claw","Thunder Fang","Ice Fang","Fire Fang","Psycho Cut","Trick Room","Wonder Room","Magic Room","Cross Poison","Venoshock","Low Sweep","Round","Hex","Acrobatics","Retaliate","Volt Switch","Bulldoze","Electroweb","Razor Shell","Tail Slap","Snarl","Phantom Force","Draining Kiss","Grassy Terrain","Misty Terrain","Electric Terrain","Psychic Terrain","Mystical Fire","Eerie Impulse","False Swipe","Air Slash","Smart Strike","Brutal Swing","Stomping Tantrum","Breaking Swipe"],TR:["Swords Dance","Body Slam","Flamethrower","Hydro Pump","Surf","Ice Beam","Blizzard","Low Kick","Thunderbolt","Thunder","Earthquake","Psychic","Agility","Focus Energy","Metronome","Fire Blast","Waterfall","Amnesia","Leech Life","Tri Attack","Substitute","Reversal","Sludge Bomb","Spikes","Outrage","Psyshock","Endure","Sleep Talk","Megahorn","Baton Pass","Encore","Iron Tail","Crunch","Shadow Ball","Future Sight","Uproar","Heat Wave","Taunt","Trick","Superpower","Skill Swap","Blaze Kick","Hyper Voice","Overheat","Cosmic Power","Muddy Water","Iron Defense","Dragon Claw","Bulk Up","Calm Mind","Leaf Blade","Dragon Dance","Gyro Ball","Close Combat","Toxic Spikes","Flare Blitz","Aura Sphere","Poison Jab","Dark Pulse","Seed Bomb","X-Scissor","Bug Buzz","Dragon Pulse","Power Gem","Focus Blast","Energy Ball","Brave Bird","Earth Power","Nasty Plot","Zen Headbutt","Flash Cannon","Leaf Storm","Power Whip","Gunk Shot","Iron Head","Stone Edge","Stealth Rock","Grass Knot","Sludge Wave","Heavy Slam","Electro Ball","Foul Play","Stored Power","Ally Switch","Scald","Work Up","Wild Charge","Drill Run","Heat Crash","Hurricane","Play Rough","Venom Drench","Dazzling Gleam","Darkest Lariat","High Horsepower","Throat Chop","Pollen Puff","Psychic Fangs","Liquidation","Body Press"]};
+const MACHINE_LIST=['TM','TR'].flatMap(kind=>MACHINE_NAMES[kind].map((name,index)=>({
+  key:kind+String(index).padStart(2,'0'),kind,name
+})));
+function validateMachineBanks(value){
+  if(value==null)return {};
+  if(typeof value!=='object'||Array.isArray(value))throw Error('Invalid machine bank.');
+  const result={};
+  for(const [gameKey,entries] of Object.entries(value)){
+    if(!['sword','shield'].includes(gameKey)||!entries||typeof entries!=='object'||Array.isArray(entries))throw Error('Invalid machine bank.');
+    result[gameKey]={};
+    for(const [key,quantity] of Object.entries(entries)){
+      if(!/^(TM|TR)\d{2}$/.test(key)||Number(key.slice(2))>99||
+        !Number.isInteger(quantity)||quantity<0||quantity>999||
+        (key.startsWith('TM')&&quantity>1))throw Error('Invalid TM/TR quantity.');
+      if(quantity>0)result[gameKey][key]=quantity;
+    }
+  }
+  return result;
+}
+let machineBanks;
+try{machineBanks=validateMachineBanks(JSON.parse(localStorage.getItem('battleBuddyMachineBanks')||'{}'))}
+catch(e){machineBanks={}}
+let machineFilter='all';
+function saveMachineBank(){localStorage.setItem('battleBuddyMachineBanks',JSON.stringify(machineBanks))}
+function renderMachineBank(){
+  const supported=game==='sword'||game==='shield';
+  $('machineBankControls').hidden=!supported;
+  $('machineBankMessage').textContent=supported?'TMs are reusable. TRs are single-use; track how many you own.':'The TM/TR checklist currently supports Sword and Shield only.';
+  if(!supported)return;
+  const inventory=machineBanks[game]||{};
+  const search=$('bankSearch').value.toLowerCase().trim().replace(/\s+/g,'');
+  const items=MACHINE_LIST.filter(item=>{
+    if(machineFilter==='owned'&&!(inventory[item.key]>0))return false;
+    if(machineFilter==='TM'&&item.kind!=='TM')return false;
+    if(machineFilter==='TR'&&item.kind!=='TR')return false;
+    return !search||item.key.toLowerCase().includes(search)||item.name.toLowerCase().replace(/\s+/g,'').includes(search);
+  });
+  $('bankCount').textContent=Object.keys(inventory).filter(key=>inventory[key]>0).length+' collected · '+items.length+' shown';
+  const container=$('bankItems');container.replaceChildren();
+  const fragment=document.createDocumentFragment();
+  items.forEach(item=>{
+    const row=document.createElement('div');row.className='bank-row';
+    const description=document.createElement('label');description.className='bank-description';
+    const name=document.createElement('span');name.textContent=item.key+' · '+item.name;
+    if(item.kind==='TM'){
+      const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=!!inventory[item.key];
+      checkbox.addEventListener('change',()=>{
+        machineBanks[game]??={};
+        if(checkbox.checked)machineBanks[game][item.key]=1;else delete machineBanks[game][item.key];
+        saveMachineBank();renderMachineBank();
+      });
+      description.append(checkbox,name);row.append(description);
+    }else{
+      description.append(name);row.append(description);
+      const qty=document.createElement('input');qty.type='number';qty.min='0';qty.max='999';qty.step='1';
+      qty.value=String(inventory[item.key]||0);qty.inputMode='numeric';
+      qty.setAttribute('aria-label',item.key+' quantity');qty.className='bank-quantity';
+      qty.addEventListener('change',()=>{
+        const value=Number(qty.value);
+        if(!Number.isInteger(value)||value<0||value>999){qty.value=String((machineBanks[game]||{})[item.key]||0);return}
+        machineBanks[game]??={};
+        if(value)machineBanks[game][item.key]=value;else delete machineBanks[game][item.key];
+        saveMachineBank();$('bankCount').textContent=Object.keys(machineBanks[game]).length+' collected · '+items.length+' shown';
+      });
+      row.append(qty);
+    }
+    fragment.append(row);
+  });
+  container.append(fragment);
+}
+[['bankAll','all'],['bankTM','TM'],['bankTR','TR'],['bankOwned','owned']].forEach(([id,filter])=>{
+  $(id).addEventListener('click',()=>{
+    machineFilter=filter;
+    ['bankAll','bankTM','bankTR','bankOwned'].forEach(buttonId=>$(buttonId).classList.toggle('active',buttonId===id));
+    renderMachineBank();
+  });
+});
+$('bankSearch').addEventListener('input',renderMachineBank);
+$('game').addEventListener('change',()=>{if(collectionView==='bank')renderMachineBank()});

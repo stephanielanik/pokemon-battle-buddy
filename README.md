@@ -96,3 +96,11 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Offensive coverage across 18 defending types using damaging moves recorded in party profiles.
 - Collapsible sections for coverage and gaps; boxed Pokémon are excluded.
 - Type-based estimates only: not a full damage simulator, and single-type offensive coverage does not guarantee coverage against every dual-type combination.
+
+## Version 1.1.0 — TM/TR Bank
+- My Team → TM/TR Bank includes the full 100 TMs and 100 TRs for Sword and Shield, searchable by number or move name.
+- Mark reusable TMs as owned and record quantities of single-use TRs (0–999).
+- Inventory is stored separately for Sword and Shield; other games are explicitly unsupported in this release.
+- Backups schema v3 includes TM/TR banks and continues to import v1/v2 backups.
+- Recording TR usage is manual; teaching compatibility and move suggestions are planned for a later release.
+- Machine names sourced from Pokémon Database's Sword/Shield TM/TR list: https://pokemondb.net/sword-shield/tms

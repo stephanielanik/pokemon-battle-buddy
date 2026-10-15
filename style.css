@@ -213,3 +213,19 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .analyzer-row strong{display:block;font-size:14px}
 .analyzer-row span{display:block;font-size:12px;line-height:1.5;color:var(--muted);margin-top:3px}
 .analyzer-header button:disabled{opacity:.6}
+
+/* v1.1 TM/TR bank */
+#machineBank[hidden],#machineBankControls[hidden]{display:none!important}
+.machine-bank{margin-top:14px}
+.machine-bank h3{margin:0 0 10px}
+.bank-filters{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.bank-filters button{flex:1 1 60px;padding:10px 9px;font-size:13px}
+.bank-filters button.active{background:var(--accent2);color:#fff;border-color:var(--accent)}
+#bankSearch{display:block;width:100%;font-size:16px;margin:7px 0 10px}
+.bank-items{display:grid;gap:7px;max-width:100%;min-width:0}
+.bank-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border);background:var(--input);padding:10px 12px;border-radius:12px;min-width:0}
+.bank-description{display:flex;align-items:center;gap:11px;min-width:0;flex:1;font-size:14px;font-weight:700;margin:0;overflow-wrap:anywhere}
+.bank-description input{flex:0 0 20px;width:20px;height:20px;accent-color:var(--accent)}
+.bank-description span{min-width:0}
+.bank-quantity{flex:0 0 66px;width:66px;max-width:66px;padding:9px 6px;font-size:16px!important;text-align:center}
+@media(max-width:420px){.party-box-toggle button{flex:1 1 85px;padding:11px 8px;font-size:13px}.bank-row{padding:9px}.bank-description{font-size:13px}}
