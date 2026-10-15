@@ -330,3 +330,8 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .result-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
 .result-actions button{margin:0;min-height:44px;white-space:normal}
 @media(max-width:390px){.result-actions button{flex:1 1 130px;padding:10px 12px;font-size:13px}}
+
+/* v1.7.3: tappable autocomplete while iOS keyboard is open */
+#suggestions{position:relative;z-index:20;max-height:min(220px,35dvh);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#suggestions button{min-height:48px;touch-action:manipulation;cursor:pointer}
+#search{scroll-margin-top:20px}

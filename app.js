@@ -135,7 +135,27 @@ $('search').addEventListener('focus',()=>{
   $('suggestions').replaceChildren();
 });
 $('go').onclick=()=>search($('search').value);$('search').addEventListener('keydown',e=>{if(e.key==='Enter')search($('search').value)});
-let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{const q=$('search').value.toLowerCase().trim();let hits=allNames.filter(n=>n.includes(q)).slice(0,9);$('suggestions').hidden=!q||!hits.length;$('suggestions').innerHTML=hits.map(n=>{const id=allNames.indexOf(n)+1;const picked=preferredName(n);return `<button data-name="${n}"><img loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png" alt=""><strong>${title(n)}</strong>${picked!==n?'<span class="sub">Galar preferred</span>':''}</button>`}).join('');$('suggestions').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('search').value=title(b.dataset.name);search(b.dataset.name)})},150)});
+let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{const q=$('search').value.toLowerCase().trim();let hits=allNames.filter(n=>n.includes(q)).slice(0,9);$('suggestions').hidden=!q||!hits.length;$('suggestions').innerHTML=hits.map(n=>{const id=allNames.indexOf(n)+1;const picked=preferredName(n);return `<button data-name="${n}"><img loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png" alt=""><strong>${title(n)}</strong>${picked!==n?'<span class="sub">Galar preferred</span>':''}</button>`}).join('');$('suggestions').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+  $('search').value=title(b.dataset.name);
+  $('search').blur();
+  $('suggestions').hidden=true;
+  search(b.dataset.name);
+}));
+requestAnimationFrame(keepLookupSuggestionsVisible);},150)});
+// Keep the autocomplete list reachable above the iPhone on-screen keyboard.
+function keepLookupSuggestionsVisible(){
+  const input=$('search'),list=$('suggestions');
+  if(document.activeElement!==input||list.hidden||!list.children.length)return;
+  const viewport=window.visualViewport;
+  const visibleBottom=viewport?viewport.offsetTop+viewport.height:window.innerHeight;
+  const listBottom=list.getBoundingClientRect().bottom;
+  if(listBottom>visibleBottom-12){
+    window.scrollBy({top:listBottom-visibleBottom+20,behavior:'auto'});
+  }
+}
+if(window.visualViewport){
+  window.visualViewport.addEventListener('resize',()=>requestAnimationFrame(keepLookupSuggestionsVisible));
+}
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));$('lookup').hidden=b.dataset.tab!=='lookup';$('team').hidden=b.dataset.tab!=='team';$('profile').hidden=true});
 renderTeam();fetch('https://pokeapi.co/api/v2/pokemon?limit=1025').then(r=>r.json()).then(d=>allNames=d.results.map(x=>x.name)).catch(()=>{});
 
@@ -214,7 +234,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.7.2';
+const APP_VERSION='1.7.3';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

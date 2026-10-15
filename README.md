@@ -198,3 +198,7 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Add a searched Pokémon directly to Box without opening its profile, preserving duplicate-species support.
 - Compare move utility with additional consideration for paralysis chance, flinching, critical hits, and selected Speed-boosting effects.
 - Flag notable effects lost by replacing an existing move. These remain heuristic suggestions, not full damage or battle simulations.
+
+## Version 1.7.3
+- Keep Lookup autocomplete suggestions within the visible iPhone viewport when the on-screen keyboard appears.
+- Increase suggestion tap targets and dismiss the keyboard when a suggestion is selected.
