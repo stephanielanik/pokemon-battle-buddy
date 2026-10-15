@@ -89,3 +89,40 @@ $('profileForm').addEventListener('submit',e=>{
   p.moves=[...document.querySelectorAll('.profile-move')].map(x=>cleanText(x.value));
   save();$('profileStatus').textContent='Saved on this device ✓';
 });
+
+// v0.6.1: update checks use a fresh HTML request, not cached JS.
+// Existing localStorage data (team, game, theme) is never cleared.
+const APP_VERSION='0.6.1';
+let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
+async function checkForUpdates(manual=false){
+  if(updateChecking)return;
+  if(!manual && Date.now()-lastUpdateCheck<30000)return;
+  updateChecking=true;lastUpdateCheck=Date.now();
+  const status=$('updateStatus'),button=$('checkUpdates');
+  if(manual){status.textContent='Checking for updates…';button.disabled=true}
+  try{
+    const url=new URL(window.location.href);
+    url.searchParams.set('_bb_check',String(Date.now()));
+    const response=await fetch(url.toString(),{cache:'no-store',redirect:'follow'});
+    if(!response.ok)throw Error('Update check failed');
+    const markup=await response.text();
+    const doc=new DOMParser().parseFromString(markup,'text/html');
+    const latest=doc.querySelector('meta[name="battle-buddy-version"]')?.content;
+    if(latest && latest!==APP_VERSION){
+      updateAvailable=true;$('updateBanner').hidden=false;
+      status.textContent='Version '+latest+' is available.';
+    }else if(latest===APP_VERSION){
+      if(manual)status.textContent='You have the latest version.';
+    }else if(manual)status.textContent='Could not determine the latest version. Try again shortly.';
+  }catch(e){if(manual)status.textContent='Unable to check. Verify your connection and try again.'}
+  finally{updateChecking=false;button.disabled=false}
+}
+$('checkUpdates').addEventListener('click',()=>checkForUpdates(true));
+$('applyUpdate').addEventListener('click',()=>{
+  // Navigate to a fresh document; query value bypasses stale document caches.
+  const url=new URL(window.location.href);
+  url.searchParams.set('_bb_refresh',String(Date.now()));
+  window.location.replace(url.toString());
+});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkForUpdates()});
+window.addEventListener('pageshow',()=>checkForUpdates());
