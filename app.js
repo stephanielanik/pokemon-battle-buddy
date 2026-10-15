@@ -92,7 +92,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='0.6.1';
+const APP_VERSION='0.6.2';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -126,3 +126,58 @@ $('applyUpdate').addEventListener('click',()=>{
 });
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkForUpdates()});
 window.addEventListener('pageshow',()=>checkForUpdates());
+
+// v0.6.2: portable backups. Never clear device storage during an app update.
+function backupPayload(){
+  return {format:'pokemon-battle-buddy-backup',schemaVersion:1,exportedAt:new Date().toISOString(),
+    team,game:localStorage.getItem('battleBuddyGame')||'shield',
+    theme:localStorage.getItem('battleBuddyTheme')||'battle'};
+}
+$('exportTeam').addEventListener('click',()=>{
+  const blob=new Blob([JSON.stringify(backupPayload(),null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement('a');
+  link.href=url;link.download='battle-buddy-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  document.body.append(link);link.click();link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),60000);
+  $('backupStatus').textContent='Backup prepared. Save the JSON file somewhere safe, such as iCloud Drive.';
+});
+$('importTeam').addEventListener('click',()=>$('backupFile').click());
+$('backupFile').addEventListener('change',async event=>{
+  const file=event.target.files?.[0];if(!file)return;
+  const status=$('backupStatus');
+  try{
+    if(file.size>1024*1024)throw Error('Backup is too large.');
+    const data=JSON.parse(await file.text());
+    if(data.format!=='pokemon-battle-buddy-backup'||data.schemaVersion!==1)throw Error('This is not a supported Battle Buddy backup.');
+    if(!Array.isArray(data.team)||data.team.length>6)throw Error('Backup must contain no more than six Pokémon.');
+    const validTypes=Object.keys(colors);
+    const restored=data.team.map(p=>{
+      if(!p||!Number.isInteger(p.id)||p.id<1||p.id>100000||
+         typeof p.name!=='string'||!(/^[a-z0-9-]{1,80}$/).test(p.name)||
+         !Array.isArray(p.types)||p.types.length<1||p.types.length>2||
+         !p.types.every(t=>validTypes.includes(t))||
+         (p.artwork!=null&&(typeof p.artwork!=='string'||!/^https:\/\//.test(p.artwork)))||
+         (p.moves!=null&&(!Array.isArray(p.moves)||p.moves.length>4||
+           !p.moves.every(m=>typeof m==='string'&&m.length<=60))))
+        throw Error('Backup contains an invalid Pokémon record.');
+      return {id:p.id,name:p.name,types:p.types,artwork:p.artwork||'',
+        nickname:typeof p.nickname==='string'?p.nickname.slice(0,40):'',
+        level:Number.isInteger(p.level)&&p.level>=1&&p.level<=100?p.level:null,
+        ability:typeof p.ability==='string'?p.ability.slice(0,100):'',
+        heldItem:typeof p.heldItem==='string'?p.heldItem.slice(0,100):'',
+        pokerus:['unknown','never','active','cured'].includes(p.pokerus)?p.pokerus:'unknown',
+        moves:(p.moves||[]).slice(0,4),tags:[]};
+    });
+    const allowedGames=['shield','sword','lets-go-pikachu','lets-go-eevee','legends-za'];
+    if(!allowedGames.includes(data.game)||!['battle','cozy'].includes(data.theme))throw Error('Backup settings are invalid.');
+    if(!confirm('Replace your current '+team.length+' Pokémon with the '+restored.length+' in this backup?')){status.textContent='Import cancelled.';return}
+    // Write only after the entire backup has been checked and confirmed.
+    localStorage.setItem('battleBuddyTeam',JSON.stringify(restored));
+    localStorage.setItem('battleBuddyGame',data.game);
+    team=restored;game=data.game;$('game').value=game;updateGameLabel();
+    setTheme(data.theme);renderTeam();editingTeamIndex=-1;
+    status.textContent='Restored '+team.length+' Pokémon and your preferences.';
+  }catch(error){status.textContent='Import failed: '+error.message}
+  finally{event.target.value=''}
+});

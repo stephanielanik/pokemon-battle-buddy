@@ -47,3 +47,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 0.5
 - Regional forms display the National Pokédex species number, not PokéAPI form IDs.
 - Settings button uses a theme-colored SVG icon instead of a platform-dependent emoji.
+
+## Version 0.6.2
+- Settings → Export Backup saves a JSON copy of the team, profiles, selected game, and theme. Save it in Files or iCloud Drive.
+- Settings → Import Backup validates a previously exported JSON file and asks before replacing the current team.
+- More robust iPhone viewport sizing, including profile forms, headers, and navigation.
+- Updates continue to preserve localStorage; deleting a Home Screen app can still delete its data. Backups must be exported manually.
