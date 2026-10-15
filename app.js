@@ -117,7 +117,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='0.7.2';
+const APP_VERSION='0.7.3';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -244,8 +244,7 @@ async function refreshMoveAdvisor(opponentTypes){
   }).sort((a,b)=>b.score-a.score);
   if(!ranked.length){status.textContent='No damaging moves could be evaluated. Status moves are excluded; check your move names or internet connection.';return}
   const failed=details.filter(x=>!x.move).length;
-  status.textContent='Team moves ranked within each effectiveness category by power × type × STAB × accuracy.'+
-    (failed?' '+failed+' move(s) could not be found.':'');
+  status.textContent=failed?failed+' move(s) could not be found.':'';
   const categoryFor=value=>value>1?'super':value===1?'neutral':value===0?'immune':'resisted';
   matchupGroups.forEach(([key])=>{
     const section=sections[key];
@@ -257,7 +256,7 @@ async function refreshMoveAdvisor(opponentTypes){
     candidates.forEach((item,i)=>{
       const card=document.createElement('div');card.className='advisor-card'+(i>=2?' advisor-extra':'');
       const name=document.createElement('strong');
-      name.textContent=(i===0&&key==='super'?'⭐ Best in category: ':'')+
+      name.textContent=(i===0&&key==='super'?'⭐ ':'')+
         (item.pokemon.nickname||title(item.pokemon.name))+' — '+title(item.name);
       const meta=document.createElement('p');meta.className='hint';
       meta.textContent=title(item.type)+' · '+title(item.damageClass)+' · Power '+item.power+
