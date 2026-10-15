@@ -119,6 +119,15 @@ $('add').onclick=()=>{
   setTimeout(()=>$('add').textContent='＋ Add to My Team',1500);
 };
 
+$('addToBox').addEventListener('click',()=>{
+  if(!current)return;
+  box.push({...current,recordId:newPokemonId()});
+  save();
+  const button=$('addToBox');
+  button.textContent='✓ Added to Box';
+  clearTimeout(button._resetTimer);
+  button._resetTimer=setTimeout(()=>{button.textContent='＋ Add to Box'},1500);
+});
 $('search').addEventListener('focus',()=>{
   if(!$('search').value)return;
   $('search').value='';
@@ -205,7 +214,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.7.1';
+const APP_VERSION='1.7.2';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -1083,6 +1092,12 @@ function moveUtility(move){
   if(changes.some(x=>targetsSelf?x.change>0:x.change<0))utility+=1.5;
   if(move.meta?.ailment?.name&&move.meta.ailment.name!=='none')utility+=1;
   if(move.meta?.healing>0||move.meta?.drain>0)utility+=1;
+  // Reward tactical effects without treating them as guaranteed outcomes.
+  if(move.meta?.flinch_chance>0)utility+=Math.min(move.meta.flinch_chance/100,1);
+  if(move.meta?.crit_rate>0)utility+=.35;
+  if(move.meta?.ailment_chance>0)utility+=Math.min(move.meta.ailment_chance/100,1);
+  if(move.name==='flame-charge'||move.name==='rapid-spin'||move.name==='trailblaze')utility+=1.1;
+  if(move.name==='charge'||move.name==='confuse-ray')utility+=.6;
   return utility;
 }
 function moveCoverage(moves){
@@ -1150,9 +1165,15 @@ function decideMoveReplacement(candidate,entries,details){
     const meaningfulUpgrade=sameType&&candidateValue>removedValue*1.08;
     const redundantAttack=sameType&&candidateValue>=removedValue*.92;
     const statusSacrifice=candidateDamaging&&!oldDamaging;
+    const existingEffects=moveUtility(x.move);
+    const sameRole=sameType&&candidate.damage_class?.name===x.move.damage_class?.name;
+    // Don't trade away a distinct tactical effect just for modest damage gains.
+    const effectLoss=oldDamaging&&existingEffects>candidateUtility+1?
+      Math.min(1.2,(existingEffects-candidateUtility)*.45):0;
     const score=damageGain+gained.length*.85-lost.length*1.4+utilityDelta*.55+
       (meaningfulUpgrade?2.5:redundantAttack?.65:0)-
-      (statusSacrifice?1.5:0)-
+      (statusSacrifice?1.5:0)-effectLoss+
+      (sameRole&&meaningfulUpgrade?.45:0)-
       (drawbacks.includes('User faints after use')?5:0)-
       (losingLastAttack?8:losingSecondAttack?3:0);
     return {...x,score,lost,gained,removedValue,losingLastAttack,losingSecondAttack,
@@ -1216,6 +1237,11 @@ $('compareNewMove').addEventListener('click',async()=>{
   }
   const effects=notableMoveEffects(candidate);
   if(effects.length)advice+=' '+effects.join(' · ')+'.';
+  if(!already&&!skipRecommended&&!selfKO&&!free&&replacement.move){
+    const previousEffects=notableMoveEffects(replacement.move);
+    const lostEffects=previousEffects.filter(effect=>!effects.includes(effect));
+    if(lostEffects.length)advice+=' You would lose: '+lostEffects.slice(0,2).join(' · ')+'.';
+  }
   const otherDrawbacks=drawbacks.filter(x=>!selfKO||x!=='User faints after use');
   if(otherDrawbacks.length)advice+=' ⚠️ '+otherDrawbacks.join(' · ')+'.';
   const summary=$('learnMoveSummary');summary.replaceChildren();

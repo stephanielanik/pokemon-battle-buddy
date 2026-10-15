@@ -193,3 +193,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Learn New Move explanations now mention relevant Attack vs. Special Attack differences, including base stat values.
 - Highlight notable secondary effects such as status chances, flinching, healing, and priority when known.
 - Keeps existing move ranking and user confirmation safeguards; effects are advisory, not a full battle simulator.
+
+## Version 1.7.2 — Lookup Box action and move effect improvements
+- Add a searched Pokémon directly to Box without opening its profile, preserving duplicate-species support.
+- Compare move utility with additional consideration for paralysis chance, flinching, critical hits, and selected Speed-boosting effects.
+- Flag notable effects lost by replacing an existing move. These remain heuristic suggestions, not full damage or battle simulations.
