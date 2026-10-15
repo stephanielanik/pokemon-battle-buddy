@@ -202,3 +202,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 1.7.3
 - Keep Lookup autocomplete suggestions within the visible iPhone viewport when the on-screen keyboard appears.
 - Increase suggestion tap targets and dismiss the keyboard when a suggestion is selected.
+
+## Version 1.7.4
+- Display Box count in parentheses to distinguish the count from a Box number.
+- After adding a Pokémon to Box from Lookup or Quick Add, offer a direct Edit Pokémon button for that exact saved record.
+- The edit shortcut resets when starting another search. No automatic profile navigation or data loss.

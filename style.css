@@ -335,3 +335,7 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 #suggestions{position:relative;z-index:20;max-height:min(220px,35dvh);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 #suggestions button{min-height:48px;touch-action:manipulation;cursor:pointer}
 #search{scroll-margin-top:20px}
+
+/* v1.7.4 quick edit after saving to Box */
+#editLookupBoxPokemon[hidden],#editQuickBoxPokemon[hidden]{display:none!important}
+#editQuickBoxPokemon{margin-top:8px;min-height:44px}

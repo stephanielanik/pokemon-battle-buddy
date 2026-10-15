@@ -47,7 +47,8 @@ function showMatch(types){
 }
 
 async function api(path){let r=await fetch('https://pokeapi.co/api/v2/'+path);if(!r.ok)throw Error('Pokémon not found. Try its name or Pokédex number.');return r.json()}
-async function search(name,manual=false){name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-f').replace('♂','-m');if(!name)return;if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);$('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;try{const p=await api('pokemon/'+name);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=p.sprites.other['official-artwork'].front_default||p.sprites.front_default;current={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);refreshMoveAdvisor(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
+async function search(name,manual=false){
+  $('editLookupBoxPokemon').hidden=true;name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-f').replace('♂','-m');if(!name)return;if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);$('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;try{const p=await api('pokemon/'+name);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=p.sprites.other['official-artwork'].front_default||p.sprites.front_default;current={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);refreshMoveAdvisor(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
 
 function showCollection(view){
   collectionView=['party','box','bank'].includes(view)?view:'party';
@@ -121,8 +122,11 @@ $('add').onclick=()=>{
 
 $('addToBox').addEventListener('click',()=>{
   if(!current)return;
-  box.push({...current,recordId:newPokemonId()});
+  const added={...current,recordId:newPokemonId()};
+  box.push(added);
   save();
+  $('editLookupBoxPokemon').hidden=false;
+  $('editLookupBoxPokemon').onclick=()=>openProfile(added.recordId);
   const button=$('addToBox');
   button.textContent='✓ Added to Box';
   clearTimeout(button._resetTimer);
@@ -234,7 +238,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.7.3';
+const APP_VERSION='1.7.4';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -984,6 +988,7 @@ function renderBoxRecommendations(analyzerId){
 // v1.4.1: add a Pokémon directly to the Box without visiting Lookup.
 let boxPreview=null,boxSearchRun=0;
 async function previewBoxPokemon(name,manual=false){
+  $('editQuickBoxPokemon').hidden=true;
   const run=++boxSearchRun,status=$('boxAddStatus');
   $('boxAddPreview').hidden=true;boxPreview=null;
   $('boxPokemonSuggestions').hidden=true;
@@ -1034,8 +1039,11 @@ $('boxPokemonSearch').addEventListener('input',()=>{
 });
 $('confirmBoxAdd').addEventListener('click',()=>{
   if(!boxPreview)return;
-  box.push({...boxPreview,recordId:newPokemonId()});
+  const added={...boxPreview,recordId:newPokemonId()};
+  box.push(added);
   save();
+  $('editQuickBoxPokemon').hidden=false;
+  $('editQuickBoxPokemon').onclick=()=>openProfile(added.recordId);
   $('boxAddStatus').textContent=title(boxPreview.name)+' added to your Box.';
   $('boxAddPreview').hidden=true;$('boxPokemonSearch').value='';boxPreview=null;
 });
