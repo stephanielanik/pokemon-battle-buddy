@@ -182,3 +182,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 
 ## Version 1.6.5
 - Clear the opponent Lookup search text when the search field receives focus, so another Pokémon can be entered immediately. Existing results remain visible until the next search.
+
+## Version 1.7.0 — Evolve Pokémon
+- Evolution Tracker now offers buttons for immediate next-stage evolutions.
+- Confirmed evolution updates the existing individual record's species, Pokédex number, artwork, and types while retaining nickname, level, recorded moves, held item, Pokérus and other profile details.
+- Ability and moves should be reviewed after evolving, since legal abilities and move availability can change.
+- Evolution is never automatic; the user confirms the change.

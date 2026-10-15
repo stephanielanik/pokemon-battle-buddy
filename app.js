@@ -205,7 +205,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.6.5';
+const APP_VERSION='1.7.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -446,6 +446,24 @@ async function loadEvolution(p,recordId){
         }
       }
       path.append(row);
+      // Only immediate next evolutions can be applied, not arbitrary stages.
+      if(node.depth>0&&node.name!==currentSpecies){
+        const parent=nodes.find(n=>n.depth===node.depth-1&&n.name===currentSpecies);
+        // Parent verification below uses the actual tree, not flattened branch order.
+      }
+    }
+    function findCurrentNode(node){
+      if(node.species.name===currentSpecies)return node;
+      for(const child of node.evolves_to){const found=findCurrentNode(child);if(found)return found}
+      return null;
+    }
+    const currentNode=findCurrentNode(chain.chain);
+    for(const next of currentNode?.evolves_to||[]){
+      const button=document.createElement('button');
+      button.type='button';button.className='evolution-action';
+      button.textContent='Evolve to '+title(next.species.name);
+      button.addEventListener('click',()=>evolvePokemon(recordId,next.species.name));
+      path.append(button);
     }
     const note=document.createElement('p');note.className='hint';
     note.textContent='Evolution requirements may vary by game or regional form. Your Pokémon will not change automatically.';
@@ -454,6 +472,46 @@ async function loadEvolution(p,recordId){
     if(request!==evolutionRequest||editingRecordId!==recordId)return;
     status.textContent='Evolution information unavailable. Check your internet connection.';
   }
+}
+
+async function evolvePokemon(recordId,nextSpecies){
+  const p=[...team,...box].find(x=>x.recordId===recordId);
+  if(!p||editingRecordId!==recordId)return;
+  if(!confirm('Evolve '+(p.nickname||title(p.name))+' into '+title(nextSpecies)+'? Your recorded moves and other details will be kept.'))return;
+  const status=$('evolutionStatus');
+  status.textContent='Loading evolved Pokémon…';
+  try{
+    // Recheck that the chosen evolution is an immediate successor of this species.
+    const currentData=await api('pokemon/'+p.name);
+    const species=await api('pokemon-species/'+currentData.species.name);
+    const chainId=species.evolution_chain?.url.match(/evolution-chain\/(\d+)/)?.[1];
+    if(!chainId)throw Error('Evolution data unavailable');
+    const chain=await api('evolution-chain/'+chainId);
+    function findNode(node){
+      if(node.species.name===currentData.species.name)return node;
+      for(const child of node.evolves_to){const found=findNode(child);if(found)return found}
+      return null;
+    }
+    const node=findNode(chain.chain);
+    if(!node?.evolves_to.some(child=>child.species.name===nextSpecies))throw Error('Not a direct evolution');
+    const evolved=await api('pokemon/'+nextSpecies);
+    if(editingRecordId!==recordId)return;
+    const types=evolved.types.slice().sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);
+    const artwork=evolved.sprites.other?.['official-artwork']?.front_default||evolved.sprites.front_default||'';
+    // Keep the same individual record and all user-entered profile data.
+    // Ability is retained for review: evolution may change ability availability.
+    const oldName=p.name;
+    p.id=evolved.id;p.name=evolved.name;p.types=types;p.artwork=artwork;
+    save();
+    $('profileArt').src=artwork;$('profileArt').alt=title(p.name);
+    $('profileName').textContent=title(p.name);
+    $('profileDex').textContent='#'+String(p.id).padStart(3,'0');
+    $('profileTypes').innerHTML=types.map(pill).join('');
+    $('profileStatus').textContent=title(oldName)+' evolved into '+title(p.name)+'! Check its ability and moves.';
+    $('evolutionPath').replaceChildren();
+    loadEvolution(p,recordId);
+    loadMoveImprovements(p,recordId);
+  }catch(error){status.textContent='Could not evolve: '+error.message}
 }
 
 // v1.0 Team Analyzer: party-only defensive and offensive type coverage.

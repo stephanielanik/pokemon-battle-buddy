@@ -322,3 +322,6 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .battle-pick strong{display:block;font-size:14px}
 .battle-pick p{margin:5px 0 0;font-size:12px}
 .battle-risk{color:var(--text);font-size:12px;line-height:1.45;margin:6px 0 0}
+
+/* v1.7 manual evolution */
+.evolution-action{display:block;margin:10px 0;padding:10px 13px;min-height:42px}
