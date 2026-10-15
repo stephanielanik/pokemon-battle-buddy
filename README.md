@@ -157,3 +157,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Each recommended move also shows a defensive risk label, including 2× and 4× vulnerabilities.
 - The risk estimate assumes possible opponent same-type attacks; it does not know the opponent's actual moves, speed, abilities, or battle conditions.
 - Party and profile data are unchanged.
+
+## Version 1.6.1 — Smarter move decisions
+- Warn about self-KO, recoil, recharge turns, two-turn attacks, and self-stat drops.
+- Apply penalties in rough move ranking and avoid calling Self-Destruct a straightforward damage upgrade.
+- Remove repeated elemental type text from comparison details when a type badge is already shown.
+- All move decisions remain advisory and require explicit confirmation.

@@ -199,7 +199,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.6.0';
+const APP_VERSION='1.6.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -963,18 +963,45 @@ function expectedHits(move){
   if(min===2&&max===5)return 3.1; // Approximate average, not guaranteed.
   return (min+max)/2;
 }
+// Identify major drawbacks before ranking moves by damage.
+function moveDrawbacks(move){
+  if(!move)return [];
+  const name=move.name||'',meta=move.meta||{},flags=[];
+  if(['self-destruct','explosion','misty-explosion','final-gambit','memento','healing-wish','lunar-dance'].includes(name)||meta.category?.name==='damage+heal'&&meta.healing===-100)
+    flags.push('User faints after use');
+  if(meta.drain<0||['take-down','double-edge','flare-blitz','brave-bird','wood-hammer','head-smash','wild-charge','volt-tackle','submission'].includes(name))
+    flags.push('Recoil damage');
+  if(['hyper-beam','giga-impact','blast-burn','frenzy-plant','hydro-cannon','rock-wrecker','roar-of-time','prismatic-laser','eternabeam'].includes(name))
+    flags.push('Must recharge next turn');
+  if(['solar-beam','solar-blade','sky-attack','razor-wind','skull-bash','meteor-beam','geomancy','freeze-shock','ice-burn','phantom-force','shadow-force','fly','dig','dive','bounce'].includes(name))
+    flags.push('Takes two turns (unless conditions change)');
+  if((move.stat_changes||[]).some(x=>x.change<0)&&meta.category?.name==='damage+raise'===false)
+    flags.push('Lowers stats');
+  if(['close-combat','superpower','overheat','draco-meteor','leaf-storm','v-create','hammer-arm','make-it-rain','psycho-boost'].includes(name)&&!flags.includes('Lowers stats'))
+    flags.push('Lowers user stats');
+  return [...new Set(flags)];
+}
+function movePenalty(move){
+  const drawbacks=moveDrawbacks(move);
+  if(drawbacks.includes('User faints after use'))return .12;
+  let multiplier=1;
+  if(drawbacks.includes('Must recharge next turn')||drawbacks.some(x=>x.startsWith('Takes two turns')))multiplier*=.55;
+  if(drawbacks.includes('Recoil damage'))multiplier*=.8;
+  if(drawbacks.includes('Lowers user stats')||drawbacks.includes('Lowers stats'))multiplier*=.8;
+  return multiplier;
+}
 function roughMoveValue(move,pokemon){
   if(!move?.power||move.damage_class?.name==='status')return 0;
   const attack=pokemon.stats?.find(x=>x.stat.name==='attack')?.base_stat||1;
   const special=pokemon.stats?.find(x=>x.stat.name==='special-attack')?.base_stat||1;
   const stat=move.damage_class?.name==='physical'?attack:special;
   const stab=pokemon.types.some(t=>t.type.name===move.type.name)?1.5:1;
-  return move.power*expectedHits(move)*stat*stab*(move.accuracy==null?1:move.accuracy/100);
+  return move.power*expectedHits(move)*stat*stab*(move.accuracy==null?1:move.accuracy/100)*movePenalty(move);
 }
 function moveDescription(move){
   if(!move)return 'Details unavailable';
   const hits=expectedHits(move);
-  return title(move.type.name)+' · '+title(move.damage_class.name)+' · '+
+  return title(move.damage_class.name)+' · '+
     (move.power==null?'Status':'Power '+move.power+(hits>1?' × '+(Number.isInteger(hits)?hits:hits.toFixed(1))+' hits (avg.)':''))+
     ' · Accuracy '+(move.accuracy==null?'—':move.accuracy+'%')+
     (move.priority>0?' · Priority +'+move.priority:'');
@@ -1001,6 +1028,7 @@ function decideMoveReplacement(candidate,entries,details){
   const baseBest=Math.max(1,...current.map(m=>roughMoveValue(m,details)));
   const candidateValue=roughMoveValue(candidate,details);
   const candidateUtility=moveUtility(candidate);
+  const drawbacks=moveDrawbacks(candidate);
   const options=entries.map(x=>{
     const updated=current.map((m,i)=>i===x.index?candidate:m);
     const coverage=moveCoverage(updated);
@@ -1010,7 +1038,8 @@ function decideMoveReplacement(candidate,entries,details){
     const damageGain=(candidateValue-removedValue)/baseBest;
     const utilityDelta=candidateUtility-moveUtility(x.move);
     // Preserve broad coverage and valuable tactical moves.
-    const score=damageGain+gained.length*.85-lost.length*1.4+utilityDelta*.55;
+    const score=damageGain+gained.length*.85-lost.length*1.4+utilityDelta*.55-
+      (drawbacks.includes('User faints after use')?5:0);
     return {...x,score,lost,gained,removedValue};
   }).sort((a,b)=>b.score-a.score);
   return options[0];
@@ -1035,7 +1064,9 @@ $('compareNewMove').addEventListener('click',async()=>{
   const replacement=free||decideMoveReplacement(candidate,entries,details);
   const newValue=roughMoveValue(candidate,details);
   let advice;
+  const drawbacks=moveDrawbacks(candidate);
   if(already)advice='Already known — no change needed.';
+  else if(drawbacks.includes('User faints after use'))advice='⚠️ Situational: your Pokémon faints after using this move. Usually not worth replacing a reliable attack unless you want a last-resort option.';
   else if(free)advice='You have an empty slot. No move needs to be forgotten.';
   else if(replacement.score<=0){
     advice='No clear overall upgrade. If you learn it, '+title(replacement.name)+' is the least costly option.';
@@ -1043,12 +1074,13 @@ $('compareNewMove').addEventListener('click',async()=>{
   if(!free&&!already){
     if(replacement.gained?.length)advice+=' Adds coverage against '+replacement.gained.map(title).join(', ')+'.';
     if(replacement.lost?.length)advice+=' Loses coverage against '+replacement.lost.map(title).join(', ')+'.';
-    if(candidate.power&&newValue>replacement.removedValue*1.1)advice+=' Higher estimated damage potential.';
+    if(candidate.power&&newValue>replacement.removedValue*1.1&&!drawbacks.includes('User faints after use'))advice+=' Higher estimated damage potential.';
     if(replacement.move?.priority>0)advice+=' You would lose a priority attack.';
     if(replacement.move?.stat_changes?.some(x=>x.change>0))advice+=' You would lose a stat-boosting effect.';
     if(replacement.move?.damage_class?.name==='status')advice+=' You would lose a status move.';
   }
   if(candidate.damage_class?.name==='status')advice+=' Consider its tactical effect rather than damage.';
+  if(drawbacks.length)advice+=' ⚠️ '+drawbacks.join(' · ')+'.';
   const summary=$('learnMoveSummary');summary.replaceChildren();
   const heading=document.createElement('strong');heading.textContent=title(candidate.name);
   const info=document.createElement('p');info.className='hint';info.textContent=moveDescription(candidate);
