@@ -207,3 +207,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Display Box count in parentheses to distinguish the count from a Box number.
 - After adding a Pokémon to Box from Lookup or Quick Add, offer a direct Edit Pokémon button for that exact saved record.
 - The edit shortcut resets when starting another search. No automatic profile navigation or data loss.
+
+## Version 1.8.0 — Navigation cleanup
+- Three top-level tabs: Lookup, My Pokémon, TM/TR Bank.
+- My Pokémon has Party and Box views, compact counts, and an Add Pokémon control that opens Box quick search on demand.
+- Team Analyzer is collapsed by default under Party. Existing data and storage keys remain unchanged.

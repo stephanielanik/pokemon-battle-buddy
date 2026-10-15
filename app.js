@@ -51,23 +51,20 @@ async function search(name,manual=false){
   $('editLookupBoxPokemon').hidden=true;name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-f').replace('♂','-m');if(!name)return;if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);$('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;try{const p=await api('pokemon/'+name);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=p.sprites.other['official-artwork'].front_default||p.sprites.front_default;current={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);refreshMoveAdvisor(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
 
 function showCollection(view){
-  collectionView=['party','box','bank'].includes(view)?view:'party';
+  collectionView=['party','box'].includes(view)?view:'party';
   $('teamCards').hidden=collectionView!=='party';
   $('boxCards').hidden=collectionView!=='box';
-  $('boxAdd').hidden=collectionView!=='box';
-  $('machineBank').hidden=collectionView!=='bank';
+  $('boxAdd').hidden=collectionView!=='box'||!boxAddExpanded;
+
   $('partyView').classList.toggle('active',collectionView==='party');
   $('boxView').classList.toggle('active',collectionView==='box');
-  $('bankView').classList.toggle('active',collectionView==='bank');
+
   $('partyView').setAttribute('aria-pressed',String(collectionView==='party'));
   $('boxView').setAttribute('aria-pressed',String(collectionView==='box'));
-  $('bankView').setAttribute('aria-pressed',String(collectionView==='bank'));
-  if(collectionView==='bank')renderMachineBank();
-  $('teamAnalyzer').hidden=collectionView!=='party';
-  $('collectionHint').hidden=collectionView==='bank';
-  $('collectionHint').textContent=collectionView==='party'?
-    'Your active party. Move Pokémon to the Box to keep their profiles.':
-    'Stored Pokémon keep their profiles. Bring one back when your party has room.';
+
+
+  $('analyzerDisclosure').hidden=collectionView!=='party';
+
 }
 function renderCollectionCards(list,container,location){
   container.replaceChildren();
@@ -92,6 +89,8 @@ function renderTeam(){
   $('teamCount').textContent=team.length+'/6';
   $('partyCount').textContent=team.length+'/6';
   $('boxCount').textContent=box.length;
+  $('partySummary').textContent=team.length;
+  $('boxSummary').textContent=box.length;
   renderCollectionCards(team,$('teamCards'),'party');
   renderCollectionCards(box,$('boxCards'),'box');
   showCollection(collectionView);
@@ -109,7 +108,14 @@ function movePokemon(recordId,location){
 }
 $('partyView').addEventListener('click',()=>showCollection('party'));
 $('boxView').addEventListener('click',()=>showCollection('box'));
-$('bankView').addEventListener('click',()=>showCollection('bank'));
+let boxAddExpanded=false;
+$('toggleBoxAdd').addEventListener('click',()=>{
+  if(collectionView!=='box')showCollection('box');
+  boxAddExpanded=!boxAddExpanded;
+  $('boxAdd').hidden=!boxAddExpanded;
+  $('toggleBoxAdd').setAttribute('aria-expanded',String(boxAddExpanded));
+  if(boxAddExpanded)$('boxPokemonSearch').focus();
+});
 $('add').onclick=()=>{
   if(!current)return;
   const newRecord={...current,recordId:newPokemonId()};
@@ -160,7 +166,14 @@ function keepLookupSuggestionsVisible(){
 if(window.visualViewport){
   window.visualViewport.addEventListener('resize',()=>requestAnimationFrame(keepLookupSuggestionsVisible));
 }
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));$('lookup').hidden=b.dataset.tab!=='lookup';$('team').hidden=b.dataset.tab!=='team';$('profile').hidden=true});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
+  $('lookup').hidden=b.dataset.tab!=='lookup';
+  $('team').hidden=b.dataset.tab!=='team';
+  $('bank').hidden=b.dataset.tab!=='bank';
+  $('profile').hidden=true;
+  if(b.dataset.tab==='bank')renderMachineBank();
+});
 renderTeam();fetch('https://pokeapi.co/api/v2/pokemon?limit=1025').then(r=>r.json()).then(d=>allNames=d.results.map(x=>x.name)).catch(()=>{});
 
 // Theme is device-local, just like the team and game selector.
@@ -182,13 +195,13 @@ let editingRecordId=null;
 const cleanText=value=>String(value??'').trim();
 function showTeamTab(){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='team'));
-  $('lookup').hidden=true;$('team').hidden=false;$('profile').hidden=true;
+  $('lookup').hidden=true;$('team').hidden=false;$('bank').hidden=true;$('profile').hidden=true;
 }
 async function openProfile(recordId){
   const p=[...team,...box].find(x=>x.recordId===recordId);if(!p)return;
   editingRecordId=recordId;
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='team'));
-  $('lookup').hidden=true;$('team').hidden=true;$('profile').hidden=false;
+  $('lookup').hidden=true;$('team').hidden=true;$('bank').hidden=true;$('profile').hidden=false;
   $('profileArt').src=p.artwork||'';$('profileArt').alt=title(p.name);
   $('profileName').textContent=title(p.name);
   $('profileDex').textContent='#'+String(p.id).padStart(3,'0');
@@ -238,7 +251,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.7.4';
+const APP_VERSION='1.8.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -699,7 +712,7 @@ function renderMachineBank(){
   });
 });
 $('bankSearch').addEventListener('input',renderMachineBank);
-$('game').addEventListener('change',()=>{if(collectionView==='bank')renderMachineBank()});
+$('game').addEventListener('change',()=>{if(!$('bank').hidden)renderMachineBank()});
 
 // v1.2: Sword/Shield TM/TR teaching suggestions, limited to owned machines.
 const teachingPokemonCache=new Map(),teachingMoveCache=new Map();

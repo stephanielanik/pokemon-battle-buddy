@@ -339,3 +339,18 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 /* v1.7.4 quick edit after saving to Box */
 #editLookupBoxPokemon[hidden],#editQuickBoxPokemon[hidden]{display:none!important}
 #editQuickBoxPokemon{margin-top:8px;min-height:44px}
+
+/* v1.8 simplified mobile navigation */
+nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px;font-size:14px}
+.collection-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:16px 0}
+.collection-heading h2{margin:0}.collection-count{margin:4px 0 0;color:var(--muted);font-size:13px}
+#toggleBoxAdd{padding:10px 12px;min-height:44px;font-size:13px}
+.party-box-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+#boxAdd[hidden],#analyzerDisclosure:not([open]) .analyzer-header{display:none!important}
+#analyzerDisclosure>summary{cursor:pointer;list-style:none;font-weight:800;min-height:44px;display:flex;align-items:center}
+#analyzerDisclosure>summary::-webkit-details-marker{display:none}
+#analyzerDisclosure>summary:after{content:'▾';margin-left:auto}
+#analyzerDisclosure[open]>summary:after{content:'▴'}
+#analyzerDisclosure .analyzer-header{justify-content:flex-end}
+#bank[hidden]{display:none!important}
+@media(max-width:390px){nav .tab{font-size:12px;flex-basis:95px}.collection-heading{flex-wrap:wrap}}
