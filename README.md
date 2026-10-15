@@ -147,3 +147,7 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Account for multi-hit attacks (including Double Kick), coverage gained or lost, priority, stat boosts, ailments and healing/drain utility.
 - Evaluate each possible replacement by its impact on the complete four-move set, rather than only comparing individual power values.
 - Show coverage trade-offs and flag uncertain upgrades. Still advisory; special mechanics and battle-specific effects are not fully modeled.
+
+## Version 1.5.2 — Profile layout
+- Current moves and Save appear before Learn New Move and TM/TR suggestions.
+- Evolution Tracker is moved to the bottom and collapsed by default.
