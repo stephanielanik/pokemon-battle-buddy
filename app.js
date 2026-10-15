@@ -251,7 +251,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.9.1';
+const APP_VERSION='1.9.2';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -963,7 +963,7 @@ const synergySpeciesCache=new Map();
 function getSynergySpecies(name){
   if(!synergySpeciesCache.has(name))synergySpeciesCache.set(name,(async()=>{
     const species=await api('pokemon-species/'+name);
-    const chainId=species.evolution_chain?.url.match(/evolution-chain\\/(\\d+)/)?.[1];
+    const chainId=species.evolution_chain?.url.match(/evolution-chain\/(\d+)/)?.[1];
     if(chainId){
       const chain=await api('evolution-chain/'+chainId);
       function find(node){

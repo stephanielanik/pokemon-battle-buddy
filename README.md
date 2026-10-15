@@ -227,3 +227,7 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Fetch base stats and species evolution information from PokéAPI and combine them with recorded levels and moves.
 - Group promising swaps as Ready to Swap or Worth Training; caution about large level gaps, low defensive bulk, lower attacking potential, unevolved replacements, and powerful defensive or offensive abilities.
 - Missing profile information prevents confident Ready to Swap labels. No automatic swaps; calculations remain heuristic.
+
+## Version 1.9.2 — Emergency startup repair
+- Correct malformed regular expression in evolution chain lookup introduced in 1.9.1, which prevented the entire app script from parsing.
+- No storage changes or data migrations.
