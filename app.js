@@ -199,7 +199,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.5.0';
+const APP_VERSION='1.5.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -952,20 +952,65 @@ function resetLearnMoveHelper(){
   $('learnMoveResults').hidden=true;$('learnMoveSummary').replaceChildren();
   $('learnMoveOptions').replaceChildren();$('forgetMove').replaceChildren();
 }
+// Estimates for comparisons only; multi-hit and utility moves need special treatment.
+function expectedHits(move){
+  const min=move?.meta?.min_hits,max=move?.meta?.max_hits;
+  if(!min||!max)return 1;
+  if(min===max)return min;
+  if(min===2&&max===5)return 3.1; // Approximate average, not guaranteed.
+  return (min+max)/2;
+}
 function roughMoveValue(move,pokemon){
   if(!move?.power||move.damage_class?.name==='status')return 0;
   const attack=pokemon.stats?.find(x=>x.stat.name==='attack')?.base_stat||1;
   const special=pokemon.stats?.find(x=>x.stat.name==='special-attack')?.base_stat||1;
   const stat=move.damage_class?.name==='physical'?attack:special;
   const stab=pokemon.types.some(t=>t.type.name===move.type.name)?1.5:1;
-  return move.power*stat*stab*(move.accuracy==null?1:move.accuracy/100);
+  return move.power*expectedHits(move)*stat*stab*(move.accuracy==null?1:move.accuracy/100);
 }
 function moveDescription(move){
   if(!move)return 'Details unavailable';
+  const hits=expectedHits(move);
   return title(move.type.name)+' · '+title(move.damage_class.name)+' · '+
-    (move.power==null?'Status':'Power '+move.power)+' · Accuracy '+
-    (move.accuracy==null?'—':move.accuracy+'%')+
+    (move.power==null?'Status':'Power '+move.power+(hits>1?' × '+(Number.isInteger(hits)?hits:hits.toFixed(1))+' hits (avg.)':''))+
+    ' · Accuracy '+(move.accuracy==null?'—':move.accuracy+'%')+
     (move.priority>0?' · Priority +'+move.priority:'');
+}
+function moveUtility(move){
+  if(!move)return 0;
+  let utility=0;
+  if(move.priority>0)utility+=2;
+  if(move.damage_class?.name==='status'||!move.power)utility+=1.5;
+  const changes=move.stat_changes||[];
+  if(changes.some(x=>x.change>0))utility+=1.5;
+  if(move.meta?.ailment?.name&&move.meta.ailment.name!=='none')utility+=1;
+  if(move.meta?.healing>0||move.meta?.drain>0)utility+=1;
+  return utility;
+}
+function moveCoverage(moves){
+  const damaging=moves.filter(m=>m?.power>0&&m.damage_class?.name!=='status');
+  return new Set(Object.keys(colors).filter(defense=>
+    damaging.some(m=>(rules[m.type.name]?.[defense]??1)>1)));
+}
+function decideMoveReplacement(candidate,entries,details){
+  const current=entries.map(x=>x.move);
+  const baseline=moveCoverage(current);
+  const baseBest=Math.max(1,...current.map(m=>roughMoveValue(m,details)));
+  const candidateValue=roughMoveValue(candidate,details);
+  const candidateUtility=moveUtility(candidate);
+  const options=entries.map(x=>{
+    const updated=current.map((m,i)=>i===x.index?candidate:m);
+    const coverage=moveCoverage(updated);
+    const lost=[...baseline].filter(t=>!coverage.has(t));
+    const gained=[...coverage].filter(t=>!baseline.has(t));
+    const removedValue=roughMoveValue(x.move,details);
+    const damageGain=(candidateValue-removedValue)/baseBest;
+    const utilityDelta=candidateUtility-moveUtility(x.move);
+    // Preserve broad coverage and valuable tactical moves.
+    const score=damageGain+gained.length*.85-lost.length*1.4+utilityDelta*.55;
+    return {...x,score,lost,gained,removedValue};
+  }).sort((a,b)=>b.score-a.score);
+  return options[0];
 }
 $('compareNewMove').addEventListener('click',async()=>{
   const run=++learnMoveRun,recordId=editingRecordId;
@@ -984,25 +1029,23 @@ $('compareNewMove').addEventListener('click',async()=>{
   const already=current.some(n=>normalizeMoveName(n)===normalizeMoveName(candidate.name));
   const entries=current.map((n,i)=>({name:n,move:moves[i],index:i}));
   const free=entries.find(x=>!x.name);
-  const attackMoves=entries.filter(x=>x.move?.power>0);
-  const value=roughMoveValue(candidate,details);
-  const ranked=entries.map(x=>{
-    const score=roughMoveValue(x.move,details);
-    const unique=x.move?.type?.name&&attackMoves.filter(y=>y.move?.type?.name===x.move.type.name).length===1;
-    const priority=x.move?.priority>0;
-    const utility=x.move&&(!x.move.power||x.move.damage_class?.name==='status');
-    return {...x,score,cost:score*(unique?1.4:1)*(priority?1.6:1)+(utility?value*.7:0),priority,utility};
-  }).sort((a,b)=>a.cost-b.cost);
-  const replacement=free||ranked[0];
+  const replacement=free||decideMoveReplacement(candidate,entries,details);
+  const newValue=roughMoveValue(candidate,details);
   let advice;
   if(already)advice='Already known — no change needed.';
   else if(free)advice='You have an empty slot. No move needs to be forgotten.';
-  else if(!candidate.power||candidate.damage_class?.name==='status')advice='Situational status move. Consider its effect before replacing a move.';
-  else if(value<=replacement.score)advice='Not a clear damage upgrade. Consider type coverage before learning.';
-  else advice='Consider replacing '+title(replacement.name)+'. Better estimated damage potential'+
-    (!attackMoves.some(x=>x.move?.type?.name===candidate.type.name)?' and adds '+title(candidate.type.name)+' coverage':'')+'.';
-  if(!free&&!already&&replacement.priority)advice+=' You would lose a priority move.';
-  if(!free&&!already&&replacement.utility)advice+=' You would lose a utility move.';
+  else if(replacement.score<=0){
+    advice='No clear overall upgrade. If you learn it, '+title(replacement.name)+' is the least costly option.';
+  }else advice='Consider replacing '+title(replacement.name)+'.';
+  if(!free&&!already){
+    if(replacement.gained?.length)advice+=' Adds coverage against '+replacement.gained.map(title).join(', ')+'.';
+    if(replacement.lost?.length)advice+=' Loses coverage against '+replacement.lost.map(title).join(', ')+'.';
+    if(candidate.power&&newValue>replacement.removedValue*1.1)advice+=' Higher estimated damage potential.';
+    if(replacement.move?.priority>0)advice+=' You would lose a priority attack.';
+    if(replacement.move?.stat_changes?.some(x=>x.change>0))advice+=' You would lose a stat-boosting effect.';
+    if(replacement.move?.damage_class?.name==='status')advice+=' You would lose a status move.';
+  }
+  if(candidate.damage_class?.name==='status')advice+=' Consider its tactical effect rather than damage.';
   const summary=$('learnMoveSummary');summary.replaceChildren();
   const heading=document.createElement('strong');heading.textContent=title(candidate.name);
   const info=document.createElement('p');info.className='hint';info.textContent=moveDescription(candidate);

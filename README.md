@@ -142,3 +142,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Shows move type, category, power, accuracy, and priority, with a cautious replacement suggestion.
 - Select the move to forget and confirm to update the saved profile. TM/TR inventory is unaffected.
 - Requires PokéAPI internet access; recommendations are estimates, not full battle calculations.
+
+## Version 1.5.1 — Smarter Learn New Move recommendations
+- Account for multi-hit attacks (including Double Kick), coverage gained or lost, priority, stat boosts, ailments and healing/drain utility.
+- Evaluate each possible replacement by its impact on the complete four-move set, rather than only comparing individual power values.
+- Show coverage trade-offs and flag uncertain upgrades. Still advisory; special mechanics and battle-specific effects are not fully modeled.
