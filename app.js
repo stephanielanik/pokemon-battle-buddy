@@ -199,7 +199,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.5.2';
+const APP_VERSION='1.6.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -311,6 +311,7 @@ async function moveInfo(name){
 }
 async function refreshMoveAdvisor(opponentTypes){
   const run=++advisorRun,status=$('advisorStatus');
+  $('battlePicks').hidden=true;$('battlePickResults').replaceChildren();
   const sections=Object.fromEntries(matchupGroups.map(([key])=>[key,$('advisor-'+key)]));
   Object.values(sections).forEach(section=>section?.replaceChildren());
   const entries=team.flatMap((pokemon,index)=>(Array.isArray(pokemon.moves)?pokemon.moves:[])
@@ -331,6 +332,7 @@ async function refreshMoveAdvisor(opponentTypes){
     return [{pokemon,index,name:move.name||name,type,power:move.power,effectiveness,stab,accuracy:move.accuracy,score,damageClass:move.damage_class?.name||'unknown'}];
   }).sort((a,b)=>b.score-a.score);
   if(!ranked.length){status.textContent='No damaging moves could be evaluated. Status moves are excluded; check your move names or internet connection.';return}
+  renderBattlePicks(opponentTypes,ranked,run);
   const failed=details.filter(x=>!x.move).length;
   status.textContent=failed?failed+' move(s) could not be found.':'';
   const categoryFor=value=>value>1?'super':value===1?'neutral':value===0?'immune':'resisted';
@@ -350,7 +352,8 @@ async function refreshMoveAdvisor(opponentTypes){
       meta.textContent=title(item.type)+' · '+title(item.damageClass)+' · Power '+item.power+
         ' · Type ×'+item.effectiveness+(item.stab>1?' · STAB ×1.5':'')+
         ' · Accuracy '+(item.accuracy==null?'—':item.accuracy+'%');
-      card.append(name,meta);section.append(card);
+      const risk=document.createElement('p');risk.className='battle-risk';risk.textContent=defensiveRiskLabel(item.pokemon,opponentTypes);
+      card.append(name,meta,risk);section.append(card);
     });
     if(candidates.length>2){
       const toggle=document.createElement('button');toggle.type='button';toggle.className='advisor-more';
@@ -1088,3 +1091,44 @@ $('confirmLearnMove').addEventListener('click',()=>{
   save();refreshProfileMoveBadges(candidate.recordId);
   resetLearnMoveHelper();$('profileStatus').textContent=candidate.moveName+' saved to profile.';
 });
+
+// v1.6: defensive matchup awareness for battle recommendations.
+// Uses opponent types as possible STAB threats, not its actual known moves.
+function defensiveRisk(pokemon,opponentTypes){
+  const attacks=opponentTypes.map(type=>({type,
+    multiplier:pokemon.types.reduce((n,defender)=>n*(rules[type]?.[defender]??1),1)}));
+  return {attacks,worst:Math.max(...attacks.map(x=>x.multiplier))};
+}
+function defensiveRiskLabel(pokemon,opponentTypes){
+  const risk=defensiveRisk(pokemon,opponentTypes);
+  const label=risk.worst>=4?'⚠️ 4× danger':risk.worst>1?'⚠️ Weak':
+    risk.worst===0?'🛡️ Immune to an opponent type':
+    risk.worst<1?'🛡️ Resists':'➖ Neutral defense';
+  return label+' · '+risk.attacks.map(x=>title(x.type)+' ×'+x.multiplier).join(' · ');
+}
+function renderBattlePicks(opponentTypes,ranked,run){
+  if(run!==advisorRun)return;
+  const wrapper=$('battlePicks'),results=$('battlePickResults'),status=$('battlePickStatus');
+  const choices=team.map(pokemon=>{
+    const best=ranked.find(item=>item.pokemon===pokemon);
+    const risk=defensiveRisk(pokemon,opponentTypes);
+    // Offensive strength matters, but avoid recommending a 4x-vulnerable attacker
+    // solely because of a strong move. No speed/actual moveset information available.
+    const riskWeight=risk.worst>=4?.2:risk.worst>=2?.55:risk.worst===0?1.35:risk.worst<1?1.2:1;
+    return {pokemon,best,risk,score:(best?.score||0)*riskWeight};
+  }).filter(x=>x.best).sort((a,b)=>b.score-a.score);
+  if(!choices.length){wrapper.hidden=true;return}
+  wrapper.hidden=false;
+  status.textContent='';
+  choices.slice(0,3).forEach((choice,index)=>{
+    const row=document.createElement('div');row.className='battle-pick';
+    const heading=document.createElement('strong');
+    heading.textContent=(index===0?'⭐ ':'')+(choice.pokemon.nickname||title(choice.pokemon.name))+
+      ' — '+title(choice.best.name);
+    const move=document.createElement('p');move.className='hint';
+    move.textContent='Attack ×'+choice.best.effectiveness+' · '+title(choice.best.type);
+    const defense=document.createElement('p');defense.className='battle-risk';
+    defense.textContent=defensiveRiskLabel(choice.pokemon,opponentTypes);
+    row.append(heading,move,defense);results.append(row);
+  });
+}

@@ -313,3 +313,12 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .evolution-tracker>summary:after{content:'▾';margin-left:auto}
 .evolution-tracker[open]>summary:after{content:'▴'}
 .evolution-tracker:not([open]){padding-bottom:14px}
+
+/* v1.6 offensive + defensive battle recommendations */
+.battle-picks[hidden]{display:none!important}
+.battle-picks{padding:12px 0 16px;margin:12px 0;border-bottom:1px solid var(--border)}
+.battle-picks h4{margin:0 0 8px}
+.battle-pick{padding:11px 12px;margin:8px 0;background:var(--input);border:1px solid var(--border);border-radius:12px;overflow-wrap:anywhere}
+.battle-pick strong{display:block;font-size:14px}
+.battle-pick p{margin:5px 0 0;font-size:12px}
+.battle-risk{color:var(--text);font-size:12px;line-height:1.45;margin:6px 0 0}

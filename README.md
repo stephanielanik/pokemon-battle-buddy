@@ -151,3 +151,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 1.5.2 — Profile layout
 - Current moves and Save appear before Learn New Move and TM/TR suggestions.
 - Evolution Tracker is moved to the bottom and collapsed by default.
+
+## Version 1.6.0 — Smart Battle Recommendations
+- Lookup now shows top three Pokémon to send, balancing their best recorded damaging move with defensive risk from opponent type(s).
+- Each recommended move also shows a defensive risk label, including 2× and 4× vulnerabilities.
+- The risk estimate assumes possible opponent same-type attacks; it does not know the opponent's actual moves, speed, abilities, or battle conditions.
+- Party and profile data are unchanged.
