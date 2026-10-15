@@ -212,3 +212,7 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Three top-level tabs: Lookup, My Pokémon, TM/TR Bank.
 - My Pokémon has Party and Box views, compact counts, and an Add Pokémon control that opens Box quick search on demand.
 - Team Analyzer is collapsed by default under Party. Existing data and storage keys remain unchanged.
+
+## Version 1.8.1 — Critical startup fix
+- Remove stale teamCount DOM reference after navigation cleanup. The missing element prevented initialization, Settings, and rendering of saved local Pokémon.
+- Does not clear or migrate localStorage. Existing data should reappear once the app loads.

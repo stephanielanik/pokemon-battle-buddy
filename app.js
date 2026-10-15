@@ -86,7 +86,7 @@ function renderCollectionCards(list,container,location){
 }
 
 function renderTeam(){
-  $('teamCount').textContent=team.length+'/6';
+  // Main navigation no longer has a teamCount element.
   $('partyCount').textContent=team.length+'/6';
   $('boxCount').textContent=box.length;
   $('partySummary').textContent=team.length;
@@ -251,7 +251,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.8.0';
+const APP_VERSION='1.8.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
