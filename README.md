@@ -53,3 +53,7 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Settings → Import Backup validates a previously exported JSON file and asks before replacing the current team.
 - More robust iPhone viewport sizing, including profile forms, headers, and navigation.
 - Updates continue to preserve localStorage; deleting a Home Screen app can still delete its data. Backups must be exported manually.
+
+## Version 0.6.3
+- Search input now uses 16px text to avoid Safari's focus auto-zoom on iPhone.
+- Search suggestions and their labels stay within the mobile viewport, even with long names.

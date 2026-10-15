@@ -116,3 +116,15 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
   .searchrow button{flex:0 0 auto}
   .settings-panel{padding:18px}
 }
+
+/* v0.6.3: iOS search focus zoom and autocomplete width containment. */
+#lookup,.searchrow,.suggestions{box-sizing:border-box;width:100%;min-width:0;max-width:100%}
+.searchrow{display:flex;align-items:stretch;flex-wrap:nowrap;gap:8px}
+.searchrow input,#search{font-size:16px!important;flex:1 1 0%;width:0;min-width:0;max-width:100%;-webkit-text-size-adjust:100%}
+.searchrow #go{flex:0 0 auto;white-space:nowrap}
+.suggestions{overflow-x:hidden;overflow-y:auto}
+.suggestions button{display:flex;align-items:center;box-sizing:border-box;width:100%;max-width:100%;min-width:0;gap:10px;overflow:hidden}
+.suggestions button img{flex:0 0 36px;width:36px;height:36px}
+.suggestions button strong{min-width:0;flex:1 1 auto;overflow-wrap:anywhere;text-align:left}
+.suggestions button .sub{flex:0 1 auto;min-width:0;max-width:42%;white-space:normal;text-align:right;overflow-wrap:anywhere}
+@media(max-width:390px){.searchrow{gap:6px}.searchrow #go{padding:12px 13px}}
