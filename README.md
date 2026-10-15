@@ -188,3 +188,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Confirmed evolution updates the existing individual record's species, Pokédex number, artwork, and types while retaining nickname, level, recorded moves, held item, Pokérus and other profile details.
 - Ability and moves should be reviewed after evolving, since legal abilities and move availability can change.
 - Evolution is never automatic; the user confirms the change.
+
+## Version 1.7.1 — Better move explanations
+- Learn New Move explanations now mention relevant Attack vs. Special Attack differences, including base stat values.
+- Highlight notable secondary effects such as status chances, flinching, healing, and priority when known.
+- Keeps existing move ranking and user confirmation safeguards; effects are advisory, not a full battle simulator.

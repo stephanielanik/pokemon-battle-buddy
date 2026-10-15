@@ -205,7 +205,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.7.0';
+const APP_VERSION='1.7.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -1090,6 +1090,39 @@ function moveCoverage(moves){
   return new Set(Object.keys(colors).filter(defense=>
     damaging.some(m=>(rules[m.type.name]?.[defense]??1)>1)));
 }
+// Explain notable effects without treating chance-based effects as guaranteed.
+function notableMoveEffects(move){
+  if(!move)return [];
+  const meta=move.meta||{},notes=[];
+  const ailment=meta.ailment?.name;
+  if(ailment&&ailment!=='none'){
+    const chance=meta.ailment_chance||move.effect_chance||0;
+    notes.push((chance?chance+'% chance to ':'Can ')+
+      (ailment==='paralysis'?'paralyze':ailment==='burn'?'burn':ailment==='freeze'?'freeze':
+       ailment==='poison'?'poison':ailment==='confusion'?'confuse':ailment==='sleep'?'put to sleep':'inflict '+title(ailment)));
+  }
+  if(meta.flinch_chance>0)notes.push(meta.flinch_chance+'% chance to flinch');
+  if(meta.drain>0)notes.push('Restores HP based on damage');
+  if(meta.healing>0)notes.push('Restores HP');
+  if(move.priority>0)notes.push('Priority +'+move.priority);
+  if(move.name==='flame-charge')notes.push('Raises user Speed');
+  if(move.name==='charge')notes.push('Boosts next Electric attack and raises Special Defense');
+  if(move.name==='razor-leaf')notes.push('Higher critical-hit chance');
+  if(move.name==='pyro-ball'&&!notes.some(x=>x.includes('burn')))notes.push('10% chance to burn');
+  return [...new Set(notes)].slice(0,3);
+}
+function attackingStatExplanation(candidate,oldMove,pokemon){
+  if(!candidate?.power||!oldMove?.power)return '';
+  const newClass=candidate.damage_class?.name,oldClass=oldMove.damage_class?.name;
+  if(!['physical','special'].includes(newClass)||!['physical','special'].includes(oldClass)||newClass===oldClass)return '';
+  const atk=pokemon.stats?.find(x=>x.stat.name==='attack')?.base_stat;
+  const spa=pokemon.stats?.find(x=>x.stat.name==='special-attack')?.base_stat;
+  if(!Number.isFinite(atk)||!Number.isFinite(spa))return '';
+  const newStat=newClass==='physical'?atk:spa,oldStat=oldClass==='physical'?atk:spa;
+  if(newStat<=oldStat*1.12)return '';
+  return 'Uses '+(newClass==='physical'?'Attack':'Special Attack')+
+    ' ('+newStat+') instead of '+(oldClass==='physical'?'Attack':'Special Attack')+' ('+oldStat+').';
+}
 function decideMoveReplacement(candidate,entries,details){
   const current=entries.map(x=>x.move);
   const baseline=moveCoverage(current);
@@ -1177,6 +1210,12 @@ $('compareNewMove').addEventListener('click',async()=>{
     if(opponentDebuffs.length)advice+=' Lowers the opponent’s '+opponentDebuffs.map(x=>title(x.stat.name)+' by '+Math.abs(x.change)+' stage'+(Math.abs(x.change)===1?'':'s')).join(', ')+'.';
     else advice+=' Consider its tactical effect rather than damage.';
   }
+  if(!already&&!selfKO&&!skipRecommended&&!free){
+    const statReason=attackingStatExplanation(candidate,replacement.move,details);
+    if(statReason)advice+=' '+statReason;
+  }
+  const effects=notableMoveEffects(candidate);
+  if(effects.length)advice+=' '+effects.join(' · ')+'.';
   const otherDrawbacks=drawbacks.filter(x=>!selfKO||x!=='User faints after use');
   if(otherDrawbacks.length)advice+=' ⚠️ '+otherDrawbacks.join(' · ')+'.';
   const summary=$('learnMoveSummary');summary.replaceChildren();
