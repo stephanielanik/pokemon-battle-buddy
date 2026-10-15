@@ -97,7 +97,7 @@ function renderTeam(){
 function save(){
   localStorage.setItem('battleBuddyTeam',JSON.stringify(team));
   localStorage.setItem('battleBuddyBox',JSON.stringify(box));
-  renderTeam();$('analyzerResults').replaceChildren();$('analyzerStatus').textContent='Party changed. Tap Analyze Party for updated results.';if(current)refreshMoveAdvisor(current.types);
+  renderTeam();$('boxRecommendations').hidden=true;$('analyzerResults').replaceChildren();$('analyzerStatus').textContent='Party changed. Tap Analyze Party for updated results.';if(current)refreshMoveAdvisor(current.types);
 }
 function movePokemon(recordId,location){
   const source=location==='party'?team:box, destination=location==='party'?box:team;
@@ -196,7 +196,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.3.1';
+const APP_VERSION='1.4.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -459,7 +459,7 @@ function analyzerRow(label,detail,kind=''){
 }
 $('analyzeTeam').addEventListener('click',async()=>{
   const run=++analyzerRun,results=$('analyzerResults'),status=$('analyzerStatus'),button=$('analyzeTeam');
-  results.replaceChildren();$('coverageSuggestions').hidden=true;
+  results.replaceChildren();$('coverageSuggestions').hidden=true;$('boxRecommendations').hidden=true;
   if(!team.length){status.textContent='Add Pokémon to your party to analyze it.';return}
   button.disabled=true;status.textContent='Analyzing your party…';
   const attackTypes=Object.keys(colors);
@@ -481,6 +481,7 @@ $('analyzeTeam').addEventListener('click',async()=>{
   protection.forEach(x=>defenseSection.append(analyzerRow(title(x.type),
     [...x.immune.map(m=>m.name+' immune'),...x.resist.map(m=>m.name+' resists')].join(', '))));
   results.append(defenseSection);
+  renderBoxRecommendations(run);
   const moveEntries=team.flatMap(p=>(Array.isArray(p.moves)?p.moves:[])
     .filter(m=>typeof m==='string'&&m.trim()).map(name=>({pokemon:p,name})));
   if(!moveEntries.length){
@@ -805,3 +806,78 @@ document.querySelectorAll('.profile-move').forEach(input=>{
     timer=setTimeout(()=>refreshProfileMoveBadges(editingRecordId),400);
   });
 });
+
+// v1.4: suggest Box-to-Party swaps based on team-wide defensive coverage.
+// A swap is suggested only when it improves the aggregate score; no changes are made.
+function defenseSummary(members){
+  const threats=Object.keys(colors).map(type=>{
+    const values=members.map(p=>p.types.reduce((n,t)=>n*(rules[type]?.[t]??1),1));
+    return {type,weak:values.filter(v=>v>1).length,
+      protected:values.filter(v=>v<1).length};
+  });
+  // Shared weaknesses matter most; resistances/immunities help as tiebreakers.
+  const score=threats.reduce((total,x)=>total+
+    (x.weak>=2?(x.weak-1)*3:0)+x.weak*.5-x.protected*.25,0);
+  return {threats,score,shared:threats.filter(x=>x.weak>=2).length};
+}
+function renderBoxRecommendations(analyzerId){
+  const section=$('boxRecommendations'),status=$('boxRecommendationStatus'),
+    results=$('boxRecommendationResults');
+  results.replaceChildren();
+  if(analyzerId!==analyzerRun||!box.length||!team.length){section.hidden=true;return}
+  section.hidden=false;
+  const baseline=defenseSummary(team),suggestions=[];
+  for(const candidate of box){
+    const options=team.length<6?[{removed:null,members:[...team,candidate]}]:
+      team.map((removed,index)=>({removed,members:team.map((p,i)=>i===index?candidate:p)}));
+    for(const option of options){
+      const revised=defenseSummary(option.members);
+      const gain=baseline.score-revised.score;
+      if(gain<=.01)continue;
+      const improved=baseline.threats.filter(old=>{
+        const newer=revised.threats.find(t=>t.type===old.type);
+        return old.weak>=2&&newer.weak<old.weak;
+      }).map(x=>title(x.type));
+      const worsened=baseline.threats.filter(old=>{
+        const newer=revised.threats.find(t=>t.type===old.type);
+        return newer.weak>old.weak;
+      }).map(x=>title(x.type));
+      suggestions.push({candidate,removed:option.removed,gain,improved,worsened,
+        sharedReduction:baseline.shared-revised.shared});
+    }
+  }
+  suggestions.sort((a,b)=>b.gain-a.gain||b.sharedReduction-a.sharedReduction);
+  const seen=new Set(),top=[];
+  for(const s of suggestions){
+    if(seen.has(s.candidate.recordId))continue;
+    seen.add(s.candidate.recordId);top.push(s);
+    if(top.length===3)break;
+  }
+  status.textContent=top.length?'Possible defensive improvements:':'No Box swap currently improves the party’s overall defensive type balance.';
+  top.forEach(s=>{
+    const row=document.createElement('div');row.className='box-recommendation';
+    const img=document.createElement('img');img.src=s.candidate.artwork||'';img.alt='';
+    const body=document.createElement('div');body.className='box-recommendation-body';
+    const name=document.createElement('strong');name.textContent=s.candidate.nickname||title(s.candidate.name);
+    const swap=document.createElement('p');swap.textContent=s.removed?
+      'Consider swapping with '+(s.removed.nickname||title(s.removed.name)):
+      'Open party slot available';
+    const gains=document.createElement('p');gains.className='hint';
+    gains.textContent=s.improved.length?'Reduces weaknesses to: '+s.improved.join(', '):
+      'Improves the overall resistance/weakness balance';
+    body.append(name,swap,gains);
+    if(s.worsened.length){
+      const tradeoff=document.createElement('p');tradeoff.className='hint';
+      tradeoff.textContent='Trade-off: more vulnerable to '+s.worsened.join(', ');
+      body.append(tradeoff);
+    }
+    const action=document.createElement('button');action.type='button';
+    action.textContent='View in Box';action.addEventListener('click',()=>{
+      showCollection('box');$('boxCards').scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    body.append(action);row.append(img,body);results.append(row);
+  });
+  const note=document.createElement('p');note.className='hint';
+  note.textContent='Based on defensive types only. Review moves and abilities before swapping.';
+  results.append(note);
+}

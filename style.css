@@ -266,3 +266,13 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .move-type-badge[hidden]{display:none!important}
 .bank-description{flex-wrap:wrap;gap:5px 9px}
 .profile-fields label>.move-type-badge{margin-top:7px}
+
+/* v1.4 compact Box recommendations */
+#boxRecommendations[hidden]{display:none!important}
+.box-recommendation{display:grid;grid-template-columns:65px minmax(0,1fr);gap:10px;
+  align-items:start;padding:11px 0;border-bottom:1px solid var(--border);min-width:0}
+.box-recommendation img{width:65px;height:65px;object-fit:contain}
+.box-recommendation-body{min-width:0;overflow-wrap:anywhere}
+.box-recommendation-body strong{display:block}
+.box-recommendation-body p{margin:5px 0;font-size:13px;line-height:1.4}
+.box-recommendation-body button{padding:8px 11px;margin-top:5px;font-size:12px}

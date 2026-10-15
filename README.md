@@ -124,3 +124,10 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 1.3.1 — Move type badges
 - Elemental type colors in TM/TR bank, saved moves, move comparisons and TM/TR recommendations.
 - Type information uses PokéAPI with throttled requests and memory caching; unavailable moves remain uncolored.
+
+## Version 1.4.0 — Box Recommendations
+- Team Analyzer recommends up to three boxed Pokémon that improve overall defensive type balance.
+- Evaluates every potential one-for-one swap when the party is full; considers adding to an open slot otherwise.
+- Shows suggested swap, reduced shared weaknesses and possible trade-offs.
+- Suggestions are informational: no automatic swaps or changes to saved data.
+- This first version scores defensive types only; offensive moves and abilities are not included in the ranking.
