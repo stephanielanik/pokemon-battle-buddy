@@ -168,3 +168,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Self-KO moves and moves with no clear overall upgrade default to Keep Current Moves rather than preselecting a replacement.
 - Choosing a replacement remains possible and updates the confirmation button.
 - Self-KO warnings are displayed once rather than repeated.
+
+## Version 1.6.3 — Status move decisions
+- Opponent stat reductions (such as Cotton Spore lowering Speed) are recognized as benefits rather than self-inflicted drawbacks.
+- Strongly discourages replacing a damaging move if that would leave fewer than two damaging moves; never recommends losing the last attack by default.
+- Displays status once instead of 'Status · Status'.
+- Users may still override the recommendation and choose a move to replace.

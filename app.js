@@ -199,7 +199,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.6.2';
+const APP_VERSION='1.6.3';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -976,8 +976,10 @@ function moveDrawbacks(move){
     flags.push('Must recharge next turn');
   if(['solar-beam','solar-blade','sky-attack','razor-wind','skull-bash','meteor-beam','geomancy','freeze-shock','ice-burn','phantom-force','shadow-force','fly','dig','dive','bounce'].includes(name))
     flags.push('Takes two turns (unless conditions change)');
-  if((move.stat_changes||[]).some(x=>x.change<0)&&meta.category?.name==='damage+raise'===false)
-    flags.push('Lowers stats');
+  // Negative stat changes targeting the opponent are beneficial, not drawbacks.
+  const targetsSelf=['user','users-field','user-and-allies','user-or-ally','users-side'].includes(move.target?.name);
+  if(targetsSelf&&(move.stat_changes||[]).some(x=>x.change<0))
+    flags.push('Lowers user stats');
   if(['close-combat','superpower','overheat','draco-meteor','leaf-storm','v-create','hammer-arm','make-it-rain','psycho-boost'].includes(name)&&!flags.includes('Lowers stats'))
     flags.push('Lowers user stats');
   return [...new Set(flags)];
@@ -988,7 +990,7 @@ function movePenalty(move){
   let multiplier=1;
   if(drawbacks.includes('Must recharge next turn')||drawbacks.some(x=>x.startsWith('Takes two turns')))multiplier*=.55;
   if(drawbacks.includes('Recoil damage'))multiplier*=.8;
-  if(drawbacks.includes('Lowers user stats')||drawbacks.includes('Lowers stats'))multiplier*=.8;
+  if(drawbacks.includes('Lowers user stats'))multiplier*=.8;
   return multiplier;
 }
 function roughMoveValue(move,pokemon){
@@ -1002,8 +1004,8 @@ function roughMoveValue(move,pokemon){
 function moveDescription(move){
   if(!move)return 'Details unavailable';
   const hits=expectedHits(move);
-  return title(move.damage_class.name)+' · '+
-    (move.power==null?'Status':'Power '+move.power+(hits>1?' × '+(Number.isInteger(hits)?hits:hits.toFixed(1))+' hits (avg.)':''))+
+  return title(move.damage_class.name)+
+    (move.power==null?'':' · Power '+move.power+(hits>1?' × '+(Number.isInteger(hits)?hits:hits.toFixed(1))+' hits (avg.)':''))+
     ' · Accuracy '+(move.accuracy==null?'—':move.accuracy+'%')+
     (move.priority>0?' · Priority +'+move.priority:'');
 }
@@ -1013,7 +1015,8 @@ function moveUtility(move){
   if(move.priority>0)utility+=2;
   if(move.damage_class?.name==='status'||!move.power)utility+=1.5;
   const changes=move.stat_changes||[];
-  if(changes.some(x=>x.change>0))utility+=1.5;
+  const targetsSelf=['user','users-field','user-and-allies','user-or-ally','users-side'].includes(move.target?.name);
+  if(changes.some(x=>targetsSelf?x.change>0:x.change<0))utility+=1.5;
   if(move.meta?.ailment?.name&&move.meta.ailment.name!=='none')utility+=1;
   if(move.meta?.healing>0||move.meta?.drain>0)utility+=1;
   return utility;
@@ -1038,10 +1041,15 @@ function decideMoveReplacement(candidate,entries,details){
     const removedValue=roughMoveValue(x.move,details);
     const damageGain=(candidateValue-removedValue)/baseBest;
     const utilityDelta=candidateUtility-moveUtility(x.move);
+    const remainingDamaging=updated.filter(m=>m?.power>0&&m.damage_class?.name!=='status').length;
+    const previousDamaging=current.filter(m=>m?.power>0&&m.damage_class?.name!=='status').length;
+    const losingLastAttack=previousDamaging>0&&remainingDamaging===0;
+    const losingSecondAttack=previousDamaging>=2&&remainingDamaging<2;
     // Preserve broad coverage and valuable tactical moves.
     const score=damageGain+gained.length*.85-lost.length*1.4+utilityDelta*.55-
-      (drawbacks.includes('User faints after use')?5:0);
-    return {...x,score,lost,gained,removedValue};
+      (drawbacks.includes('User faints after use')?5:0)-
+      (losingLastAttack?8:losingSecondAttack?3:0);
+    return {...x,score,lost,gained,removedValue,losingLastAttack,losingSecondAttack};
   }).sort((a,b)=>b.score-a.score);
   return options[0];
 }
@@ -1067,11 +1075,19 @@ $('compareNewMove').addEventListener('click',async()=>{
   let advice;
   const drawbacks=moveDrawbacks(candidate);
   const selfKO=drawbacks.includes('User faints after use');
-  const skipRecommended=!already&&(selfKO||(!free&&replacement.score<=0));
+  const skipRecommended=!already&&(selfKO||(!free&&(replacement.score<=0||replacement.losingLastAttack||replacement.losingSecondAttack)));
   if(already)advice='Already known — no change needed.';
   else if(selfKO)advice='⭐ Keep Current Moves. ⚠️ Situational: '+title(candidate.name)+' causes your Pokémon to faint. Best saved as a last-resort attack.';
   else if(free)advice='You have an empty slot. No move needs to be forgotten.';
-  else if(skipRecommended)advice='⭐ Keep Current Moves. No clear overall upgrade. If you still want it, consider replacing '+title(replacement.name)+'.';
+  else if(skipRecommended){
+    const tactical=candidate.damage_class?.name==='status';
+    advice='⭐ Keep Current Moves. '+
+      (replacement.losingLastAttack?'You would lose your only damaging move.':
+       replacement.losingSecondAttack?'Replacing '+title(replacement.name)+' would leave only one damaging move.':
+       tactical?'This status move is situational rather than a clear upgrade.':
+       'No clear overall upgrade.')+
+      ' You can still choose a replacement if you prefer.';
+  }
   else advice='Consider replacing '+title(replacement.name)+'.';
   if(!free&&!already&&!selfKO){
     if(replacement.gained?.length)advice+=' Adds coverage against '+replacement.gained.map(title).join(', ')+'.';
@@ -1081,7 +1097,11 @@ $('compareNewMove').addEventListener('click',async()=>{
     if(replacement.move?.stat_changes?.some(x=>x.change>0))advice+=' You would lose a stat-boosting effect.';
     if(replacement.move?.damage_class?.name==='status')advice+=' You would lose a status move.';
   }
-  if(candidate.damage_class?.name==='status')advice+=' Consider its tactical effect rather than damage.';
+  if(candidate.damage_class?.name==='status'){
+    const opponentDebuffs=(candidate.stat_changes||[]).filter(x=>x.change<0&&!['user','users-field','user-and-allies','user-or-ally','users-side'].includes(candidate.target?.name));
+    if(opponentDebuffs.length)advice+=' Lowers the opponent’s '+opponentDebuffs.map(x=>title(x.stat.name)+' by '+Math.abs(x.change)+' stage'+(Math.abs(x.change)===1?'':'s')).join(', ')+'.';
+    else advice+=' Consider its tactical effect rather than damage.';
+  }
   const otherDrawbacks=drawbacks.filter(x=>!selfKO||x!=='User faints after use');
   if(otherDrawbacks.length)advice+=' ⚠️ '+otherDrawbacks.join(' · ')+'.';
   const summary=$('learnMoveSummary');summary.replaceChildren();
