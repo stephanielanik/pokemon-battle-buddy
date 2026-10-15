@@ -120,3 +120,7 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Suggests a potential move to replace based on rough power, base physical/special attack, STAB and accuracy, while noting type coverage.
 - Comparisons are advisory: move effects, priority, abilities, defensive stats, and battle conditions are not fully modeled.
 - No move or TR inventory changes happen automatically.
+
+## Version 1.3.1 — Move type badges
+- Elemental type colors in TM/TR bank, saved moves, move comparisons and TM/TR recommendations.
+- Type information uses PokéAPI with throttled requests and memory caching; unavailable moves remain uncolored.

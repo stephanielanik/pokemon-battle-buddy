@@ -159,6 +159,7 @@ async function openProfile(recordId){
   $('profileHeldItem').value=p.heldItem||'';
   $('profilePokerus').value=['unknown','never','active','cured'].includes(p.pokerus)?p.pokerus:'unknown';
   document.querySelectorAll('.profile-move').forEach((input,i)=>input.value=p.moves?.[i]||'');
+  refreshProfileMoveBadges(recordId);
   $('profileStatus').textContent='';
   loadEvolution(p,recordId);
   loadMoveImprovements(p,recordId);
@@ -189,12 +190,13 @@ $('profileForm').addEventListener('submit',e=>{
   p.pokerus=$('profilePokerus').value;
   p.moves=[...document.querySelectorAll('.profile-move')].map(x=>cleanText(x.value));
   save();$('profileStatus').textContent='Saved on this device ✓';
+  refreshProfileMoveBadges(editingRecordId);
   loadEvolution(p,editingRecordId);
 });
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.3.0';
+const APP_VERSION='1.3.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -557,6 +559,7 @@ function renderMachineBank(){
     const row=document.createElement('div');row.className='bank-row';
     const description=document.createElement('label');description.className='bank-description';
     const name=document.createElement('span');name.textContent=item.key+' · '+item.name;
+    const badge=document.createElement('span');badge.className='move-type-badge';badge.hidden=true;
     if(item.kind==='TM'){
       const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.checked=!!inventory[item.key];
       checkbox.addEventListener('change',()=>{
@@ -564,9 +567,9 @@ function renderMachineBank(){
         if(checkbox.checked)machineBanks[game][item.key]=1;else delete machineBanks[game][item.key];
         saveMachineBank();renderMachineBank();
       });
-      description.append(checkbox,name);row.append(description);
+      description.append(checkbox,name,badge);row.append(description);
     }else{
-      description.append(name);row.append(description);
+      description.append(name,badge);row.append(description);
       const qty=document.createElement('input');qty.type='number';qty.min='0';qty.max='999';qty.step='1';
       qty.value=String(inventory[item.key]||0);qty.inputMode='numeric';
       qty.setAttribute('aria-label',item.key+' quantity');qty.className='bank-quantity';
@@ -580,6 +583,7 @@ function renderMachineBank(){
       row.append(qty);
     }
     fragment.append(row);
+    scheduleTypeBadge(item.name,badge);
   });
   container.append(fragment);
 }
@@ -633,6 +637,7 @@ function machineSuggestionRow(entry){
     (move.accuracy==null?'':' · '+move.accuracy+'% accuracy')+
     (entry.machine.kind==='TR'?' · Owned: '+(machineBanks[game]?.[entry.machine.key]||0):' · Reusable');
   row.append(heading,meta);
+  if(move.type?.name)row.insertBefore(makeTypeBadge(move.type.name),meta);
   return row;
 }
 async function loadMoveImprovements(p,recordId){
@@ -694,6 +699,7 @@ async function loadMoveImprovements(p,recordId){
         const line=document.createElement('p');line.className='hint';
         line.textContent=title(name)+(move?.power?' · '+title(move.type.name)+' · Power '+move.power+' · '+title(move.damage_class.name):' · Status / unavailable');
         comparison.append(line);
+        if(move?.type?.name)line.prepend(makeTypeBadge(move.type.name));
       });
       const advice=document.createElement('p');advice.className='comparison-advice';
       if(!candidate.power||candidate.damage_class?.name==='status'){
@@ -749,3 +755,53 @@ async function loadCoverageSuggestions(analyzerId,gaps){
     row.append(who);results.append(row);
   });
 }
+
+// v1.3.1: type colors for bank and recorded moves.
+const typeLookupCache=new Map(),typeLookupQueue=[];let typeLookupActive=0;
+function makeTypeBadge(type){
+  const badge=document.createElement('span');badge.className='move-type-badge';
+  badge.textContent=title(type);badge.style.background=colors[type]||'#91a5b7';return badge;
+}
+function cachedMoveType(name){
+  const key=normalizeMoveName(name);if(!key)return Promise.resolve(null);
+  if(!typeLookupCache.has(key))typeLookupCache.set(key,new Promise(resolve=>{
+    typeLookupQueue.push({key,resolve});pumpTypeLookup();
+  }));
+  return typeLookupCache.get(key);
+}
+function pumpTypeLookup(){
+  while(typeLookupActive<5&&typeLookupQueue.length){
+    const task=typeLookupQueue.shift();typeLookupActive++;
+    moveInfo(task.key).then(data=>task.resolve(data?.type?.name||null))
+      .catch(()=>task.resolve(null)).finally(()=>{typeLookupActive--;pumpTypeLookup()});
+  }
+}
+function scheduleTypeBadge(name,badge){
+  const key=normalizeMoveName(name);badge.dataset.move=key;
+  cachedMoveType(key).then(type=>{
+    if(!badge.isConnected||badge.dataset.move!==key)return;
+    badge.hidden=!type;
+    if(type){badge.textContent=title(type);badge.style.background=colors[type]||'#91a5b7'}
+  });
+}
+function refreshProfileMoveBadges(recordId){
+  document.querySelectorAll('.profile-move').forEach(input=>{
+    let badge=input.parentElement.querySelector('.move-type-badge');
+    if(!badge){badge=document.createElement('span');badge.className='move-type-badge';badge.hidden=true;input.insertAdjacentElement('afterend',badge)}
+    const key=normalizeMoveName(input.value);badge.dataset.move=key;badge.hidden=true;
+    if(!key)return;
+    cachedMoveType(key).then(type=>{
+      if(editingRecordId!==recordId||badge.dataset.move!==key)return;
+      badge.hidden=!type;
+      if(type){badge.textContent=title(type);badge.style.background=colors[type]||'#91a5b7'}
+    });
+  });
+}
+document.querySelectorAll('.profile-move').forEach(input=>{
+  let timer;
+  input.addEventListener('input',()=>{
+    clearTimeout(timer);
+    const badge=input.parentElement.querySelector('.move-type-badge');if(badge)badge.hidden=true;
+    timer=setTimeout(()=>refreshProfileMoveBadges(editingRecordId),400);
+  });
+});

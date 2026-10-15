@@ -258,3 +258,11 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .move-comparison strong{font-size:13px}
 .move-comparison p{margin:6px 0}
 .comparison-advice{font-size:13px;line-height:1.5;color:var(--text)}
+
+/* v1.3.1: move type colors */
+.move-type-badge{display:inline-flex;align-items:center;vertical-align:middle;color:#0c1828;
+  font-size:11px;font-weight:850;line-height:1.2;padding:5px 9px;border-radius:999px;
+  white-space:nowrap;width:max-content;max-width:100%;margin:4px 5px 4px 0}
+.move-type-badge[hidden]{display:none!important}
+.bank-description{flex-wrap:wrap;gap:5px 9px}
+.profile-fields label>.move-type-badge{margin-top:7px}
