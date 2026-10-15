@@ -199,7 +199,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.6.3';
+const APP_VERSION='1.6.4';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -1033,6 +1033,7 @@ function decideMoveReplacement(candidate,entries,details){
   const candidateValue=roughMoveValue(candidate,details);
   const candidateUtility=moveUtility(candidate);
   const drawbacks=moveDrawbacks(candidate);
+  const candidateDamaging=!!(candidate.power>0&&candidate.damage_class?.name!=='status');
   const options=entries.map(x=>{
     const updated=current.map((m,i)=>i===x.index?candidate:m);
     const coverage=moveCoverage(updated);
@@ -1045,14 +1046,24 @@ function decideMoveReplacement(candidate,entries,details){
     const previousDamaging=current.filter(m=>m?.power>0&&m.damage_class?.name!=='status').length;
     const losingLastAttack=previousDamaging>0&&remainingDamaging===0;
     const losingSecondAttack=previousDamaging>=2&&remainingDamaging<2;
-    // Preserve broad coverage and valuable tactical moves.
-    const score=damageGain+gained.length*.85-lost.length*1.4+utilityDelta*.55-
+    const oldDamaging=!!(x.move?.power>0&&x.move.damage_class?.name!=='status');
+    const sameType=!!(candidateDamaging&&oldDamaging&&x.move.type.name===candidate.type.name);
+    // Replacing an existing attack of the same type preserves its coverage.
+    // Reward that swap only if the new move is a meaningful damage upgrade.
+    const meaningfulUpgrade=sameType&&candidateValue>removedValue*1.08;
+    const redundantAttack=sameType&&candidateValue>=removedValue*.92;
+    const statusSacrifice=candidateDamaging&&!oldDamaging;
+    const score=damageGain+gained.length*.85-lost.length*1.4+utilityDelta*.55+
+      (meaningfulUpgrade?2.5:redundantAttack?.65:0)-
+      (statusSacrifice?1.5:0)-
       (drawbacks.includes('User faints after use')?5:0)-
       (losingLastAttack?8:losingSecondAttack?3:0);
-    return {...x,score,lost,gained,removedValue,losingLastAttack,losingSecondAttack};
+    return {...x,score,lost,gained,removedValue,losingLastAttack,losingSecondAttack,
+      sameType,meaningfulUpgrade,statusSacrifice};
   }).sort((a,b)=>b.score-a.score);
   return options[0];
 }
+
 $('compareNewMove').addEventListener('click',async()=>{
   const run=++learnMoveRun,recordId=editingRecordId;
   const pokemon=[...team,...box].find(p=>p.recordId===recordId);
@@ -1088,11 +1099,11 @@ $('compareNewMove').addEventListener('click',async()=>{
        'No clear overall upgrade.')+
       ' You can still choose a replacement if you prefer.';
   }
-  else advice='Consider replacing '+title(replacement.name)+'.';
+  else advice='Consider replacing '+title(replacement.name)+'.'+(replacement.meaningfulUpgrade?' Stronger '+title(candidate.type.name)+' attack without losing type coverage.':'');
   if(!free&&!already&&!selfKO){
     if(replacement.gained?.length)advice+=' Adds coverage against '+replacement.gained.map(title).join(', ')+'.';
     if(replacement.lost?.length)advice+=' Loses coverage against '+replacement.lost.map(title).join(', ')+'.';
-    if(candidate.power&&newValue>replacement.removedValue*1.1)advice+=' Higher estimated damage potential.';
+    if(candidate.power&&newValue>replacement.removedValue*1.1&&!replacement.meaningfulUpgrade)advice+=' Higher estimated damage potential.';
     if(replacement.move?.priority>0)advice+=' You would lose a priority attack.';
     if(replacement.move?.stat_changes?.some(x=>x.change>0))advice+=' You would lose a stat-boosting effect.';
     if(replacement.move?.damage_class?.name==='status')advice+=' You would lose a status move.';

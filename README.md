@@ -174,3 +174,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Strongly discourages replacing a damaging move if that would leave fewer than two damaging moves; never recommends losing the last attack by default.
 - Displays status once instead of 'Status · Status'.
 - Users may still override the recommendation and choose a move to replace.
+
+## Version 1.6.4 — Smarter move replacements
+- Prioritizes replacing a weaker same-type damaging move when the candidate is a meaningful improvement for that Pokémon's base attacking stats.
+- Avoids sacrificing useful status moves merely to add a stronger attack of a type already covered.
+- Retains coverage and minimum damaging-move safeguards; all choices still require confirmation.
