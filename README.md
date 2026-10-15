@@ -179,3 +179,6 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Prioritizes replacing a weaker same-type damaging move when the candidate is a meaningful improvement for that Pokémon's base attacking stats.
 - Avoids sacrificing useful status moves merely to add a stronger attack of a type already covered.
 - Retains coverage and minimum damaging-move safeguards; all choices still require confirmation.
+
+## Version 1.6.5
+- Clear the opponent Lookup search text when the search field receives focus, so another Pokémon can be entered immediately. Existing results remain visible until the next search.

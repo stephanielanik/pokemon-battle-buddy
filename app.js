@@ -119,6 +119,12 @@ $('add').onclick=()=>{
   setTimeout(()=>$('add').textContent='＋ Add to My Team',1500);
 };
 
+$('search').addEventListener('focus',()=>{
+  if(!$('search').value)return;
+  $('search').value='';
+  $('suggestions').hidden=true;
+  $('suggestions').replaceChildren();
+});
 $('go').onclick=()=>search($('search').value);$('search').addEventListener('keydown',e=>{if(e.key==='Enter')search($('search').value)});
 let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{const q=$('search').value.toLowerCase().trim();let hits=allNames.filter(n=>n.includes(q)).slice(0,9);$('suggestions').hidden=!q||!hits.length;$('suggestions').innerHTML=hits.map(n=>{const id=allNames.indexOf(n)+1;const picked=preferredName(n);return `<button data-name="${n}"><img loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png" alt=""><strong>${title(n)}</strong>${picked!==n?'<span class="sub">Galar preferred</span>':''}</button>`}).join('');$('suggestions').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('search').value=title(b.dataset.name);search(b.dataset.name)})},150)});
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));$('lookup').hidden=b.dataset.tab!=='lookup';$('team').hidden=b.dataset.tab!=='team';$('profile').hidden=true});
@@ -199,7 +205,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.6.4';
+const APP_VERSION='1.6.5';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
