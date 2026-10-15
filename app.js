@@ -16,12 +16,12 @@ function match(types){return Object.keys(colors).map(a=>({type:a,value:types.red
 function showMatch(types){const groups=[['🔥 Super effective',x=>x>1],['➖ Neutral',x=>x===1],['🛡️ Resisted',x=>x>0&&x<1],['🚫 Immune',x=>x===0]]; $('matchups').innerHTML=groups.map(([label,fn])=>{let a=match(types).filter(x=>fn(x.value));return `<div class="group"><h4>${label}</h4><div class="chips">${a.map(x=>`<span class="chip" style="background:${colors[x.type]}">${title(x.type)} ×${x.value}</span>`).join('')||'None'}</div></div>`}).join('')}
 async function api(path){let r=await fetch('https://pokeapi.co/api/v2/'+path);if(!r.ok)throw Error('Pokémon not found. Try its name or Pokédex number.');return r.json()}
 async function search(name,manual=false){name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-f').replace('♂','-m');if(!name)return;if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);$('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;try{const p=await api('pokemon/'+name);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=p.sprites.other['official-artwork'].front_default||p.sprites.front_default;current={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
-function renderTeam(){ $('teamCount').textContent=team.length+'/6';$('teamCards').innerHTML=team.map((p,i)=>`<div class="teamcard" style="background:${gradient(p.types)}"><img src="${p.artwork||''}" alt=""><strong>${title(p.name)}</strong><div class="types">${p.types.map(pill).join('')}</div><button data-remove="${i}">Remove</button></div>`).join('')+Array.from({length:6-team.length},()=>'<div class="empty">＋ Open Lookup to add a Pokémon</div>').join('');$('teamCards').querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{team.splice(+b.dataset.remove,1);save()})}
+function renderTeam(){ $('teamCount').textContent=team.length+'/6';$('teamCards').innerHTML=team.map((p,i)=>`<div class="teamcard" style="background:${gradient(p.types)}"><img src="${p.artwork||''}" alt=""><strong>${title(p.name)}</strong><div class="types">${p.types.map(pill).join('')}</div><button data-edit="${i}">Edit profile</button><button data-remove="${i}">Remove</button></div>`).join('')+Array.from({length:6-team.length},()=>'<div class="empty">＋ Open Lookup to add a Pokémon</div>').join('');$('teamCards').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openProfile(+b.dataset.edit));$('teamCards').querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{team.splice(+b.dataset.remove,1);save()})}
 function save(){localStorage.setItem('battleBuddyTeam',JSON.stringify(team));renderTeam()}
 $('add').onclick=()=>{if(!current)return;if(team.length===6){alert('Your team already has six Pokémon. Remove one first.');return}team.push({...current});save();$('add').textContent='✓ Added to team';setTimeout(()=>$('add').textContent='＋ Add to My Team',1500)};
 $('go').onclick=()=>search($('search').value);$('search').addEventListener('keydown',e=>{if(e.key==='Enter')search($('search').value)});
 let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{const q=$('search').value.toLowerCase().trim();let hits=allNames.filter(n=>n.includes(q)).slice(0,9);$('suggestions').hidden=!q||!hits.length;$('suggestions').innerHTML=hits.map(n=>{const id=allNames.indexOf(n)+1;const picked=preferredName(n);return `<button data-name="${n}"><img loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png" alt=""><strong>${title(n)}</strong>${picked!==n?'<span class="sub">Galar preferred</span>':''}</button>`}).join('');$('suggestions').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('search').value=title(b.dataset.name);search(b.dataset.name)})},150)});
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));$('lookup').hidden=b.dataset.tab!=='lookup';$('team').hidden=b.dataset.tab!=='team'});
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));$('lookup').hidden=b.dataset.tab!=='lookup';$('team').hidden=b.dataset.tab!=='team';$('profile').hidden=true});
 renderTeam();fetch('https://pokeapi.co/api/v2/pokemon?limit=1025').then(r=>r.json()).then(d=>allNames=d.results.map(x=>x.name)).catch(()=>{});
 
 // Theme is device-local, just like the team and game selector.
@@ -37,3 +37,55 @@ settingsToggle.addEventListener('click',()=>toggleSettings(true));
 settingsClose.addEventListener('click',()=>toggleSettings(false));
 settingsDialog.addEventListener('click',e=>{if(e.target===settingsDialog)toggleSettings(false)});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!settingsDialog.hidden)toggleSettings(false)});
+
+// v0.6: editable, device-local Pokémon profiles.
+let editingTeamIndex=-1;
+const cleanText=value=>String(value??'').trim();
+function showTeamTab(){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='team'));
+  $('lookup').hidden=true;$('team').hidden=false;$('profile').hidden=true;
+}
+async function openProfile(index){
+  const p=team[index];if(!p)return;
+  editingTeamIndex=index;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='team'));
+  $('lookup').hidden=true;$('team').hidden=true;$('profile').hidden=false;
+  $('profileArt').src=p.artwork||'';$('profileArt').alt=title(p.name);
+  $('profileName').textContent=title(p.name);
+  $('profileDex').textContent='#'+String(p.id).padStart(3,'0');
+  $('profileTypes').innerHTML=p.types.map(pill).join('');
+  $('profileNickname').value=p.nickname||'';
+  $('profileLevel').value=p.level??'';
+  $('profileAbility').value=p.ability||'';
+  $('profileHeldItem').value=p.heldItem||'';
+  $('profilePokerus').value=['unknown','never','active','cured'].includes(p.pokerus)?p.pokerus:'unknown';
+  document.querySelectorAll('.profile-move').forEach((input,i)=>input.value=p.moves?.[i]||'');
+  $('profileStatus').textContent='';
+  $('abilitySuggestions').replaceChildren();$('moveSuggestions').replaceChildren();
+  window.scrollTo(0,0);
+  const openedIndex=index;
+  try{
+    const details=await api('pokemon/'+p.name);
+    if(editingTeamIndex!==openedIndex||$('profile').hidden)return;
+    const fill=(id,values)=>{const list=$(id);for(const value of [...new Set(values)]){const opt=document.createElement('option');opt.value=title(value);list.append(opt)}};
+    fill('abilitySuggestions',details.abilities.map(x=>x.ability.name));
+    fill('moveSuggestions',details.moves.map(x=>x.move.name));
+  }catch(e){ /* Manual entry remains available offline. */ }
+}
+$('backToTeam').addEventListener('click',()=>{editingTeamIndex=-1;showTeamTab();window.scrollTo(0,0)});
+$('profileForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  const p=team[editingTeamIndex];if(!p){showTeamTab();return}
+  const levelText=$('profileLevel').value.trim();
+  const level=levelText===''?null:Number(levelText);
+  if(level!==null&&(!Number.isInteger(level)||level<1||level>100)){
+    $('profileStatus').textContent='Level must be between 1 and 100.';return;
+  }
+  p.nickname=cleanText($('profileNickname').value);
+  p.level=level;
+  p.ability=cleanText($('profileAbility').value);
+  p.heldItem=cleanText($('profileHeldItem').value);
+  p.pokerus=$('profilePokerus').value;
+  p.moves=[...document.querySelectorAll('.profile-move')].map(x=>cleanText(x.value));
+  save();$('profileStatus').textContent='Saved on this device ✓';
+});
