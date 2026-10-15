@@ -162,6 +162,7 @@ async function openProfile(recordId){
   document.querySelectorAll('.profile-move').forEach((input,i)=>input.value=p.moves?.[i]||'');
   refreshProfileMoveBadges(recordId);
   $('profileStatus').textContent='';
+  resetLearnMoveHelper();
   loadEvolution(p,recordId);
   loadMoveImprovements(p,recordId);
   $('abilitySuggestions').replaceChildren();$('moveSuggestions').replaceChildren();
@@ -191,13 +192,14 @@ $('profileForm').addEventListener('submit',e=>{
   p.pokerus=$('profilePokerus').value;
   p.moves=[...document.querySelectorAll('.profile-move')].map(x=>cleanText(x.value));
   save();$('profileStatus').textContent='Saved on this device ✓';
+  resetLearnMoveHelper();
   refreshProfileMoveBadges(editingRecordId);
   loadEvolution(p,editingRecordId);
 });
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.4.1';
+const APP_VERSION='1.5.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -940,4 +942,106 @@ $('confirmBoxAdd').addEventListener('click',()=>{
   save();
   $('boxAddStatus').textContent=title(boxPreview.name)+' added to your Box.';
   $('boxAddPreview').hidden=true;$('boxPokemonSearch').value='';boxPreview=null;
+});
+
+// v1.5: choose a new move and confirm which existing move to forget.
+let learnMoveRun=0,learnMoveCandidate=null;
+function resetLearnMoveHelper(){
+  ++learnMoveRun;learnMoveCandidate=null;
+  $('learnMoveName').value='';$('learnMoveStatus').textContent='';
+  $('learnMoveResults').hidden=true;$('learnMoveSummary').replaceChildren();
+  $('learnMoveOptions').replaceChildren();$('forgetMove').replaceChildren();
+}
+function roughMoveValue(move,pokemon){
+  if(!move?.power||move.damage_class?.name==='status')return 0;
+  const attack=pokemon.stats?.find(x=>x.stat.name==='attack')?.base_stat||1;
+  const special=pokemon.stats?.find(x=>x.stat.name==='special-attack')?.base_stat||1;
+  const stat=move.damage_class?.name==='physical'?attack:special;
+  const stab=pokemon.types.some(t=>t.type.name===move.type.name)?1.5:1;
+  return move.power*stat*stab*(move.accuracy==null?1:move.accuracy/100);
+}
+function moveDescription(move){
+  if(!move)return 'Details unavailable';
+  return title(move.type.name)+' · '+title(move.damage_class.name)+' · '+
+    (move.power==null?'Status':'Power '+move.power)+' · Accuracy '+
+    (move.accuracy==null?'—':move.accuracy+'%')+
+    (move.priority>0?' · Priority +'+move.priority:'');
+}
+$('compareNewMove').addEventListener('click',async()=>{
+  const run=++learnMoveRun,recordId=editingRecordId;
+  const pokemon=[...team,...box].find(p=>p.recordId===recordId);
+  const name=normalizeMoveName($('learnMoveName').value);
+  const status=$('learnMoveStatus');$('learnMoveResults').hidden=true;learnMoveCandidate=null;
+  if(!pokemon||!name){status.textContent='Enter the move to compare.';return}
+  status.textContent='Comparing moves…';
+  const current=[...document.querySelectorAll('.profile-move')].map(x=>x.value.trim());
+  const [candidate,details,...moves]=await Promise.all([
+    moveInfo(name),getTeachingPokemon(pokemon.name),
+    ...current.map(n=>n?moveInfo(n):Promise.resolve(null))
+  ]);
+  if(run!==learnMoveRun||editingRecordId!==recordId||$('profile').hidden)return;
+  if(!candidate||!details){status.textContent='Could not load move details. Check spelling or connection.';return}
+  const already=current.some(n=>normalizeMoveName(n)===normalizeMoveName(candidate.name));
+  const entries=current.map((n,i)=>({name:n,move:moves[i],index:i}));
+  const free=entries.find(x=>!x.name);
+  const attackMoves=entries.filter(x=>x.move?.power>0);
+  const value=roughMoveValue(candidate,details);
+  const ranked=entries.map(x=>{
+    const score=roughMoveValue(x.move,details);
+    const unique=x.move?.type?.name&&attackMoves.filter(y=>y.move?.type?.name===x.move.type.name).length===1;
+    const priority=x.move?.priority>0;
+    const utility=x.move&&(!x.move.power||x.move.damage_class?.name==='status');
+    return {...x,score,cost:score*(unique?1.4:1)*(priority?1.6:1)+(utility?value*.7:0),priority,utility};
+  }).sort((a,b)=>a.cost-b.cost);
+  const replacement=free||ranked[0];
+  let advice;
+  if(already)advice='Already known — no change needed.';
+  else if(free)advice='You have an empty slot. No move needs to be forgotten.';
+  else if(!candidate.power||candidate.damage_class?.name==='status')advice='Situational status move. Consider its effect before replacing a move.';
+  else if(value<=replacement.score)advice='Not a clear damage upgrade. Consider type coverage before learning.';
+  else advice='Consider replacing '+title(replacement.name)+'. Better estimated damage potential'+
+    (!attackMoves.some(x=>x.move?.type?.name===candidate.type.name)?' and adds '+title(candidate.type.name)+' coverage':'')+'.';
+  if(!free&&!already&&replacement.priority)advice+=' You would lose a priority move.';
+  if(!free&&!already&&replacement.utility)advice+=' You would lose a utility move.';
+  const summary=$('learnMoveSummary');summary.replaceChildren();
+  const heading=document.createElement('strong');heading.textContent=title(candidate.name);
+  const info=document.createElement('p');info.className='hint';info.textContent=moveDescription(candidate);
+  const recommendation=document.createElement('p');recommendation.textContent=advice;
+  summary.append(heading,makeTypeBadge(candidate.type.name),info,recommendation);
+  const list=$('learnMoveOptions');list.replaceChildren();
+  entries.forEach(x=>{
+    const row=document.createElement('div');row.className='learn-existing-row';
+    const label=document.createElement('strong');label.textContent=x.name||'Empty slot';
+    row.append(label);if(x.move?.type?.name)row.append(makeTypeBadge(x.move.type.name));
+    const detail=document.createElement('small');detail.textContent=x.name?moveDescription(x.move):'Available';
+    row.append(detail);list.append(row);
+  });
+  const select=$('forgetMove');select.replaceChildren();
+  entries.forEach(x=>{
+    const option=document.createElement('option');option.value=String(x.index);
+    option.textContent=x.name?'Replace '+title(x.name):'Use empty slot '+(x.index+1);
+    select.append(option);
+  });
+  select.value=String(replacement.index);
+  $('confirmLearnMove').disabled=already;
+  learnMoveCandidate={run,recordId,moveName:title(candidate.name),current};
+  $('learnMoveResults').hidden=false;status.textContent='';
+});
+$('confirmLearnMove').addEventListener('click',()=>{
+  const candidate=learnMoveCandidate;
+  if(!candidate||candidate.run!==learnMoveRun||candidate.recordId!==editingRecordId)return;
+  const inputs=[...document.querySelectorAll('.profile-move')];
+  const current=inputs.map(x=>x.value.trim());
+  if(current.some((n,i)=>n!==candidate.current[i])){
+    $('learnMoveStatus').textContent='Your moves changed. Compare again first.';return;
+  }
+  const index=Number($('forgetMove').value);
+  if(!Number.isInteger(index)||index<0||index>3)return;
+  const old=current[index];
+  if(!confirm(old?'Replace '+old+' with '+candidate.moveName+'?':'Learn '+candidate.moveName+' in the empty slot?'))return;
+  const pokemon=[...team,...box].find(p=>p.recordId===candidate.recordId);if(!pokemon)return;
+  current[index]=candidate.moveName;pokemon.moves=current;
+  inputs.forEach((input,i)=>input.value=current[i]);
+  save();refreshProfileMoveBadges(candidate.recordId);
+  resetLearnMoveHelper();$('profileStatus').textContent=candidate.moveName+' saved to profile.';
 });

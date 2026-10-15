@@ -136,3 +136,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Search and add a Pokémon directly from the Box view without opening Lookup or a full profile.
 - Preview artwork, types and available regional forms before adding.
 - Each addition creates an independent saved Pokémon record, including duplicates of the same species.
+
+## Version 1.5.0 — Learn New Move
+- In Pokémon profiles, compare a proposed move against the four current moves.
+- Shows move type, category, power, accuracy, and priority, with a cautious replacement suggestion.
+- Select the move to forget and confirm to update the saved profile. TM/TR inventory is unaffected.
+- Requires PokéAPI internet access; recommendations are estimates, not full battle calculations.
