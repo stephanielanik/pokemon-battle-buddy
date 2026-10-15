@@ -222,3 +222,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Penalize losing unique move coverage and adding redundant types; flag lower-level replacements and Huge Power/Pure Power abilities for review.
 - Recommend no swap when gains are too small to justify one. No automatic party changes.
 - Rankings are heuristic and do not model full battle stats or abilities.
+
+## Version 1.9.1 — Box readiness estimates
+- Fetch base stats and species evolution information from PokéAPI and combine them with recorded levels and moves.
+- Group promising swaps as Ready to Swap or Worth Training; caution about large level gaps, low defensive bulk, lower attacking potential, unevolved replacements, and powerful defensive or offensive abilities.
+- Missing profile information prevents confident Ready to Swap labels. No automatic swaps; calculations remain heuristic.

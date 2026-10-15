@@ -354,3 +354,6 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 #analyzerDisclosure .analyzer-header{justify-content:flex-end}
 #bank[hidden]{display:none!important}
 @media(max-width:390px){nav .tab{font-size:12px;flex-basis:95px}.collection-heading{flex-wrap:wrap}}
+
+/* v1.9.1 readiness labels in Box recommendations */
+.box-recommendation-body strong{line-height:1.4}

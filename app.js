@@ -251,7 +251,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.9.0';
+const APP_VERSION='1.9.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -958,19 +958,61 @@ function offensiveSummary(members,knownMoves){
   return new Set(Object.keys(colors).filter(defending=>
     [...types].some(attacking=>(rules[attacking]?.[defending]??1)>1)));
 }
+// Cached species and stats avoid repeated calls on every team analysis.
+const synergySpeciesCache=new Map();
+function getSynergySpecies(name){
+  if(!synergySpeciesCache.has(name))synergySpeciesCache.set(name,(async()=>{
+    const species=await api('pokemon-species/'+name);
+    const chainId=species.evolution_chain?.url.match(/evolution-chain\\/(\\d+)/)?.[1];
+    if(chainId){
+      const chain=await api('evolution-chain/'+chainId);
+      function find(node){
+        if(node.species.name===name)return node;
+        for(const child of node.evolves_to){const found=find(child);if(found)return found}
+        return null;
+      }
+      species._hasNextEvolution=!!find(chain.chain)?.evolves_to?.length;
+    }
+    return species;
+  })().catch(()=>null));
+  return synergySpeciesCache.get(name);
+}
+function baseStat(pokemon,name){
+  return pokemon?.stats?.find(s=>s.stat.name===name)?.base_stat||0;
+}
+function readinessStats(pokemon){
+  if(!pokemon)return null;
+  const hp=baseStat(pokemon,'hp'),def=baseStat(pokemon,'defense'),spd=baseStat(pokemon,'special-defense');
+  const atk=baseStat(pokemon,'attack'),spa=baseStat(pokemon,'special-attack'),spe=baseStat(pokemon,'speed');
+  return {hp,def,spd,atk,spa,spe,bulk:hp*(def+spd)/2,offense:Math.max(atk,spa),total:hp+def+spd+atk+spa+spe};
+}
+function isUnevolvedSpecies(species){
+  // True only when the species has a known next evolution; branch rules
+  // and special cases are handled as readiness cautions, not absolute facts.
+  return species?._hasNextEvolution===true;
+}
 async function renderBoxRecommendations(analyzerId){
   const section=$('boxRecommendations'),status=$('boxRecommendationStatus'),
     results=$('boxRecommendationResults');
   results.replaceChildren();
   if(analyzerId!==analyzerRun||!box.length||!team.length){section.hidden=true;return}
-  section.hidden=false;status.textContent='Comparing Box Pokémon with your whole party…';
+  section.hidden=false;status.textContent='Checking levels, stats, moves, and team synergy…';
   const all=[...team,...box];
   const uniqueMoves=[...new Set(all.flatMap(p=>(p.moves||[])
     .filter(m=>typeof m==='string'&&m.trim()).map(normalizeMoveName)))];
-  const loaded=await Promise.all(uniqueMoves.map(async name=>[name,await moveInfo(name)]));
+  const uniqueSpecies=[...new Set(all.map(p=>p.name))];
+  const [loaded,profiles]=await Promise.all([
+    Promise.all(uniqueMoves.map(async name=>[name,await moveInfo(name)])),
+    Promise.all(uniqueSpecies.map(async name=>{
+      const pokemon=await getTeachingPokemon(name);
+      const species=pokemon?await getSynergySpecies(pokemon.species.name):null;
+      return [name,{pokemon,species,stats:readinessStats(pokemon)}];
+    }))
+  ]);
   if(analyzerId!==analyzerRun)return;
-  const lookup=new Map(loaded);
-  const known=new Map(all.map(p=>[p.recordId,(p.moves||[]).map(m=>lookup.get(normalizeMoveName(m))).filter(Boolean)]));
+  const lookup=new Map(loaded),profileMap=new Map(profiles);
+  const known=new Map(all.map(p=>[p.recordId,(p.moves||[])
+    .map(m=>lookup.get(normalizeMoveName(m))).filter(Boolean)]));
   const baseline=defenseSummary(team),baseOffense=offensiveSummary(team,known);
   const suggestions=[];
   for(const candidate of box){
@@ -987,44 +1029,67 @@ async function renderBoxRecommendations(analyzerId){
       const oldSameTypes=option.removed?team.filter(p=>p!==option.removed&&
         p.types.some(t=>option.removed.types.includes(t))).length:0;
       const redundancyChange=sameTypes-oldSameTypes;
-      const overall=defenseGain+gained.length*1.3-lost.length*2.1-redundancyChange*.5;
-      // Small apparent improvements are too uncertain to justify a swap.
-      if(overall<2.5)continue;
+      const synergyGain=defenseGain+gained.length*1.3-lost.length*2.1-redundancyChange*.5;
+      if(synergyGain<2.5)continue;
+      const cProfile=profileMap.get(candidate.name),rProfile=option.removed&&profileMap.get(option.removed.name);
+      const cStats=cProfile?.stats,rStats=rProfile?.stats;
+      const candidateLevel=Number(candidate.level)||null,removedLevel=Number(option.removed?.level)||null;
+      const levelGap=candidateLevel&&removedLevel?removedLevel-candidateLevel:null;
+      const bulkRatio=cStats&&rStats&&rStats.bulk?cStats.bulk/rStats.bulk:null;
+      const offenseRatio=cStats&&rStats&&rStats.offense?cStats.offense/rStats.offense:null;
+      const candidateEvolving=isUnevolvedSpecies(cProfile?.species);
+      const removedEvolving=isUnevolvedSpecies(rProfile?.species);
+      const underleveled=levelGap!=null&&levelGap>=8;
+      const fragile=bulkRatio!=null&&bulkRatio<.7;
+      const weakerOffense=offenseRatio!=null&&offenseRatio<.7;
+      const unevolvedDisadvantage=!!option.removed&&candidateEvolving&&!removedEvolving;
+      const abilityWarning=!!option.removed&&/^(huge power|pure power)$/i.test(option.removed.ability||'');
+      // Flag meaningful, known defensive abilities rather than pretending
+      // to model their exact impact in the generic type score.
+      const abilityReview=option.removed&&/^(levitate|water absorb|volt absorb|flash fire|storm drain|sap sipper|dry skin|lightning rod|motor drive)$/i.test(option.removed.ability||'');
+      const missingLevel=!!option.removed&&(!candidateLevel||!removedLevel);
+      const missingStats=!!option.removed&&(!cStats||!rStats);
+      const missingMoves=!(candidate.moves||[]).some(m=>typeof m==='string'&&m.trim());
+      const penalties=(underleveled?2.5:0)+(fragile?2.5:0)+(weakerOffense?1.2:0)+
+        (unevolvedDisadvantage?2:0)+(abilityWarning?3:0)+(abilityReview?1:0);
+      const overall=synergyGain-penalties;
+      const ready=overall>=2.5&&!underleveled&&!fragile&&!unevolvedDisadvantage&&
+        !abilityWarning&&!missingLevel&&!missingStats&&!missingMoves;
+      if(overall<1&&!ready)continue;
       const improved=baseline.threats.filter(old=>{
         const newer=revised.threats.find(t=>t.type===old.type);
         return (old.weak>=2&&newer.weak<old.weak)||
-          (old.exposed&&!newer.exposed)||
-          newer.fourfold<old.fourfold;
+          (old.exposed&&!newer.exposed)||newer.fourfold<old.fourfold;
       }).map(x=>title(x.type));
       const worsened=baseline.threats.filter(old=>{
         const newer=revised.threats.find(t=>t.type===old.type);
         return newer.weak>old.weak||(!old.exposed&&newer.exposed)||newer.fourfold>old.fourfold;
       }).map(x=>title(x.type));
-      const removedLevel=Number(option.removed?.level),candidateLevel=Number(candidate.level);
-      const levelCaution=option.removed&&candidateLevel>0&&removedLevel>0&&candidateLevel+8<removedLevel;
-      // Do not claim that typing predicts overall strength; ability effects
-      // such as Huge Power need explicit review.
-      const abilityCaution=option.removed&&/huge power|pure power/i.test(option.removed.ability||'');
-      suggestions.push({candidate,removed:option.removed,overall,improved,worsened,
-        gained:gained.map(title),lost:lost.map(title),levelCaution,abilityCaution});
+      suggestions.push({candidate,removed:option.removed,overall,ready,improved,worsened,
+        gained:gained.map(title),lost:lost.map(title),levelGap,bulkRatio,offenseRatio,
+        underleveled,fragile,weakerOffense,unevolvedDisadvantage,abilityWarning,abilityReview,
+        missingLevel,missingStats,missingMoves});
     }
   }
   suggestions.sort((a,b)=>b.overall-a.overall);
-  const seen=new Set(),top=[];
-  for(const suggestion of suggestions){
-    if(seen.has(suggestion.candidate.recordId))continue;
-    seen.add(suggestion.candidate.recordId);top.push(suggestion);
-    if(top.length===3)break;
+  const seen=new Set(),ready=[],training=[];
+  for(const s of suggestions){
+    if(seen.has(s.candidate.recordId))continue;
+    seen.add(s.candidate.recordId);
+    (s.ready?ready:training).push(s);
   }
-  status.textContent=top.length?'Possible improvements worth reviewing:':
+  const top=[...ready.slice(0,3),...training.slice(0,Math.max(0,3-ready.length))];
+  status.textContent=top.length?'Potential swaps, with readiness considered:':
     'No worthwhile Box swap identified with your current recorded information.';
-  top.forEach(s=>{
+  for(const s of top){
     const row=document.createElement('div');row.className='box-recommendation';
     const img=document.createElement('img');img.src=s.candidate.artwork||'';img.alt='';
     const body=document.createElement('div');body.className='box-recommendation-body';
-    const name=document.createElement('strong');name.textContent=s.candidate.nickname||title(s.candidate.name);
+    const name=document.createElement('strong');
+    name.textContent=(s.ready?'⚔️ Ready to Swap · ':'🌱 Worth Training · ')+
+      (s.candidate.nickname||title(s.candidate.name));
     const swap=document.createElement('p');swap.textContent=s.removed?
-      'Consider swapping with '+(s.removed.nickname||title(s.removed.name)):
+      'Compare with '+(s.removed.nickname||title(s.removed.name)):
       'Open party slot available';
     body.append(name,swap);
     function line(message){
@@ -1034,18 +1099,23 @@ async function renderBoxRecommendations(analyzerId){
     if(s.gained.length)line('Adds move coverage against: '+s.gained.join(', '));
     if(s.worsened.length)line('Trade-off: greater risk from '+s.worsened.join(', '));
     if(s.lost.length)line('Loses move coverage against: '+s.lost.join(', '));
-    if(s.levelCaution)line('⚠️ Box Pokémon is over 8 levels lower.');
-    if(s.abilityCaution)line('⚠️ Replaced Pokémon has a powerful ability: '+s.removed.ability+'.');
+    if(s.levelGap!=null)line('Level comparison: '+(s.levelGap>0?s.levelGap+' levels lower':s.levelGap<0?Math.abs(s.levelGap)+' levels higher':'same level'));
+    if(s.fragile)line('⚠️ Significantly lower base defensive bulk.');
+    if(s.weakerOffense)line('⚠️ Lower base attacking potential.');
+    if(s.unevolvedDisadvantage)line('⚠️ Still has an evolution; replacement does not.');
+    if(s.abilityWarning||s.abilityReview)line('⚠️ Review '+s.removed.ability+' on the current party member.');
+    if(s.missingLevel||s.missingStats||s.missingMoves)line('⚠️ Incomplete level, stats, or recorded moves; readiness is uncertain.');
     const action=document.createElement('button');action.type='button';
     action.textContent='View in Box';action.addEventListener('click',()=>{
       showCollection('box');$('boxCards').scrollIntoView({behavior:'smooth',block:'start'});
     });
     body.append(action);row.append(img,body);results.append(row);
-  });
+  }
   const note=document.createElement('p');note.className='hint';
-  note.textContent='Estimates use typing and recorded moves. Stats, abilities, and battle conditions may change the best choice.';
+  note.textContent='Readiness uses recorded levels, species base stats, and moves. IVs, EVs, natures, and most ability effects are not modeled.';
   results.append(note);
 }
+
 
 // v1.4.1: add a Pokémon directly to the Box without visiting Lookup.
 let boxPreview=null,boxSearchRun=0;
