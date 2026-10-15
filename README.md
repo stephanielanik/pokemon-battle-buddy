@@ -57,3 +57,7 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 0.6.3
 - Search input now uses 16px text to avoid Safari's focus auto-zoom on iPhone.
 - Search suggestions and their labels stay within the mobile viewport, even with long names.
+
+## Version 0.6.4
+- Use 16px input and select text throughout the Pokémon profile editor and settings to prevent iPhone Safari focus zoom.
+- Reinforce width containment on profile forms and move fields.

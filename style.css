@@ -128,3 +128,15 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .suggestions button strong{min-width:0;flex:1 1 auto;overflow-wrap:anywhere;text-align:left}
 .suggestions button .sub{flex:0 1 auto;min-width:0;max-width:42%;white-space:normal;text-align:right;overflow-wrap:anywhere}
 @media(max-width:390px){.searchrow{gap:6px}.searchrow #go{padding:12px 13px}}
+
+/* v0.6.4: prevent iOS Safari focus zoom in team profile and settings. */
+#profile input,#profile select,#profile textarea,
+.settings-panel input,.settings-panel select,.settings-panel textarea,
+#search{font-size:16px!important}
+.profile-fields,.profile-fields label,.profile-fields input,.profile-fields select,
+.move-fields,.move-fields .profile-fields,.profile-heading,.profile-heading>div{
+  box-sizing:border-box;min-width:0;max-width:100%
+}
+.profile-fields input,.profile-fields select{width:100%;-webkit-text-size-adjust:100%}
+#profileForm{width:100%;min-width:0;max-width:100%}
+.profile-heading h2{overflow-wrap:anywhere}
