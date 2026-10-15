@@ -47,3 +47,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 0.5
 - Regional forms display the National Pokédex species number, not PokéAPI form IDs.
 - Settings button uses a theme-colored SVG icon instead of a platform-dependent emoji.
+
+## Version 0.6 — Team Member Editor
+- Tap **Edit** on a team card to customize nickname, level, ability, held item, four moves, and Pokérus status.
+- Edits are saved locally alongside existing team records; previously saved teams remain compatible.
+- Move names and abilities are free-text for now (no game-specific legality checking). Level is optional, from 1 to 100.
