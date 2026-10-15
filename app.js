@@ -57,6 +57,7 @@ function showCollection(view){
   $('boxView').classList.toggle('active',collectionView==='box');
   $('partyView').setAttribute('aria-pressed',String(collectionView==='party'));
   $('boxView').setAttribute('aria-pressed',String(collectionView==='box'));
+  $('teamAnalyzer').hidden=collectionView!=='party';
   $('collectionHint').textContent=collectionView==='party'?
     'Your active party. Move Pokémon to the Box to keep their profiles.':
     'Stored Pokémon keep their profiles. Bring one back when your party has room.';
@@ -87,7 +88,7 @@ function renderTeam(){
 function save(){
   localStorage.setItem('battleBuddyTeam',JSON.stringify(team));
   localStorage.setItem('battleBuddyBox',JSON.stringify(box));
-  renderTeam();if(current)refreshMoveAdvisor(current.types);
+  renderTeam();$('analyzerResults').replaceChildren();$('analyzerStatus').textContent='Party changed. Tap Analyze Party for updated results.';if(current)refreshMoveAdvisor(current.types);
 }
 function movePokemon(recordId,location){
   const source=location==='party'?team:box, destination=location==='party'?box:team;
@@ -182,7 +183,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='0.9.0';
+const APP_VERSION='1.0.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -427,3 +428,70 @@ async function loadEvolution(p,recordId){
     status.textContent='Evolution information unavailable. Check your internet connection.';
   }
 }
+
+// v1.0 Team Analyzer: party-only defensive and offensive type coverage.
+let analyzerRun=0;
+function analyzerSection(titleText,open=true){
+  const section=document.createElement('details');section.className='analyzer-section';section.open=open;
+  const summary=document.createElement('summary');summary.textContent=titleText;section.append(summary);
+  return section;
+}
+function analyzerRow(label,detail,kind=''){
+  const row=document.createElement('div');row.className='analyzer-row '+kind;
+  const strong=document.createElement('strong');strong.textContent=label;
+  const small=document.createElement('span');small.textContent=detail;
+  row.append(strong,small);return row;
+}
+$('analyzeTeam').addEventListener('click',async()=>{
+  const run=++analyzerRun,results=$('analyzerResults'),status=$('analyzerStatus'),button=$('analyzeTeam');
+  results.replaceChildren();
+  if(!team.length){status.textContent='Add Pokémon to your party to analyze it.';return}
+  button.disabled=true;status.textContent='Analyzing your party…';
+  const attackTypes=Object.keys(colors);
+  const defensive=attackTypes.map(type=>{
+    const members=team.map(p=>({name:p.nickname||title(p.name),
+      multiplier:p.types.reduce((n,t)=>n*(rules[type]?.[t]??1),1)}));
+    return {type,weak:members.filter(x=>x.multiplier>1),resist:members.filter(x=>x.multiplier>0&&x.multiplier<1),immune:members.filter(x=>x.multiplier===0)};
+  });
+  const threats=defensive.filter(x=>x.weak.length>=2).sort((a,b)=>b.weak.length-a.weak.length);
+  const protection=defensive.filter(x=>x.resist.length+x.immune.length>0)
+    .sort((a,b)=>(b.resist.length+b.immune.length)-(a.resist.length+a.immune.length));
+  const weakSection=analyzerSection('⚠️ Shared weaknesses ('+threats.length+')');
+  if(!threats.length)weakSection.append(analyzerRow('No shared weaknesses','No attack type is super effective against two or more party members.'));
+  threats.forEach(x=>weakSection.append(analyzerRow(title(x.type)+' · '+x.weak.length+' weak',
+    x.weak.map(m=>m.name+' ×'+m.multiplier).join(', '),'analyzer-weak')));
+  results.append(weakSection);
+  const defenseSection=analyzerSection('🛡️ Resistances & immunities ('+protection.length+')',false);
+  if(!protection.length)defenseSection.append(analyzerRow('No resistances','All attack types deal neutral or greater damage.'));
+  protection.forEach(x=>defenseSection.append(analyzerRow(title(x.type),
+    [...x.immune.map(m=>m.name+' immune'),...x.resist.map(m=>m.name+' resists')].join(', '))));
+  results.append(defenseSection);
+  const moveEntries=team.flatMap(p=>(Array.isArray(p.moves)?p.moves:[])
+    .filter(m=>typeof m==='string'&&m.trim()).map(name=>({pokemon:p,name})));
+  if(!moveEntries.length){
+    results.append(analyzerRow('⚔️ Offensive coverage','Record moves in your Pokémon profiles to see coverage.'));
+    status.textContent='Defensive analysis ready. Add moves to check offensive coverage.';
+    button.disabled=false;return;
+  }
+  const details=await Promise.all(moveEntries.map(async entry=>({...entry,move:await moveInfo(entry.name)})));
+  if(run!==analyzerRun){button.disabled=false;return}
+  const attackMoves=details.filter(x=>x.move?.power>0&&x.move?.damage_class?.name!=='status'&&x.move?.type?.name);
+  const covered=attackTypes.map(defender=>{
+    const hits=attackMoves.filter(x=>(rules[x.move.type.name]?.[defender]??1)>1);
+    return {defender,hits};
+  });
+  const coverageSection=analyzerSection('⚔️ Offensive coverage ('+covered.filter(x=>x.hits.length).length+'/18)');
+  const coveredTypes=covered.filter(x=>x.hits.length);
+  if(!coveredTypes.length)coverageSection.append(analyzerRow('No coverage yet','Record damaging moves to calculate offensive coverage.'));
+  coveredTypes.forEach(x=>coverageSection.append(analyzerRow(title(x.defender),
+    [...new Set(x.hits.map(h=>(h.pokemon.nickname||title(h.pokemon.name))+' · '+title(h.move.name)))].slice(0,3).join(', '))));
+  results.append(coverageSection);
+  const gaps=covered.filter(x=>!x.hits.length);
+  const gapSection=analyzerSection('🔎 Coverage gaps ('+gaps.length+')',false);
+  if(!gaps.length)gapSection.append(analyzerRow('All 18 types covered','Your recorded moves can hit every individual type super effectively.'));
+  gaps.forEach(x=>gapSection.append(analyzerRow(title(x.defender),'No recorded move is super effective.')));
+  results.append(gapSection);
+  const failures=details.filter(x=>!x.move).length;
+  status.textContent='Party analysis ready.'+(failures?' '+failures+' move(s) could not be checked.':'');
+  button.disabled=false;
+});

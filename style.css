@@ -197,3 +197,19 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .evolution-step.current{border-color:var(--accent)}
 .evolution-step .hint{margin:5px 0 0}
 .evolution-progress{margin:6px 0 0;color:var(--accent);font-weight:800;font-size:13px}
+
+/* v1.0 party team analyzer */
+.team-analyzer[hidden]{display:none!important}
+.team-analyzer{margin-top:16px}
+.analyzer-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.analyzer-header h3{margin:0}
+.analyzer-header button{padding:10px 13px}
+.analyzer-section{border-top:1px solid var(--border);margin-top:10px;padding-top:7px}
+.analyzer-section>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:800;list-style:none}
+.analyzer-section>summary::-webkit-details-marker{display:none}
+.analyzer-section>summary:after{content:'▾';margin-left:auto}
+.analyzer-section[open]>summary:after{content:'▴'}
+.analyzer-row{padding:9px 11px;margin:6px 0;border-radius:10px;background:var(--input);min-width:0;overflow-wrap:anywhere}
+.analyzer-row strong{display:block;font-size:14px}
+.analyzer-row span{display:block;font-size:12px;line-height:1.5;color:var(--muted);margin-top:3px}
+.analyzer-header button:disabled{opacity:.6}

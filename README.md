@@ -90,3 +90,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Displays remaining levels when the next evolution has a level requirement.
 - Evolution data comes from PokéAPI; special conditions and game-specific exceptions may require verification.
 - Does not automatically change a Pokémon's species or overwrite its profile.
+
+## Version 1.0.0 — Team Analyzer
+- Party-only analysis of shared defensive weaknesses, resistances and immunities.
+- Offensive coverage across 18 defending types using damaging moves recorded in party profiles.
+- Collapsible sections for coverage and gaps; boxed Pokémon are excluded.
+- Type-based estimates only: not a full damage simulator, and single-type offensive coverage does not guarantee coverage against every dual-type combination.
