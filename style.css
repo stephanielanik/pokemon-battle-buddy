@@ -229,3 +229,16 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .bank-description span{min-width:0}
 .bank-quantity{flex:0 0 66px;width:66px;max-width:66px;padding:9px 6px;font-size:16px!important;text-align:center}
 @media(max-width:420px){.party-box-toggle button{flex:1 1 85px;padding:11px 8px;font-size:13px}.bank-row{padding:9px}.bank-description{font-size:13px}}
+
+/* v1.1.1 compact horizontal party and Box cards */
+.teamgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.compact-teamcard{display:grid;grid-template-columns:100px minmax(0,1fr);align-items:center;gap:14px;min-height:0;padding:14px;border-radius:18px;max-width:100%;min-width:0}
+.compact-teamcard img{width:100px;height:100px;max-width:100%;margin:0;object-fit:contain}
+.compact-teamcard .teamcard-info{min-width:0}
+.compact-teamcard strong{font-size:18px;line-height:1.25;overflow-wrap:anywhere}
+.compact-teamcard small{min-height:0;margin:2px 0 6px}
+.compact-teamcard .types{gap:5px;margin:8px 0}
+.compact-teamcard .pill{padding:5px 9px;font-size:12px}
+.compact-teamcard .teamcard-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.compact-teamcard .teamcard-actions button{margin:0;padding:9px 10px;font-size:12px;min-height:38px;white-space:normal}
+@media(max-width:390px){.compact-teamcard{grid-template-columns:76px minmax(0,1fr);gap:10px;padding:11px}.compact-teamcard img{width:76px;height:76px}.compact-teamcard strong{font-size:16px}.compact-teamcard .teamcard-actions button{padding:8px 9px}}

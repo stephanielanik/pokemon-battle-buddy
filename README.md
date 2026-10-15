@@ -104,3 +104,7 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Backups schema v3 includes TM/TR banks and continues to import v1/v2 backups.
 - Recording TR usage is manual; teaching compatibility and move suggestions are planned for a later release.
 - Machine names sourced from Pokémon Database's Sword/Shield TM/TR list: https://pokemondb.net/sword-shield/tms
+
+## Version 1.1.1
+- Compact horizontal Pokémon cards in Party and Box: artwork left, name/types/actions right.
+- Keeps profile editing and party swapping behavior unchanged.

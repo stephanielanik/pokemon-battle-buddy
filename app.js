@@ -70,18 +70,22 @@ function showCollection(view){
 function renderCollectionCards(list,container,location){
   container.replaceChildren();
   for(const p of list){
-    const card=document.createElement('div');card.className='teamcard';card.style.background=gradient(p.types);
+    const card=document.createElement('div');card.className='teamcard compact-teamcard';card.style.background=gradient(p.types);
     const img=document.createElement('img');img.src=p.artwork||'';img.alt='';
+    const info=document.createElement('div');info.className='teamcard-info';
     const name=document.createElement('strong');name.textContent=p.nickname||title(p.name);
     const species=document.createElement('small');species.textContent=p.nickname?title(p.name):'';
     const types=document.createElement('div');types.className='types';types.innerHTML=p.types.map(pill).join('');
+    const actions=document.createElement('div');actions.className='teamcard-actions';
     const edit=document.createElement('button');edit.type='button';edit.textContent='Edit profile';edit.addEventListener('click',()=>openProfile(p.recordId));
     const move=document.createElement('button');move.type='button';move.textContent=location==='party'?'Move to Box':'Add to Party';
     move.addEventListener('click',()=>movePokemon(p.recordId,location));
-    card.append(img,name,species,types,edit,move);container.append(card);
+    actions.append(edit,move);info.append(name,species,types,actions);
+    card.append(img,info);container.append(card);
   }
   if(!list.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=location==='party'?'No Pokémon in your party. Add one from Lookup or your Box.':'Your Box is empty.';container.append(empty)}
 }
+
 function renderTeam(){
   $('teamCount').textContent=team.length+'/6';
   $('partyCount').textContent=team.length+'/6';
@@ -189,7 +193,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.1.0';
+const APP_VERSION='1.1.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
