@@ -15,9 +15,9 @@ function gradient(types){return `linear-gradient(125deg,${colors[types[0]]||'#d9
 function match(types){return Object.keys(colors).map(a=>({type:a,value:types.reduce((n,d)=>n*(rules[a]?.[d]??1),1)}))}
 function showMatch(types){const groups=[['🔥 Super effective',x=>x>1],['➖ Neutral',x=>x===1],['🛡️ Resisted',x=>x>0&&x<1],['🚫 Immune',x=>x===0]]; $('matchups').innerHTML=groups.map(([label,fn])=>{let a=match(types).filter(x=>fn(x.value));return `<div class="group"><h4>${label}</h4><div class="chips">${a.map(x=>`<span class="chip" style="background:${colors[x.type]}">${title(x.type)} ×${x.value}</span>`).join('')||'None'}</div></div>`}).join('')}
 async function api(path){let r=await fetch('https://pokeapi.co/api/v2/'+path);if(!r.ok)throw Error('Pokémon not found. Try its name or Pokédex number.');return r.json()}
-async function search(name,manual=false){name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-f').replace('♂','-m');if(!name)return;if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);$('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;try{const p=await api('pokemon/'+name);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=p.sprites.other['official-artwork'].front_default||p.sprites.front_default;current={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
+async function search(name,manual=false){name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-f').replace('♂','-m');if(!name)return;if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);$('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;try{const p=await api('pokemon/'+name);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=p.sprites.other['official-artwork'].front_default||p.sprites.front_default;current={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);refreshMoveAdvisor(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
 function renderTeam(){ $('teamCount').textContent=team.length+'/6';$('teamCards').innerHTML=team.map((p,i)=>`<div class="teamcard" style="background:${gradient(p.types)}"><img src="${p.artwork||''}" alt=""><strong>${title(p.name)}</strong><div class="types">${p.types.map(pill).join('')}</div><button data-edit="${i}">Edit profile</button><button data-remove="${i}">Remove</button></div>`).join('')+Array.from({length:6-team.length},()=>'<div class="empty">＋ Open Lookup to add a Pokémon</div>').join('');$('teamCards').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openProfile(+b.dataset.edit));$('teamCards').querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{team.splice(+b.dataset.remove,1);save()})}
-function save(){localStorage.setItem('battleBuddyTeam',JSON.stringify(team));renderTeam()}
+function save(){localStorage.setItem('battleBuddyTeam',JSON.stringify(team));renderTeam();if(current)refreshMoveAdvisor(current.types)}
 $('add').onclick=()=>{if(!current)return;if(team.length===6){alert('Your team already has six Pokémon. Remove one first.');return}team.push({...current});save();$('add').textContent='✓ Added to team';setTimeout(()=>$('add').textContent='＋ Add to My Team',1500)};
 $('go').onclick=()=>search($('search').value);$('search').addEventListener('keydown',e=>{if(e.key==='Enter')search($('search').value)});
 let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{const q=$('search').value.toLowerCase().trim();let hits=allNames.filter(n=>n.includes(q)).slice(0,9);$('suggestions').hidden=!q||!hits.length;$('suggestions').innerHTML=hits.map(n=>{const id=allNames.indexOf(n)+1;const picked=preferredName(n);return `<button data-name="${n}"><img loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png" alt=""><strong>${title(n)}</strong>${picked!==n?'<span class="sub">Galar preferred</span>':''}</button>`}).join('');$('suggestions').querySelectorAll('button').forEach(b=>b.onclick=()=>{$('search').value=title(b.dataset.name);search(b.dataset.name)})},150)});
@@ -92,7 +92,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='0.6.4';
+const APP_VERSION='0.7.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -181,3 +181,57 @@ $('backupFile').addEventListener('change',async event=>{
   }catch(error){status.textContent='Import failed: '+error.message}
   finally{event.target.value=''}
 });
+
+// v0.7: rank known damaging moves against the currently selected opponent.
+// This is a heuristic, not a battle damage calculator; it excludes stat/ability effects.
+const advisorMoveCache=new Map();
+let advisorRun=0;
+function normalizeMoveName(name){return String(name||'').trim().toLowerCase().replace(/\s+/g,'-')}
+async function moveInfo(name){
+  const key=normalizeMoveName(name);
+  if(!key)return null;
+  if(!advisorMoveCache.has(key)){
+    const request=api('move/'+encodeURIComponent(key)).catch(()=>null);
+    advisorMoveCache.set(key,request);
+  }
+  return advisorMoveCache.get(key);
+}
+async function refreshMoveAdvisor(opponentTypes){
+  const run=++advisorRun,status=$('advisorStatus'),results=$('advisorResults');
+  results.replaceChildren();
+  const entries=team.flatMap((pokemon,index)=>(Array.isArray(pokemon.moves)?pokemon.moves:[])
+    .filter(name=>typeof name==='string'&&name.trim())
+    .map(name=>({pokemon,index,name})));
+  if(!team.length){status.textContent='Add Pokémon to My Team, then record their moves in Edit Profile to get recommendations.';return}
+  if(!entries.length){status.textContent='Your team has no moves recorded yet. Edit a Pokémon profile to add up to four moves.';return}
+  status.textContent='Checking your team’s moves…';
+  const details=await Promise.all(entries.map(async entry=>({...entry,move:await moveInfo(entry.name)})));
+  if(run!==advisorRun)return;
+  const ranked=details.flatMap(({pokemon,index,name,move})=>{
+    if(!move||!move.type||!Number.isFinite(move.power)||move.power<=0||move.damage_class?.name==='status')return [];
+    const type=move.type.name;
+    const effectiveness=opponentTypes.reduce((n,d)=>n*(rules[type]?.[d]??1),1);
+    const stab=pokemon.types.includes(type)?1.5:1;
+    const accuracy=move.accuracy==null?1:Math.max(0,Math.min(100,move.accuracy))/100;
+    const score=move.power*effectiveness*stab*accuracy;
+    return [{pokemon,index,name:move.name||name,type,power:move.power,effectiveness,stab,accuracy:move.accuracy,score,damageClass:move.damage_class?.name||'unknown'}];
+  }).sort((a,b)=>b.score-a.score);
+  if(!ranked.length){status.textContent='No damaging moves could be evaluated. Check your move names or connection; status moves are excluded.';return}
+  const failed=details.filter(x=>!x.move).length;
+  status.textContent='Ranked by base power × type effectiveness × STAB × accuracy. This is not an exact damage prediction.'+
+    (failed?' '+failed+' move(s) could not be found.':'');
+  const shown=ranked.slice(0,6);
+  shown.forEach((item,i)=>{
+    const card=document.createElement('div');card.className='advisor-card';
+    const heading=document.createElement('strong');
+    heading.textContent=(i===0?'⭐ Best estimate: ':'')+(item.pokemon.nickname||title(item.pokemon.name))+' — '+title(item.name);
+    const meta=document.createElement('p');meta.className='hint';
+    meta.textContent=title(item.type)+' · '+title(item.damageClass)+' · Power '+item.power+
+      ' · Type ×'+item.effectiveness+(item.stab>1?' · STAB ×1.5':'')+
+      ' · Accuracy '+(item.accuracy==null?'—':item.accuracy+'%');
+    card.append(heading,meta);results.append(card);
+  });
+  const note=document.createElement('p');note.className='hint';
+  note.textContent='Actual damage also depends on stats, level, defenses, abilities, items, and battle conditions. Immunities score zero.';
+  results.append(note);
+}

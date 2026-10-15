@@ -140,3 +140,10 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .profile-fields input,.profile-fields select{width:100%;-webkit-text-size-adjust:100%}
 #profileForm{width:100%;min-width:0;max-width:100%}
 .profile-heading h2{overflow-wrap:anywhere}
+
+/* v0.7 Move Advisor */
+.move-advisor{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);min-width:0;max-width:100%}
+.move-advisor h3{margin:0 0 10px}
+.advisor-card{padding:13px 14px;margin:9px 0;border:1px solid var(--border);border-radius:13px;background:var(--input);min-width:0;overflow-wrap:anywhere}
+.advisor-card strong{display:block;font-size:15px;line-height:1.5}
+.advisor-card p{margin:5px 0 0}

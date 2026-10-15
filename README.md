@@ -61,3 +61,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 0.6.4
 - Use 16px input and select text throughout the Pokémon profile editor and settings to prevent iPhone Safari focus zoom.
 - Reinforce width containment on profile forms and move fields.
+
+## Version 0.7.0 — Move Advisor
+- Search an opponent to rank damaging moves recorded in your saved team.
+- Ranking uses move base power, type effectiveness, STAB and accuracy from PokéAPI. Status moves are excluded.
+- This is a heuristic, not an exact damage calculation; stats, abilities, held items and battle conditions are not modeled.
+- Move information requires internet. Team data remains saved locally.
