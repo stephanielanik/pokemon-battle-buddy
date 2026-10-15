@@ -147,3 +147,23 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .advisor-card{padding:13px 14px;margin:9px 0;border:1px solid var(--border);border-radius:13px;background:var(--input);min-width:0;overflow-wrap:anywhere}
 .advisor-card strong{display:block;font-size:15px;line-height:1.5}
 .advisor-card p{margin:5px 0 0}
+
+/* v0.7.1 compact battle results */
+.result-actions{margin:12px 0 4px}
+.result-actions .primary{margin:0}
+.advisor-panel{margin-top:14px}
+.advisor-panel h3{margin:0 0 8px}
+.advisor-card.advisor-extra{display:none}
+#advisorResults.show-all .advisor-card.advisor-extra{display:block}
+.advisor-more{margin:8px 0;padding:10px 14px;font-size:14px}
+.matchup-panel{margin-top:14px}
+.matchup-panel>summary,.matchup-group>summary{cursor:pointer;font-weight:800;list-style:none;display:flex;align-items:center;gap:8px;min-height:44px}
+.matchup-panel>summary::-webkit-details-marker,.matchup-group>summary::-webkit-details-marker{display:none}
+.matchup-panel>summary:after,.matchup-group>summary:after{content:'▾';margin-left:auto}
+.matchup-panel[open]>summary:after,.matchup-group[open]>summary:after{content:'▴'}
+.summary-hint{font-size:12px;font-weight:500;color:var(--muted);margin-left:auto}
+.matchup-panel>summary:after{margin-left:0}
+.matchup-group{border-top:1px solid var(--border);padding:5px 0}
+.matchup-group .chips{padding:8px 0 12px}
+.matchup-count{font-size:12px;color:var(--muted);font-weight:600}
+.matchup-group>summary:focus-visible,.matchup-panel>summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}

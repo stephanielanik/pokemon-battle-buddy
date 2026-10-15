@@ -67,3 +67,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Ranking uses move base power, type effectiveness, STAB and accuracy from PokéAPI. Status moves are excluded.
 - This is a heuristic, not an exact damage calculation; stats, abilities, held items and battle conditions are not modeled.
 - Move information requires internet. Team data remains saved locally.
+
+## Version 0.7.1
+- Compact results: Move Advisor comes before Type Effectiveness, and Add to My Team sits directly under the Pokémon card.
+- Show three move recommendations initially, with a button to reveal the remaining ranked moves.
+- Type Effectiveness is collapsible, with expandable groups for super effective, neutral, resisted, and immune attacks.
