@@ -163,3 +163,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Apply penalties in rough move ranking and avoid calling Self-Destruct a straightforward damage upgrade.
 - Remove repeated elemental type text from comparison details when a type badge is already shown.
 - All move decisions remain advisory and require explicit confirmation.
+
+## Version 1.6.2 — Clear skip recommendations
+- Self-KO moves and moves with no clear overall upgrade default to Keep Current Moves rather than preselecting a replacement.
+- Choosing a replacement remains possible and updates the confirmation button.
+- Self-KO warnings are displayed once rather than repeated.

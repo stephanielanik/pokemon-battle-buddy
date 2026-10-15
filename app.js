@@ -199,7 +199,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.6.1';
+const APP_VERSION='1.6.2';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -952,6 +952,7 @@ let learnMoveRun=0,learnMoveCandidate=null;
 function resetLearnMoveHelper(){
   ++learnMoveRun;learnMoveCandidate=null;
   $('learnMoveName').value='';$('learnMoveStatus').textContent='';
+  $('confirmLearnMove').textContent='Learn This Move';
   $('learnMoveResults').hidden=true;$('learnMoveSummary').replaceChildren();
   $('learnMoveOptions').replaceChildren();$('forgetMove').replaceChildren();
 }
@@ -1065,22 +1066,24 @@ $('compareNewMove').addEventListener('click',async()=>{
   const newValue=roughMoveValue(candidate,details);
   let advice;
   const drawbacks=moveDrawbacks(candidate);
+  const selfKO=drawbacks.includes('User faints after use');
+  const skipRecommended=!already&&(selfKO||(!free&&replacement.score<=0));
   if(already)advice='Already known — no change needed.';
-  else if(drawbacks.includes('User faints after use'))advice='⚠️ Situational: your Pokémon faints after using this move. Usually not worth replacing a reliable attack unless you want a last-resort option.';
+  else if(selfKO)advice='⭐ Keep Current Moves. ⚠️ Situational: '+title(candidate.name)+' causes your Pokémon to faint. Best saved as a last-resort attack.';
   else if(free)advice='You have an empty slot. No move needs to be forgotten.';
-  else if(replacement.score<=0){
-    advice='No clear overall upgrade. If you learn it, '+title(replacement.name)+' is the least costly option.';
-  }else advice='Consider replacing '+title(replacement.name)+'.';
-  if(!free&&!already){
+  else if(skipRecommended)advice='⭐ Keep Current Moves. No clear overall upgrade. If you still want it, consider replacing '+title(replacement.name)+'.';
+  else advice='Consider replacing '+title(replacement.name)+'.';
+  if(!free&&!already&&!selfKO){
     if(replacement.gained?.length)advice+=' Adds coverage against '+replacement.gained.map(title).join(', ')+'.';
     if(replacement.lost?.length)advice+=' Loses coverage against '+replacement.lost.map(title).join(', ')+'.';
-    if(candidate.power&&newValue>replacement.removedValue*1.1&&!drawbacks.includes('User faints after use'))advice+=' Higher estimated damage potential.';
+    if(candidate.power&&newValue>replacement.removedValue*1.1)advice+=' Higher estimated damage potential.';
     if(replacement.move?.priority>0)advice+=' You would lose a priority attack.';
     if(replacement.move?.stat_changes?.some(x=>x.change>0))advice+=' You would lose a stat-boosting effect.';
     if(replacement.move?.damage_class?.name==='status')advice+=' You would lose a status move.';
   }
   if(candidate.damage_class?.name==='status')advice+=' Consider its tactical effect rather than damage.';
-  if(drawbacks.length)advice+=' ⚠️ '+drawbacks.join(' · ')+'.';
+  const otherDrawbacks=drawbacks.filter(x=>!selfKO||x!=='User faints after use');
+  if(otherDrawbacks.length)advice+=' ⚠️ '+otherDrawbacks.join(' · ')+'.';
   const summary=$('learnMoveSummary');summary.replaceChildren();
   const heading=document.createElement('strong');heading.textContent=title(candidate.name);
   const info=document.createElement('p');info.className='hint';info.textContent=moveDescription(candidate);
@@ -1100,10 +1103,17 @@ $('compareNewMove').addEventListener('click',async()=>{
     option.textContent=x.name?'Replace '+title(x.name):'Use empty slot '+(x.index+1);
     select.append(option);
   });
-  select.value=String(replacement.index);
+  if(skipRecommended){
+    const skip=document.createElement('option');skip.value='skip';skip.textContent='⭐ Keep Current Moves (recommended)';
+    select.prepend(skip);select.value='skip';
+  }else select.value=String(replacement.index);
   $('confirmLearnMove').disabled=already;
+  $('confirmLearnMove').textContent=skipRecommended?'Keep Current Moves':'Learn This Move';
   learnMoveCandidate={run,recordId,moveName:title(candidate.name),current};
   $('learnMoveResults').hidden=false;status.textContent='';
+});
+$('forgetMove').addEventListener('change',()=>{
+  $('confirmLearnMove').textContent=$('forgetMove').value==='skip'?'Keep Current Moves':'Learn This Move';
 });
 $('confirmLearnMove').addEventListener('click',()=>{
   const candidate=learnMoveCandidate;
@@ -1112,6 +1122,11 @@ $('confirmLearnMove').addEventListener('click',()=>{
   const current=inputs.map(x=>x.value.trim());
   if(current.some((n,i)=>n!==candidate.current[i])){
     $('learnMoveStatus').textContent='Your moves changed. Compare again first.';return;
+  }
+  if($('forgetMove').value==='skip'){
+    resetLearnMoveHelper();
+    $('profileStatus').textContent='Current moves kept.';
+    return;
   }
   const index=Number($('forgetMove').value);
   if(!Number.isInteger(index)||index<0||index>3)return;
