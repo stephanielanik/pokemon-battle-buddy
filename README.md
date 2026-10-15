@@ -131,3 +131,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Shows suggested swap, reduced shared weaknesses and possible trade-offs.
 - Suggestions are informational: no automatic swaps or changes to saved data.
 - This first version scores defensive types only; offensive moves and abilities are not included in the ranking.
+
+## Version 1.4.1 — Quick Add to Box
+- Search and add a Pokémon directly from the Box view without opening Lookup or a full profile.
+- Preview artwork, types and available regional forms before adding.
+- Each addition creates an independent saved Pokémon record, including duplicates of the same species.

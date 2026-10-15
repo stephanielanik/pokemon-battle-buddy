@@ -276,3 +276,18 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .box-recommendation-body strong{display:block}
 .box-recommendation-body p{margin:5px 0;font-size:13px;line-height:1.4}
 .box-recommendation-body button{padding:8px 11px;margin-top:5px;font-size:12px}
+
+/* v1.4.1 quick-add Box search */
+#boxAdd[hidden],#boxAddPreview[hidden],#boxPokemonSuggestions[hidden]{display:none!important}
+.box-add{margin:12px 0 16px;padding:14px;border:1px solid var(--border);border-radius:16px;background:var(--surface);min-width:0}
+.box-add label{margin-bottom:8px}
+.box-add .searchrow input{font-size:16px!important}
+.box-add .searchrow button{white-space:nowrap}
+.box-add-preview{display:grid;grid-template-columns:82px minmax(0,1fr);gap:12px;align-items:center;margin-top:12px;min-width:0}
+.box-add-preview img{width:82px;height:82px;object-fit:contain}
+.box-add-preview>div{min-width:0}
+.box-add-preview strong{display:block;margin-bottom:7px}
+.box-add-preview .primary{margin-top:8px}
+#boxPreviewForms{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+#boxPreviewForms button{padding:6px 8px;font-size:12px}
+#boxPreviewForms .selected-form{outline:2px solid var(--accent)}

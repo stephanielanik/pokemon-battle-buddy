@@ -53,6 +53,7 @@ function showCollection(view){
   collectionView=['party','box','bank'].includes(view)?view:'party';
   $('teamCards').hidden=collectionView!=='party';
   $('boxCards').hidden=collectionView!=='box';
+  $('boxAdd').hidden=collectionView!=='box';
   $('machineBank').hidden=collectionView!=='bank';
   $('partyView').classList.toggle('active',collectionView==='party');
   $('boxView').classList.toggle('active',collectionView==='box');
@@ -196,7 +197,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.4.0';
+const APP_VERSION='1.4.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -881,3 +882,62 @@ function renderBoxRecommendations(analyzerId){
   note.textContent='Based on defensive types only. Review moves and abilities before swapping.';
   results.append(note);
 }
+
+// v1.4.1: add a Pokémon directly to the Box without visiting Lookup.
+let boxPreview=null,boxSearchRun=0;
+async function previewBoxPokemon(name,manual=false){
+  const run=++boxSearchRun,status=$('boxAddStatus');
+  $('boxAddPreview').hidden=true;boxPreview=null;
+  $('boxPokemonSuggestions').hidden=true;
+  name=String(name||'').toLowerCase().trim().replace(/\s+/g,'-');
+  if(!name)return;
+  if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);
+  status.textContent='Finding Pokémon…';
+  try{
+    const p=await api('pokemon/'+encodeURIComponent(name));
+    if(run!==boxSearchRun)return;
+    const types=p.types.slice().sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);
+    const artwork=p.sprites.other?.['official-artwork']?.front_default||p.sprites.front_default||'';
+    boxPreview={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};
+    $('boxPreviewName').textContent=title(p.name);
+    $('boxPreviewArt').src=artwork;
+    $('boxPreviewArt').alt=title(p.name);
+    $('boxPreviewTypes').innerHTML=types.map(pill).join('');
+    $('boxPreviewForms').replaceChildren();
+    $('boxAddPreview').hidden=false;status.textContent='';
+    try{
+      const species=await api('pokemon-species/'+p.species.name);
+      if(run!==boxSearchRun)return;
+      const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));
+      if(forms.length>1){
+        for(const form of forms){
+          const button=document.createElement('button');button.type='button';
+          button.textContent=title(form.pokemon.name);
+          button.className=form.pokemon.name===p.name?'selected-form':'';
+          button.addEventListener('click',()=>previewBoxPokemon(form.pokemon.name,true));
+          $('boxPreviewForms').append(button);
+        }
+      }
+    }catch(e){ /* Form switching is optional. */ }
+  }catch(e){if(run===boxSearchRun)status.textContent='Pokémon not found. Check the name and try again.'}
+}
+$('boxAddForm').addEventListener('submit',e=>{e.preventDefault();previewBoxPokemon($('boxPokemonSearch').value)});
+$('boxPokemonSearch').addEventListener('input',()=>{
+  const q=$('boxPokemonSearch').value.toLowerCase().trim();
+  const suggestions=$('boxPokemonSuggestions');suggestions.replaceChildren();
+  if(!q||!allNames.length){suggestions.hidden=true;return}
+  const matches=allNames.filter(name=>name.includes(q)).slice(0,6);
+  for(const name of matches){
+    const button=document.createElement('button');button.type='button';button.textContent=title(name);
+    button.addEventListener('click',()=>{$('boxPokemonSearch').value=title(name);previewBoxPokemon(name)});
+    suggestions.append(button);
+  }
+  suggestions.hidden=!matches.length;
+});
+$('confirmBoxAdd').addEventListener('click',()=>{
+  if(!boxPreview)return;
+  box.push({...boxPreview,recordId:newPokemonId()});
+  save();
+  $('boxAddStatus').textContent=title(boxPreview.name)+' added to your Box.';
+  $('boxAddPreview').hidden=true;$('boxPokemonSearch').value='';boxPreview=null;
+});
