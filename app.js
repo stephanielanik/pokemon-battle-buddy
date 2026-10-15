@@ -194,7 +194,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.2.0';
+const APP_VERSION='1.3.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -632,7 +632,8 @@ function machineSuggestionRow(entry){
   meta.textContent=title(move.type.name)+' · '+(move.power?'Power '+move.power:'Status move')+
     (move.accuracy==null?'':' · '+move.accuracy+'% accuracy')+
     (entry.machine.kind==='TR'?' · Owned: '+(machineBanks[game]?.[entry.machine.key]||0):' · Reusable');
-  row.append(heading,meta);return row;
+  row.append(heading,meta);
+  return row;
 }
 async function loadMoveImprovements(p,recordId){
   const run=++teachingRun,status=$('improvementStatus'),results=$('improvementResults');
@@ -661,12 +662,63 @@ async function loadMoveImprovements(p,recordId){
   options.sort((a,b)=>score(b)-score(a));
   status.textContent=options.length+' compatible moves you own';
   const visible=options.slice(0,5);
-  visible.forEach(x=>results.append(machineSuggestionRow(x)));
+  const renderSuggestion=entry=>{
+    const row=machineSuggestionRow(entry);
+    const compare=document.createElement('button');compare.type='button';compare.className='compare-move';
+    compare.textContent='Compare moves';compare.setAttribute('aria-expanded','false');
+    const comparison=document.createElement('div');comparison.className='move-comparison';comparison.hidden=true;
+    compare.addEventListener('click',async()=>{
+      const expanded=comparison.hidden;
+      comparison.hidden=!expanded;compare.setAttribute('aria-expanded',String(expanded));
+      compare.textContent=expanded?'Hide comparison':'Compare moves';
+      if(!expanded||comparison.dataset.loaded)return;
+      comparison.textContent='Comparing known moves…';
+      const knownMoves=(p.moves||[]).filter(name=>typeof name==='string'&&name.trim());
+      if(!knownMoves.length){comparison.textContent='Record your current moves first to compare.';comparison.dataset.loaded='true';return}
+      const info=await Promise.all(knownMoves.map(async name=>({name,move:await getTeachingMove(name)})));
+      if(run!==teachingRun||editingRecordId!==recordId)return;
+      comparison.replaceChildren();
+      const candidate=entry.info;
+      const statFor=move=>move.damage_class?.name==='physical'?atk:move.damage_class?.name==='special'?spa:0;
+      const estimate=move=>move?.power>0?move.power*statFor(move)*(p.types.includes(move.type.name)?1.5:1)*(move.accuracy==null?1:move.accuracy/100):0;
+      const candidateScore=estimate(candidate);
+      const comparable=info.filter(x=>x.move?.power>0&&x.move?.damage_class?.name!=='status');
+      const existingTypes=new Set(info.filter(x=>x.move?.power>0).map(x=>x.move.type.name));
+      const candidateType=candidate.type?.name;
+      const bestReplace=comparable.slice().sort((a,b)=>{
+        const penalty=x=>info.filter(y=>y!==x&&y.move?.power>0&&y.move.type.name===x.move.type.name).length?0:1;
+        return (estimate(a.move)-estimate(b.move))||penalty(a)-penalty(b);
+      })[0];
+      const header=document.createElement('strong');header.textContent='Your current moves';comparison.append(header);
+      info.forEach(({name,move})=>{
+        const line=document.createElement('p');line.className='hint';
+        line.textContent=title(name)+(move?.power?' · '+title(move.type.name)+' · Power '+move.power+' · '+title(move.damage_class.name):' · Status / unavailable');
+        comparison.append(line);
+      });
+      const advice=document.createElement('p');advice.className='comparison-advice';
+      if(!candidate.power||candidate.damage_class?.name==='status'){
+        advice.textContent='Status move: compare its effect with your current moves before choosing a replacement.';
+      }else if(!bestReplace){
+        advice.textContent='No damaging move to compare. Consider whether you want to replace a utility move.';
+      }else{
+        const replaceScore=estimate(bestReplace.move);
+        const uniqueType=!existingTypes.has(candidateType);
+        const stronger=candidateScore>replaceScore*1.1;
+        advice.textContent=(stronger?'Consider replacing ':'Compare against ')+title(bestReplace.name)+
+          (stronger?' · stronger rough damage potential':' · not a clear damage upgrade')+
+          (uniqueType?' · adds '+title(candidateType)+' coverage':'')+
+          '. Check priority, secondary effects and coverage before deciding.';
+      }
+      comparison.append(advice);comparison.dataset.loaded='true';
+    });
+    row.append(compare,comparison);return row;
+  };
+  visible.forEach(x=>results.append(renderSuggestion(x)));
   if(options.length>5){
     const more=document.createElement('button');more.type='button';more.textContent='Show all '+options.length;
     more.addEventListener('click',()=>{
       if(more.dataset.expanded)return;
-      options.slice(5).forEach(x=>results.insertBefore(machineSuggestionRow(x),more));
+      options.slice(5).forEach(x=>results.insertBefore(renderSuggestion(x),more));
       more.dataset.expanded='true';more.remove();
     });results.append(more);
   }

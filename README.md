@@ -114,3 +114,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Team Analyzer suggests compatible owned moves that could fill uncovered defending-type gaps.
 - Uses PokéAPI Sword/Shield version-group machine learn methods; internet required.
 - Suggestions do not teach moves or consume TR inventory. Other games are not supported yet.
+
+## Version 1.3.0 — Compare Moves
+- Teachable TM/TR recommendations now offer an expandable comparison with the Pokémon's recorded moves.
+- Suggests a potential move to replace based on rough power, base physical/special attack, STAB and accuracy, while noting type coverage.
+- Comparisons are advisory: move effects, priority, abilities, defensive stats, and battle conditions are not fully modeled.
+- No move or TR inventory changes happen automatically.

@@ -250,3 +250,11 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .machine-suggestion strong,.machine-suggestion span{display:block}
 .machine-suggestion span{margin-top:3px}
 #coverageSuggestions[hidden]{display:none!important}
+
+/* v1.3 move comparison */
+.compare-move{margin-top:9px;padding:8px 12px;font-size:13px}
+.move-comparison[hidden]{display:none!important}
+.move-comparison{margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.move-comparison strong{font-size:13px}
+.move-comparison p{margin:6px 0}
+.comparison-advice{font-size:13px;line-height:1.5;color:var(--text)}
