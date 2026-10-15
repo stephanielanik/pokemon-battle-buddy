@@ -77,3 +77,10 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Combine Type Effectiveness and Move Advisor into a single panel.
 - Each expandable type category shows matching damaging moves from your saved team, ranked within that category.
 - Show two moves initially per category; expand to see additional moves.
+
+## Version 0.8.0 — Pokémon Box
+- My Team now has Party and Box views. Move Pokémon between them without losing profile information.
+- The Box is not limited to six Pokémon; party remains limited to six.
+- Each captured Pokémon gets a unique record ID, so multiple of the same species retain independent profiles.
+- Existing party records migrate automatically, and backup schema v2 exports/imports party plus Box. Old schema v1 backups remain importable.
+- Removing the Home Screen app may still delete local data; export a backup to Files or iCloud Drive.

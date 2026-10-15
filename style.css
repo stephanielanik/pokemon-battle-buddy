@@ -180,3 +180,11 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .category-moves .advisor-extra{display:none}
 .category-moves.show-all .advisor-extra{display:block}
 .category-moves .advisor-more{margin:7px 0}
+
+/* v0.8 Party and Box */
+.party-box-toggle{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
+.party-box-toggle button{flex:1 1 130px}
+.party-box-toggle button.active{background:var(--accent2);border-color:var(--accent);color:white}
+#boxCards[hidden],#teamCards[hidden]{display:none!important}
+.teamcard small{display:block;min-height:1em;font-size:12px}
+.teamcard button{margin-right:6px}
