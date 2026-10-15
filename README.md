@@ -72,3 +72,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Compact results: Move Advisor comes before Type Effectiveness, and Add to My Team sits directly under the Pokémon card.
 - Show three move recommendations initially, with a button to reveal the remaining ranked moves.
 - Type Effectiveness is collapsible, with expandable groups for super effective, neutral, resisted, and immune attacks.
+
+## Version 0.7.2
+- Combine Type Effectiveness and Move Advisor into a single panel.
+- Each expandable type category shows matching damaging moves from your saved team, ranked within that category.
+- Show two moves initially per category; expand to see additional moves.

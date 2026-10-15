@@ -13,14 +13,32 @@ $('game').addEventListener('change',()=>{game=$('game').value;localStorage.setIt
 function pill(t){return `<span class="pill" style="background:${colors[t]}">${title(t)}</span>`}
 function gradient(types){return `linear-gradient(125deg,${colors[types[0]]||'#d9b4ee'}bb,${colors[types[1]||types[0]]||'#e0c1ed'}aa)`}
 function match(types){return Object.keys(colors).map(a=>({type:a,value:types.reduce((n,d)=>n*(rules[a]?.[d]??1),1)}))}
+const matchupGroups=[
+  ['super','🔥 Super effective',x=>x>1],
+  ['neutral','➖ Neutral',x=>x===1],
+  ['resisted','🛡️ Resisted',x=>x>0&&x<1],
+  ['immune','🚫 Immune',x=>x===0]
+];
 function showMatch(types){
-  const groups=[['🔥 Super effective',x=>x>1],['➖ Neutral',x=>x===1],['🛡️ Resisted',x=>x>0&&x<1],['🚫 Immune',x=>x===0]];
-  $('matchups').innerHTML=groups.map(([label,fn],i)=>{
-    const matches=match(types).filter(x=>fn(x.value));
-    return '<details class="matchup-group" '+(i===0?'open':'')+'><summary>'+label+' <span class="matchup-count">'+matches.length+'</span></summary><div class="chips">'+
-      (matches.map(x=>'<span class="chip" style="background:'+colors[x.type]+'">'+title(x.type)+' ×'+x.value+'</span>').join('')||'None')+'</div></details>';
-  }).join('');
+  const container=$('matchups');
+  const opened=new Set([...container.querySelectorAll('details[open]')].map(x=>x.dataset.group));
+  container.replaceChildren();
+  matchupGroups.forEach(([key,label,predicate])=>{
+    const matches=match(types).filter(x=>predicate(x.value));
+    const group=document.createElement('details');group.className='matchup-group';group.dataset.group=key;
+    group.open=opened.size?opened.has(key):key==='super';
+    const summary=document.createElement('summary');
+    summary.textContent=label+' ';
+    const count=document.createElement('span');count.className='matchup-count';count.textContent=String(matches.length);summary.append(count);
+    const chips=document.createElement('div');chips.className='chips';
+    if(matches.length){
+      matches.forEach(x=>{const chip=document.createElement('span');chip.className='chip';chip.style.background=colors[x.type];chip.textContent=title(x.type)+' ×'+x.value;chips.append(chip)});
+    }else chips.textContent='None';
+    const moves=document.createElement('div');moves.className='category-moves';moves.id='advisor-'+key;
+    group.append(summary,chips,moves);container.append(group);
+  });
 }
+
 async function api(path){let r=await fetch('https://pokeapi.co/api/v2/'+path);if(!r.ok)throw Error('Pokémon not found. Try its name or Pokédex number.');return r.json()}
 async function search(name,manual=false){name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-f').replace('♂','-m');if(!name)return;if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);$('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;try{const p=await api('pokemon/'+name);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=p.sprites.other['official-artwork'].front_default||p.sprites.front_default;current={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);refreshMoveAdvisor(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
 function renderTeam(){ $('teamCount').textContent=team.length+'/6';$('teamCards').innerHTML=team.map((p,i)=>`<div class="teamcard" style="background:${gradient(p.types)}"><img src="${p.artwork||''}" alt=""><strong>${title(p.name)}</strong><div class="types">${p.types.map(pill).join('')}</div><button data-edit="${i}">Edit profile</button><button data-remove="${i}">Remove</button></div>`).join('')+Array.from({length:6-team.length},()=>'<div class="empty">＋ Open Lookup to add a Pokémon</div>').join('');$('teamCards').querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openProfile(+b.dataset.edit));$('teamCards').querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{team.splice(+b.dataset.remove,1);save()})}
@@ -99,7 +117,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='0.7.1';
+const APP_VERSION='0.7.2';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -204,13 +222,14 @@ async function moveInfo(name){
   return advisorMoveCache.get(key);
 }
 async function refreshMoveAdvisor(opponentTypes){
-  const run=++advisorRun,status=$('advisorStatus'),results=$('advisorResults');
-  results.replaceChildren();results.classList.remove('show-all');$('advisorMore').hidden=true;
+  const run=++advisorRun,status=$('advisorStatus');
+  const sections=Object.fromEntries(matchupGroups.map(([key])=>[key,$('advisor-'+key)]));
+  Object.values(sections).forEach(section=>section?.replaceChildren());
   const entries=team.flatMap((pokemon,index)=>(Array.isArray(pokemon.moves)?pokemon.moves:[])
     .filter(name=>typeof name==='string'&&name.trim())
     .map(name=>({pokemon,index,name})));
-  if(!team.length){status.textContent='Add Pokémon to My Team, then record their moves in Edit Profile to get recommendations.';return}
-  if(!entries.length){status.textContent='Your team has no moves recorded yet. Edit a Pokémon profile to add up to four moves.';return}
+  if(!team.length){status.textContent='Add Pokémon to My Team to get move recommendations.';return}
+  if(!entries.length){status.textContent='Edit your team profiles to record moves and see recommendations here.';return}
   status.textContent='Checking your team’s moves…';
   const details=await Promise.all(entries.map(async entry=>({...entry,move:await moveInfo(entry.name)})));
   if(run!==advisorRun)return;
@@ -223,26 +242,38 @@ async function refreshMoveAdvisor(opponentTypes){
     const score=move.power*effectiveness*stab*accuracy;
     return [{pokemon,index,name:move.name||name,type,power:move.power,effectiveness,stab,accuracy:move.accuracy,score,damageClass:move.damage_class?.name||'unknown'}];
   }).sort((a,b)=>b.score-a.score);
-  if(!ranked.length){status.textContent='No damaging moves could be evaluated. Check your move names or connection; status moves are excluded.';return}
+  if(!ranked.length){status.textContent='No damaging moves could be evaluated. Status moves are excluded; check your move names or internet connection.';return}
   const failed=details.filter(x=>!x.move).length;
-  status.textContent='Ranked by base power × type effectiveness × STAB × accuracy. This is not an exact damage prediction.'+
+  status.textContent='Team moves ranked within each effectiveness category by power × type × STAB × accuracy.'+
     (failed?' '+failed+' move(s) could not be found.':'');
-  const shown=ranked.slice(0,6);
-  $('advisorMore').hidden=shown.length<=3;
-  $('advisorMore').setAttribute('aria-expanded','false');
-  $('advisorMore').textContent='Show all '+shown.length+' recommendations';
-  shown.forEach((item,i)=>{
-    const card=document.createElement('div');card.className='advisor-card'+(i>=3?' advisor-extra':'');
-    const heading=document.createElement('strong');
-    heading.textContent=(i===0?'⭐ Best estimate: ':'')+(item.pokemon.nickname||title(item.pokemon.name))+' — '+title(item.name);
-    const meta=document.createElement('p');meta.className='hint';
-    meta.textContent=title(item.type)+' · '+title(item.damageClass)+' · Power '+item.power+
-      ' · Type ×'+item.effectiveness+(item.stab>1?' · STAB ×1.5':'')+
-      ' · Accuracy '+(item.accuracy==null?'—':item.accuracy+'%');
-    card.append(heading,meta);results.append(card);
+  const categoryFor=value=>value>1?'super':value===1?'neutral':value===0?'immune':'resisted';
+  matchupGroups.forEach(([key])=>{
+    const section=sections[key];
+    if(!section)return;
+    const candidates=ranked.filter(item=>categoryFor(item.effectiveness)===key);
+    if(!candidates.length)return;
+    const heading=document.createElement('h4');heading.className='category-moves-title';
+    heading.textContent='⚔️ Your team’s moves ('+candidates.length+')';section.append(heading);
+    candidates.forEach((item,i)=>{
+      const card=document.createElement('div');card.className='advisor-card'+(i>=2?' advisor-extra':'');
+      const name=document.createElement('strong');
+      name.textContent=(i===0&&key==='super'?'⭐ Best in category: ':'')+
+        (item.pokemon.nickname||title(item.pokemon.name))+' — '+title(item.name);
+      const meta=document.createElement('p');meta.className='hint';
+      meta.textContent=title(item.type)+' · '+title(item.damageClass)+' · Power '+item.power+
+        ' · Type ×'+item.effectiveness+(item.stab>1?' · STAB ×1.5':'')+
+        ' · Accuracy '+(item.accuracy==null?'—':item.accuracy+'%');
+      card.append(name,meta);section.append(card);
+    });
+    if(candidates.length>2){
+      const toggle=document.createElement('button');toggle.type='button';toggle.className='advisor-more';
+      toggle.textContent='Show all '+candidates.length+' moves';toggle.setAttribute('aria-expanded','false');
+      toggle.addEventListener('click',()=>{
+        const expanded=toggle.getAttribute('aria-expanded')!=='true';
+        section.classList.toggle('show-all',expanded);toggle.setAttribute('aria-expanded',String(expanded));
+        toggle.textContent=expanded?'Show fewer moves':'Show all '+candidates.length+' moves';
+      });
+      section.append(toggle);
+    }
   });
-  const note=document.createElement('p');note.className='hint';
-  note.textContent='Actual damage also depends on stats, level, defenses, abilities, items, and battle conditions. Immunities score zero.';
-  results.append(note);
-  $('advisorMore').onclick=()=>{const expanded=$('advisorMore').getAttribute('aria-expanded')!=='true';results.classList.toggle('show-all',expanded);$('advisorMore').setAttribute('aria-expanded',String(expanded));$('advisorMore').textContent=expanded?'Show fewer recommendations':'Show all '+shown.length+' recommendations';};
 }

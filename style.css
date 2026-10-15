@@ -167,3 +167,16 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .matchup-group .chips{padding:8px 0 12px}
 .matchup-count{font-size:12px;color:var(--muted);font-weight:600}
 .matchup-group>summary:focus-visible,.matchup-panel>summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* v0.7.2: integrated type matchups and move recommendations. */
+.combined-matchups{margin-top:14px}
+.combined-matchups h3{margin:0 0 9px}
+.combined-matchups>.hint{margin:8px 0 13px}
+.combined-matchups .matchup-group{padding:7px 0}
+.combined-matchups .matchup-group .chips{padding:6px 0 8px}
+.category-moves{min-width:0;max-width:100%;padding:2px 0 10px}
+.category-moves-title{font-size:13px;color:var(--muted);margin:9px 0 6px}
+.category-moves .advisor-card{margin:7px 0;padding:10px 12px}
+.category-moves .advisor-extra{display:none}
+.category-moves.show-all .advisor-extra{display:block}
+.category-moves .advisor-more{margin:7px 0}
