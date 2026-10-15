@@ -149,6 +149,7 @@ async function openProfile(recordId){
   $('profilePokerus').value=['unknown','never','active','cured'].includes(p.pokerus)?p.pokerus:'unknown';
   document.querySelectorAll('.profile-move').forEach((input,i)=>input.value=p.moves?.[i]||'');
   $('profileStatus').textContent='';
+  loadEvolution(p,recordId);
   $('abilitySuggestions').replaceChildren();$('moveSuggestions').replaceChildren();
   window.scrollTo(0,0);
   const openedId=recordId;
@@ -176,11 +177,12 @@ $('profileForm').addEventListener('submit',e=>{
   p.pokerus=$('profilePokerus').value;
   p.moves=[...document.querySelectorAll('.profile-move')].map(x=>cleanText(x.value));
   save();$('profileStatus').textContent='Saved on this device ✓';
+  loadEvolution(p,editingRecordId);
 });
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='0.8.0';
+const APP_VERSION='0.9.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -342,4 +344,86 @@ async function refreshMoveAdvisor(opponentTypes){
       section.append(toggle);
     }
   });
+}
+
+// v0.9: informational evolution paths. Profiles never evolve automatically.
+let evolutionRequest=0;
+function evolutionRequirement(detail){
+  if(!detail)return 'Evolution requirement varies';
+  const trigger=detail.trigger?.name||'unknown';
+  const parts=[];
+  if(detail.min_level!=null)parts.push('Level '+detail.min_level);
+  if(detail.min_happiness!=null)parts.push('Friendship '+detail.min_happiness+'+');
+  if(detail.min_affection!=null)parts.push('Affection '+detail.min_affection+'+');
+  if(detail.min_beauty!=null)parts.push('Beauty '+detail.min_beauty+'+');
+  if(detail.item?.name)parts.push('Use '+title(detail.item.name));
+  if(detail.held_item?.name)parts.push('Hold '+title(detail.held_item.name));
+  if(detail.time_of_day)parts.push(title(detail.time_of_day));
+  if(detail.known_move?.name)parts.push('Know '+title(detail.known_move.name));
+  if(detail.known_move_type?.name)parts.push('Know a '+title(detail.known_move_type.name)+' move');
+  if(detail.location?.name)parts.push('At '+title(detail.location.name));
+  if(detail.gender===1)parts.push('Female');
+  if(detail.gender===2)parts.push('Male');
+  if(detail.needs_overworld_rain)parts.push('While raining');
+  if(detail.party_species?.name)parts.push('With '+title(detail.party_species.name)+' in party');
+  if(detail.party_type?.name)parts.push('With '+title(detail.party_type.name)+' type in party');
+  if(detail.relative_physical_stats===1)parts.push('Attack > Defense');
+  if(detail.relative_physical_stats===-1)parts.push('Defense > Attack');
+  if(detail.relative_physical_stats===0)parts.push('Attack = Defense');
+  if(detail.turn_upside_down)parts.push('Hold device upside down');
+  if(trigger==='trade')parts.unshift('Trade');
+  if(trigger==='shed')parts.unshift('Special evolution');
+  if(!parts.length)parts.push(trigger==='level-up'?'Level up (special conditions may apply)':title(trigger));
+  return parts.join(' · ');
+}
+async function loadEvolution(p,recordId){
+  const request=++evolutionRequest,status=$('evolutionStatus'),path=$('evolutionPath');
+  path.replaceChildren();status.textContent='Loading evolution information…';
+  try{
+    const pokemon=await api('pokemon/'+p.name);
+    const species=await api('pokemon-species/'+pokemon.species.name);
+    if(!species.evolution_chain?.url)throw Error('No evolution chain available');
+    const chainId=species.evolution_chain.url.match(/evolution-chain\/(\d+)/)?.[1];
+    if(!chainId)throw Error('Evolution chain unavailable');
+    const chain=await api('evolution-chain/'+chainId);
+    if(request!==evolutionRequest||editingRecordId!==recordId||$('profile').hidden)return;
+    const nodes=[];
+    function walk(node,depth=0){
+      nodes.push({name:node.species.name,depth,details:node.evolution_details||[]});
+      node.evolves_to.forEach(child=>walk(child,depth+1));
+    }
+    walk(chain.chain);
+    status.textContent=nodes.length===1?'This Pokémon has no known evolution.':'Evolution path';
+    const currentSpecies=pokemon.species.name;
+    for(const node of nodes){
+      const row=document.createElement('div');row.className='evolution-step';
+      if(node.name===currentSpecies)row.classList.add('current');
+      row.style.marginLeft=Math.min(node.depth,3)*12+'px';
+      const name=document.createElement('strong');name.textContent=title(node.name)+(node.name===currentSpecies?' · Current':'');
+      row.append(name);
+      if(node.details.length){
+        const details=document.createElement('p');details.className='hint';
+        details.textContent=node.details.map(evolutionRequirement).join(' OR ');
+        row.append(details);
+        if(node.details.some(d=>d.min_level!=null)&&p.level!=null){
+          const levels=node.details.filter(d=>d.min_level!=null).map(d=>d.min_level);
+          const target=Math.min(...levels);
+          const currentIndex=nodes.findIndex(n=>n.name===currentSpecies);
+          const targetIndex=nodes.indexOf(node);
+          if(targetIndex===currentIndex+1){
+            const progress=document.createElement('p');progress.className='evolution-progress';
+            progress.textContent=p.level>=target?'Level requirement met!':(target-p.level)+' levels to go';
+            row.append(progress);
+          }
+        }
+      }
+      path.append(row);
+    }
+    const note=document.createElement('p');note.className='hint';
+    note.textContent='Evolution requirements may vary by game or regional form. Your Pokémon will not change automatically.';
+    path.append(note);
+  }catch(e){
+    if(request!==evolutionRequest||editingRecordId!==recordId)return;
+    status.textContent='Evolution information unavailable. Check your internet connection.';
+  }
 }

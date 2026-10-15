@@ -84,3 +84,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Each captured Pokémon gets a unique record ID, so multiple of the same species retain independent profiles.
 - Existing party records migrate automatically, and backup schema v2 exports/imports party plus Box. Old schema v1 backups remain importable.
 - Removing the Home Screen app may still delete local data; export a backup to Files or iCloud Drive.
+
+## Version 0.9.0 — Evolution Tracker
+- View evolution paths and requirements on each party or boxed Pokémon profile.
+- Displays remaining levels when the next evolution has a level requirement.
+- Evolution data comes from PokéAPI; special conditions and game-specific exceptions may require verification.
+- Does not automatically change a Pokémon's species or overwrite its profile.

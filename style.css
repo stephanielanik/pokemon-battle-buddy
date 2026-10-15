@@ -188,3 +188,12 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 #boxCards[hidden],#teamCards[hidden]{display:none!important}
 .teamcard small{display:block;min-height:1em;font-size:12px}
 .teamcard button{margin-right:6px}
+
+/* v0.9 evolution tracker */
+.evolution-tracker{border:1px solid var(--border);border-radius:16px;margin:24px 0 0;padding:16px;min-width:0}
+.evolution-tracker h3{margin:0 0 12px}
+.evolution-path{display:grid;gap:8px;min-width:0}
+.evolution-step{padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--input);overflow-wrap:anywhere}
+.evolution-step.current{border-color:var(--accent)}
+.evolution-step .hint{margin:5px 0 0}
+.evolution-progress{margin:6px 0 0;color:var(--accent);font-weight:800;font-size:13px}
