@@ -216,3 +216,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 1.8.1 — Critical startup fix
 - Remove stale teamCount DOM reference after navigation cleanup. The missing element prevented initialization, Settings, and rendering of saved local Pokémon.
 - Does not clear or migrate localStorage. Existing data should reappear once the app loads.
+
+## Version 1.9.0 — Team synergy recommendations
+- Compare defensive switch-ins, 4x weaknesses, immunities, and whole-team offensive coverage from recorded moves.
+- Penalize losing unique move coverage and adding redundant types; flag lower-level replacements and Huge Power/Pure Power abilities for review.
+- Recommend no swap when gains are too small to justify one. No automatic party changes.
+- Rankings are heuristic and do not model full battle stats or abilities.

@@ -251,7 +251,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.8.1';
+const APP_VERSION='1.9.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -925,51 +925,99 @@ document.querySelectorAll('.profile-move').forEach(input=>{
 
 // v1.4: suggest Box-to-Party swaps based on team-wide defensive coverage.
 // A swap is suggested only when it improves the aggregate score; no changes are made.
+
+function defensiveMultiplier(pokemon,attackType){
+  return pokemon.types.reduce((n,t)=>n*(rules[attackType]?.[t]??1),1);
+}
 function defenseSummary(members){
   const threats=Object.keys(colors).map(type=>{
-    const values=members.map(p=>p.types.reduce((n,t)=>n*(rules[type]?.[t]??1),1));
+    const values=members.map(p=>defensiveMultiplier(p,type));
     return {type,weak:values.filter(v=>v>1).length,
-      protected:values.filter(v=>v<1).length};
+      fourfold:values.filter(v=>v>=4).length,
+      protected:values.filter(v=>v>0&&v<1).length,
+      immune:values.filter(v=>v===0).length,
+      exposed:values.filter(v=>v>1).length>0&&values.every(v=>v>=1)};
   });
-  // Shared weaknesses matter most; resistances/immunities help as tiebreakers.
+  // Penalize weaknesses without switch-ins; reward real immunities and
+  // resistances that protect vulnerable teammates.
   const score=threats.reduce((total,x)=>total+
-    (x.weak>=2?(x.weak-1)*3:0)+x.weak*.5-x.protected*.25,0);
+    x.weak*.55+x.fourfold*2.5+
+    (x.weak>=2?(x.weak-1)*1.4:0)+
+    (x.exposed?2.2:0)-
+    (x.weak>0?Math.min(2,x.protected)*.8+Math.min(2,x.immune)*1.5:0)-
+    x.immune*.25,0);
   return {threats,score,shared:threats.filter(x=>x.weak>=2).length};
 }
-function renderBoxRecommendations(analyzerId){
+function offensiveSummary(members,knownMoves){
+  const types=new Set();
+  for(const p of members){
+    for(const move of knownMoves.get(p.recordId)||[]){
+      if(move?.power>0&&move.damage_class?.name!=='status'&&move.type?.name)types.add(move.type.name);
+    }
+  }
+  return new Set(Object.keys(colors).filter(defending=>
+    [...types].some(attacking=>(rules[attacking]?.[defending]??1)>1)));
+}
+async function renderBoxRecommendations(analyzerId){
   const section=$('boxRecommendations'),status=$('boxRecommendationStatus'),
     results=$('boxRecommendationResults');
   results.replaceChildren();
   if(analyzerId!==analyzerRun||!box.length||!team.length){section.hidden=true;return}
-  section.hidden=false;
-  const baseline=defenseSummary(team),suggestions=[];
+  section.hidden=false;status.textContent='Comparing Box Pokémon with your whole party…';
+  const all=[...team,...box];
+  const uniqueMoves=[...new Set(all.flatMap(p=>(p.moves||[])
+    .filter(m=>typeof m==='string'&&m.trim()).map(normalizeMoveName)))];
+  const loaded=await Promise.all(uniqueMoves.map(async name=>[name,await moveInfo(name)]));
+  if(analyzerId!==analyzerRun)return;
+  const lookup=new Map(loaded);
+  const known=new Map(all.map(p=>[p.recordId,(p.moves||[]).map(m=>lookup.get(normalizeMoveName(m))).filter(Boolean)]));
+  const baseline=defenseSummary(team),baseOffense=offensiveSummary(team,known);
+  const suggestions=[];
   for(const candidate of box){
     const options=team.length<6?[{removed:null,members:[...team,candidate]}]:
       team.map((removed,index)=>({removed,members:team.map((p,i)=>i===index?candidate:p)}));
     for(const option of options){
       const revised=defenseSummary(option.members);
-      const gain=baseline.score-revised.score;
-      if(gain<=.01)continue;
+      const newOffense=offensiveSummary(option.members,known);
+      const gained=[...newOffense].filter(t=>!baseOffense.has(t));
+      const lost=[...baseOffense].filter(t=>!newOffense.has(t));
+      const defenseGain=baseline.score-revised.score;
+      const sameTypes=option.members.filter(p=>p!==candidate&&
+        p.types.some(t=>candidate.types.includes(t))).length;
+      const oldSameTypes=option.removed?team.filter(p=>p!==option.removed&&
+        p.types.some(t=>option.removed.types.includes(t))).length:0;
+      const redundancyChange=sameTypes-oldSameTypes;
+      const overall=defenseGain+gained.length*1.3-lost.length*2.1-redundancyChange*.5;
+      // Small apparent improvements are too uncertain to justify a swap.
+      if(overall<2.5)continue;
       const improved=baseline.threats.filter(old=>{
         const newer=revised.threats.find(t=>t.type===old.type);
-        return old.weak>=2&&newer.weak<old.weak;
+        return (old.weak>=2&&newer.weak<old.weak)||
+          (old.exposed&&!newer.exposed)||
+          newer.fourfold<old.fourfold;
       }).map(x=>title(x.type));
       const worsened=baseline.threats.filter(old=>{
         const newer=revised.threats.find(t=>t.type===old.type);
-        return newer.weak>old.weak;
+        return newer.weak>old.weak||(!old.exposed&&newer.exposed)||newer.fourfold>old.fourfold;
       }).map(x=>title(x.type));
-      suggestions.push({candidate,removed:option.removed,gain,improved,worsened,
-        sharedReduction:baseline.shared-revised.shared});
+      const removedLevel=Number(option.removed?.level),candidateLevel=Number(candidate.level);
+      const levelCaution=option.removed&&candidateLevel>0&&removedLevel>0&&candidateLevel+8<removedLevel;
+      // Do not claim that typing predicts overall strength; ability effects
+      // such as Huge Power need explicit review.
+      const abilityCaution=option.removed&&/huge power|pure power/i.test(option.removed.ability||'');
+      suggestions.push({candidate,removed:option.removed,overall,improved,worsened,
+        gained:gained.map(title),lost:lost.map(title),levelCaution,abilityCaution});
     }
   }
-  suggestions.sort((a,b)=>b.gain-a.gain||b.sharedReduction-a.sharedReduction);
+  suggestions.sort((a,b)=>b.overall-a.overall);
   const seen=new Set(),top=[];
-  for(const s of suggestions){
-    if(seen.has(s.candidate.recordId))continue;
-    seen.add(s.candidate.recordId);top.push(s);
+  for(const suggestion of suggestions){
+    if(seen.has(suggestion.candidate.recordId))continue;
+    seen.add(suggestion.candidate.recordId);top.push(suggestion);
     if(top.length===3)break;
   }
-  status.textContent=top.length?'Possible defensive improvements:':'No Box swap currently improves the party’s overall defensive type balance.';
+  status.textContent=top.length?'Possible improvements worth reviewing:':
+    'No worthwhile Box swap identified with your current recorded information.';
   top.forEach(s=>{
     const row=document.createElement('div');row.className='box-recommendation';
     const img=document.createElement('img');img.src=s.candidate.artwork||'';img.alt='';
@@ -978,15 +1026,16 @@ function renderBoxRecommendations(analyzerId){
     const swap=document.createElement('p');swap.textContent=s.removed?
       'Consider swapping with '+(s.removed.nickname||title(s.removed.name)):
       'Open party slot available';
-    const gains=document.createElement('p');gains.className='hint';
-    gains.textContent=s.improved.length?'Reduces weaknesses to: '+s.improved.join(', '):
-      'Improves the overall resistance/weakness balance';
-    body.append(name,swap,gains);
-    if(s.worsened.length){
-      const tradeoff=document.createElement('p');tradeoff.className='hint';
-      tradeoff.textContent='Trade-off: more vulnerable to '+s.worsened.join(', ');
-      body.append(tradeoff);
+    body.append(name,swap);
+    function line(message){
+      const p=document.createElement('p');p.className='hint';p.textContent=message;body.append(p);
     }
+    if(s.improved.length)line('Defensive improvements: '+s.improved.join(', '));
+    if(s.gained.length)line('Adds move coverage against: '+s.gained.join(', '));
+    if(s.worsened.length)line('Trade-off: greater risk from '+s.worsened.join(', '));
+    if(s.lost.length)line('Loses move coverage against: '+s.lost.join(', '));
+    if(s.levelCaution)line('⚠️ Box Pokémon is over 8 levels lower.');
+    if(s.abilityCaution)line('⚠️ Replaced Pokémon has a powerful ability: '+s.removed.ability+'.');
     const action=document.createElement('button');action.type='button';
     action.textContent='View in Box';action.addEventListener('click',()=>{
       showCollection('box');$('boxCards').scrollIntoView({behavior:'smooth',block:'start'});
@@ -994,7 +1043,7 @@ function renderBoxRecommendations(analyzerId){
     body.append(action);row.append(img,body);results.append(row);
   });
   const note=document.createElement('p');note.className='hint';
-  note.textContent='Based on defensive types only. Review moves and abilities before swapping.';
+  note.textContent='Estimates use typing and recorded moves. Stats, abilities, and battle conditions may change the best choice.';
   results.append(note);
 }
 
