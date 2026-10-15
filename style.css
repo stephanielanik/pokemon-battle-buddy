@@ -242,3 +242,11 @@ header .game-indicator{max-width:100%;flex-wrap:wrap}
 .compact-teamcard .teamcard-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .compact-teamcard .teamcard-actions button{margin:0;padding:9px 10px;font-size:12px;min-height:38px;white-space:normal}
 @media(max-width:390px){.compact-teamcard{grid-template-columns:76px minmax(0,1fr);gap:10px;padding:11px}.compact-teamcard img{width:76px;height:76px}.compact-teamcard strong{font-size:16px}.compact-teamcard .teamcard-actions button{padding:8px 9px}}
+
+/* v1.2 TM/TR improvement suggestions */
+.move-improvement{margin-top:20px;padding:14px 16px;border:1px solid var(--border);border-radius:16px;min-width:0}
+.move-improvement>summary{font-weight:800;cursor:pointer;min-height:36px}
+.machine-suggestion{padding:10px 12px;margin:7px 0;background:var(--input);border:1px solid var(--border);border-radius:12px;overflow-wrap:anywhere}
+.machine-suggestion strong,.machine-suggestion span{display:block}
+.machine-suggestion span{margin-top:3px}
+#coverageSuggestions[hidden]{display:none!important}

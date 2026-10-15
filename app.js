@@ -161,6 +161,7 @@ async function openProfile(recordId){
   document.querySelectorAll('.profile-move').forEach((input,i)=>input.value=p.moves?.[i]||'');
   $('profileStatus').textContent='';
   loadEvolution(p,recordId);
+  loadMoveImprovements(p,recordId);
   $('abilitySuggestions').replaceChildren();$('moveSuggestions').replaceChildren();
   window.scrollTo(0,0);
   const openedId=recordId;
@@ -193,7 +194,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.1.1';
+const APP_VERSION='1.2.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -456,7 +457,7 @@ function analyzerRow(label,detail,kind=''){
 }
 $('analyzeTeam').addEventListener('click',async()=>{
   const run=++analyzerRun,results=$('analyzerResults'),status=$('analyzerStatus'),button=$('analyzeTeam');
-  results.replaceChildren();
+  results.replaceChildren();$('coverageSuggestions').hidden=true;
   if(!team.length){status.textContent='Add Pokémon to your party to analyze it.';return}
   button.disabled=true;status.textContent='Analyzing your party…';
   const attackTypes=Object.keys(colors);
@@ -483,6 +484,7 @@ $('analyzeTeam').addEventListener('click',async()=>{
   if(!moveEntries.length){
     results.append(analyzerRow('⚔️ Offensive coverage','Record moves in your Pokémon profiles to see coverage.'));
     status.textContent='Defensive analysis ready. Add moves to check offensive coverage.';
+    $('coverageSuggestions').hidden=true;
     button.disabled=false;return;
   }
   const details=await Promise.all(moveEntries.map(async entry=>({...entry,move:await moveInfo(entry.name)})));
@@ -505,6 +507,7 @@ $('analyzeTeam').addEventListener('click',async()=>{
   results.append(gapSection);
   const failures=details.filter(x=>!x.move).length;
   status.textContent='Party analysis ready.'+(failures?' '+failures+' move(s) could not be checked.':'');
+  loadCoverageSuggestions(run,covered.filter(x=>!x.hits.length).map(x=>x.defender));
   button.disabled=false;
 });
 
@@ -589,3 +592,108 @@ function renderMachineBank(){
 });
 $('bankSearch').addEventListener('input',renderMachineBank);
 $('game').addEventListener('change',()=>{if(collectionView==='bank')renderMachineBank()});
+
+// v1.2: Sword/Shield TM/TR teaching suggestions, limited to owned machines.
+const teachingPokemonCache=new Map(),teachingMoveCache=new Map();
+let teachingRun=0;
+function teachingSupported(){return game==='sword'||game==='shield'}
+function ownedMachines(){const inventory=machineBanks[game]||{};return MACHINE_LIST.filter(x=>inventory[x.key]>0)}
+function getTeachingPokemon(name){
+  if(!teachingPokemonCache.has(name))teachingPokemonCache.set(name,api('pokemon/'+name).catch(()=>null));
+  return teachingPokemonCache.get(name);
+}
+function getTeachingMove(name){
+  const key=normalizeMoveName(name);
+  if(!teachingMoveCache.has(key))teachingMoveCache.set(key,moveInfo(key));
+  return teachingMoveCache.get(key);
+}
+function canTeachInShield(pokemonData,moveName){
+  const key=normalizeMoveName(moveName);
+  const entry=pokemonData.moves?.find(x=>x.move.name===key);
+  return !!entry?.version_group_details?.some(x=>
+    x.version_group.name==='sword-shield'&&x.move_learn_method.name==='machine');
+}
+async function availableMachineMoves(pokemon){
+  const owned=ownedMachines(),data=await getTeachingPokemon(pokemon.name);
+  if(!data)return null;
+  const compatible=owned.filter(x=>canTeachInShield(data,x.name));
+  const moves=await Promise.all(compatible.map(async machine=>{
+    const info=await getTeachingMove(machine.name);
+    return info?{machine,info}:null;
+  }));
+  return moves.filter(Boolean);
+}
+function machineSuggestionRow(entry){
+  const row=document.createElement('div');row.className='machine-suggestion';
+  const heading=document.createElement('strong');
+  heading.textContent=entry.machine.key+' · '+entry.machine.name;
+  const meta=document.createElement('span');meta.className='hint';
+  const move=entry.info;
+  meta.textContent=title(move.type.name)+' · '+(move.power?'Power '+move.power:'Status move')+
+    (move.accuracy==null?'':' · '+move.accuracy+'% accuracy')+
+    (entry.machine.kind==='TR'?' · Owned: '+(machineBanks[game]?.[entry.machine.key]||0):' · Reusable');
+  row.append(heading,meta);return row;
+}
+async function loadMoveImprovements(p,recordId){
+  const run=++teachingRun,status=$('improvementStatus'),results=$('improvementResults');
+  results.replaceChildren();
+  if(!teachingSupported()){status.textContent='Available for Sword and Shield only.';return}
+  if(!ownedMachines().length){status.textContent='Add TMs or TRs to your Bank to see compatible moves.';return}
+  status.textContent='Checking your TM/TR collection…';
+  const compatible=await availableMachineMoves(p);
+  if(run!==teachingRun||editingRecordId!==recordId||$('profile').hidden)return;
+  if(compatible===null){status.textContent='Unable to check compatibility. Try again online.';return}
+  const known=new Set((p.moves||[]).map(normalizeMoveName));
+  const options=compatible.filter(x=>!known.has(normalizeMoveName(x.machine.name)));
+  if(!options.length){status.textContent='No additional compatible moves found in your Bank.';return}
+  const pokemonData=await getTeachingPokemon(p.name);
+  if(run!==teachingRun||editingRecordId!==recordId)return;
+  const atk=pokemonData.stats?.find(x=>x.stat.name==='attack')?.base_stat||1;
+  const spa=pokemonData.stats?.find(x=>x.stat.name==='special-attack')?.base_stat||1;
+  const score=x=>{
+    const move=x.info;
+    if(!move.power)return 0;
+    const stat=move.damage_class.name==='physical'?atk:spa;
+    const stab=p.types.includes(move.type.name)?1.5:1;
+    const accuracy=move.accuracy==null?1:move.accuracy/100;
+    return move.power*stat*stab*accuracy;
+  };
+  options.sort((a,b)=>score(b)-score(a));
+  status.textContent=options.length+' compatible moves you own';
+  const visible=options.slice(0,5);
+  visible.forEach(x=>results.append(machineSuggestionRow(x)));
+  if(options.length>5){
+    const more=document.createElement('button');more.type='button';more.textContent='Show all '+options.length;
+    more.addEventListener('click',()=>{
+      if(more.dataset.expanded)return;
+      options.slice(5).forEach(x=>results.insertBefore(machineSuggestionRow(x),more));
+      more.dataset.expanded='true';more.remove();
+    });results.append(more);
+  }
+}
+let coverageRun=0;
+async function loadCoverageSuggestions(analyzerId,gaps){
+  const run=++coverageRun,section=$('coverageSuggestions'),status=$('coverageSuggestionStatus'),results=$('coverageSuggestionResults');
+  results.replaceChildren();
+  if(!teachingSupported()||!ownedMachines().length||!gaps.length){section.hidden=true;return}
+  section.hidden=false;status.textContent='Checking teachable moves…';
+  const responses=await Promise.all(team.map(async p=>({p,moves:await availableMachineMoves(p)})));
+  if(run!==coverageRun||analyzerId!==analyzerRun)return;
+  const suggestions=[];
+  responses.forEach(({p,moves})=>(moves||[]).forEach(entry=>{
+    if(!entry.info.power||entry.info.damage_class?.name==='status')return;
+    const covers=gaps.filter(type=>(rules[entry.info.type.name]?.[type]??1)>1);
+    if(!covers.length)return;
+    const alreadyKnows=(p.moves||[]).some(x=>normalizeMoveName(x)===normalizeMoveName(entry.machine.name));
+    if(alreadyKnows)return;
+    suggestions.push({p,entry,covers});
+  }));
+  suggestions.sort((a,b)=>b.covers.length-a.covers.length||((b.entry.info.power||0)-(a.entry.info.power||0)));
+  status.textContent=suggestions.length?'Owned moves that could improve your coverage:':'No compatible TM/TR improvements found for the current gaps.';
+  suggestions.slice(0,10).forEach(s=>{
+    const row=machineSuggestionRow(s.entry);
+    const who=document.createElement('span');who.className='hint';
+    who.textContent='Teach to '+(s.p.nickname||title(s.p.name))+' · Covers '+s.covers.map(title).join(', ');
+    row.append(who);results.append(row);
+  });
+}

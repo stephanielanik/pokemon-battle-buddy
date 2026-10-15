@@ -108,3 +108,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 1.1.1
 - Compact horizontal Pokémon cards in Party and Box: artwork left, name/types/actions right.
 - Keeps profile editing and party swapping behavior unchanged.
+
+## Version 1.2.0 — Move Improvement Advisor
+- Profile accordion shows owned TM/TR moves compatible with that Pokémon's Sword/Shield machine learnset, excluding moves already recorded.
+- Team Analyzer suggests compatible owned moves that could fill uncovered defending-type gaps.
+- Uses PokéAPI Sword/Shield version-group machine learn methods; internet required.
+- Suggestions do not teach moves or consume TR inventory. Other games are not supported yet.
