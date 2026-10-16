@@ -75,6 +75,43 @@ function renderCollectionCards(list,container,location){
     const img=document.createElement('img');img.src=p.artwork||'';img.alt='';
     const info=document.createElement('div');info.className='teamcard-info';
     const name=document.createElement('strong');name.textContent=p.nickname||title(p.name);
+    const heading=document.createElement('div');heading.className='compact-card-heading';
+    const levelControl=document.createElement('div');levelControl.className='quick-level';
+    const levelValue=document.createElement('button');levelValue.type='button';levelValue.className='quick-level-value';
+    const pokemonName=p.nickname||title(p.name);
+    const currentLevel=()=>Number.isInteger(Number(p.level))&&Number(p.level)>=1&&Number(p.level)<=100?Number(p.level):null;
+    function refreshLevel(){
+      const level=currentLevel();
+      levelValue.textContent=level===null?'Lv. —':'Lv. '+level;
+      levelValue.setAttribute('aria-label','Edit level for '+pokemonName+(level===null?'':', currently '+level));
+      levelPlus.disabled=level===100;
+    }
+    const levelPlus=document.createElement('button');levelPlus.type='button';levelPlus.className='quick-level-plus';
+    levelPlus.textContent='＋';levelPlus.setAttribute('aria-label','Increase '+pokemonName+' level by one');
+    function setQuickLevel(value){
+      if(!Number.isInteger(value)||value<1||value>100)return;
+      p.level=value;
+      localStorage.setItem('battleBuddyTeam',JSON.stringify(team));
+      localStorage.setItem('battleBuddyBox',JSON.stringify(box));
+      refreshLevel();
+      // A level change should not rebuild cards or jump the page.
+      $('analyzerResults').replaceChildren();
+      $('boxRecommendations').hidden=true;
+      $('analyzerStatus').textContent='Levels changed. Analyze Party again for updated recommendations.';
+    }
+    levelPlus.addEventListener('click',()=>setQuickLevel(Math.min(100,(currentLevel()??0)+1)));
+    levelValue.addEventListener('click',()=>{
+      const entered=prompt('Set level for '+pokemonName+' (1–100):',currentLevel()??'');
+      if(entered===null)return;
+      const trimmed=entered.trim();
+      if(!/^(?:[1-9]|[1-9][0-9]|100)$/.test(trimmed)){
+        alert('Please enter a whole number from 1 to 100.');return;
+      }
+      setQuickLevel(Number(trimmed));
+    });
+    levelControl.append(levelValue,levelPlus);
+    heading.append(name,levelControl);
+    refreshLevel();
     const species=document.createElement('small');species.textContent=p.nickname?title(p.name):'';
     const types=document.createElement('div');types.className='types';types.innerHTML=p.types.map(pill).join('');
     const actions=document.createElement('div');actions.className='teamcard-actions';
@@ -90,7 +127,7 @@ function renderCollectionCards(list,container,location){
       remove.addEventListener('click',()=>removeBoxPokemon(p.recordId));
       actions.append(remove);
     }
-    info.append(name,species,types,actions);
+    info.append(heading,species,types,actions);
     card.append(img,info);container.append(card);
   }
   if(!list.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=location==='party'?'No Pokémon in your party. Add one from Lookup or your Box.':'Your Box is empty.';container.append(empty)}
@@ -271,7 +308,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.10.0';
+const APP_VERSION='1.10.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

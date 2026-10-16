@@ -360,3 +360,13 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 
 /* v1.9.3 Box-only removal action */
 .compact-teamcard .teamcard-actions .remove-box-pokemon{background:transparent;border:1px solid var(--border);color:var(--text);font-weight:650}
+
+/* v1.10.1 compact inline level editor */
+.compact-card-heading{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
+.compact-card-heading>strong{min-width:0;overflow-wrap:anywhere}
+.quick-level{display:inline-flex;align-items:center;flex:0 0 auto;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.65);border-radius:999px;overflow:hidden;color:#29243b}
+.quick-level button{border:0!important;background:transparent!important;box-shadow:none!important;color:inherit!important;margin:0!important;border-radius:0!important;font-size:12px!important;font-weight:800!important;line-height:1.1!important}
+.quick-level-value{padding:10px 3px 10px 10px!important;min-height:40px}
+.quick-level-plus{min-width:36px;min-height:40px;padding:8px 10px 8px 4px!important;font-size:17px!important}
+.quick-level-plus:disabled{opacity:.35}
+@media(max-width:390px){.compact-card-heading{gap:4px}.quick-level-value{padding-left:7px!important}.quick-level-plus{min-width:32px;padding-right:6px!important}}

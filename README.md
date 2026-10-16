@@ -242,3 +242,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Where multiple regular abilities are possible, show a caution rather than guessing the active ability.
 - Blocked moves display 0x actual effectiveness and cannot become Best Pokémon to Send recommendations.
 - This is limited to standard ability-based type immunities; Mold Breaker, held items, field conditions, and special move exceptions are not fully modeled.
+
+## Version 1.10.1 — Quick levels
+- Compact level display beside Pokémon names in Party and Box.
+- Tap + to increment and save immediately; tap the level number to enter a specific level (1–100).
+- No card rebuild or scroll jump on level changes; saved profiles remain unchanged except for the selected Pokémon's level.
