@@ -258,3 +258,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Show super-effective, neutral, resisted, and immune attacking types.
 - Rank up to three party Pokémon using recorded damaging moves, STAB, accuracy, and defensive typing.
 - Clearly warn that unknown opponent abilities may override type effectiveness.
+
+## Version 1.12.0 — Move Advisor 2.0
+- Re-rank replacement choices using the complete moveset, base Attack/Special Attack, STAB, accuracy, estimated turns, utility, and redundant attack types.
+- Raise the threshold for situational, recoil, two-turn, recharge, and conditional moves; preserve key Speed boosts and priority.
+- Explain fixed damage and conditional moves without treating their missing base power as ordinary zero-power attacks.
+- Show short, actionable recommendations with up to three specific reasons. No changes to Pokémon storage.

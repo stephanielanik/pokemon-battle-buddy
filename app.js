@@ -438,7 +438,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.11.0';
+const APP_VERSION='1.12.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -1512,48 +1512,152 @@ function attackingStatExplanation(candidate,oldMove,pokemon){
   return 'Uses '+(newClass==='physical'?'Attack':'Special Attack')+
     ' ('+newStat+') instead of '+(oldClass==='physical'?'Attack':'Special Attack')+' ('+oldStat+').';
 }
+// Move Advisor 2.0: score the complete moveset, not just raw move power.
+// All scores are heuristics; opponent stats, IVs, EVs and field conditions are unknown.
+const specialMechanics={
+  'night-shade':'Deals fixed damage equal to the user’s level',
+  'seismic-toss':'Deals fixed damage equal to the user’s level',
+  'counter':'Only works after taking a physical hit; retaliates at negative priority',
+  'mirror-coat':'Only works after taking a special hit; retaliates at negative priority',
+  'endeavor':'Only works when the target has more HP than the user',
+  'flail':'Power increases as the user’s HP decreases',
+  'reversal':'Power increases as the user’s HP decreases',
+  'sucker-punch':'Fails unless the opponent selects a damaging move',
+  'sunny-day':'Boosts Fire, weakens Water and strengthens Growth; weather can benefit opponents',
+  'rain-dance':'Boosts Water, weakens Fire and changes weather interactions',
+  'solar-beam':'Usually charges for a turn; attacks immediately in harsh sunlight',
+  'hex':'Power doubles against a target with a major status condition',
+  'shadow-punch':'Normally never misses',
+  'flame-charge':'Raises the user’s Speed after hitting'
+};
+const variableDamageMoves=new Set(['night-shade','seismic-toss','counter','mirror-coat','endeavor','flail','reversal','super-fang','dragon-rage','sonic-boom','psywave','final-gambit']);
+function moveIsDamaging(move){return !!move&&(move.power>0||variableDamageMoves.has(move.name))&&move.damage_class?.name!=='status'}
+function moveRole(move){
+  if(!move)return 'unknown';
+  if(moveIsDamaging(move))return 'attack';
+  if(['sunny-day','rain-dance','sandstorm','hail','snow-scape'].includes(move.name))return 'weather';
+  if(['growth','swords-dance','nasty-plot','iron-defense','calm-mind','agility'].includes(move.name))return 'setup';
+  if(['cotton-spore','charm','thunder-wave','will-o-wisp','confuse-ray','yawn','spore','hypnosis','toxic'].includes(move.name))return 'disruption';
+  if(['recover','roost','soft-boiled','synthesis','rest','wish'].includes(move.name))return 'recovery';
+  return 'support';
+}
+function moveExpectedValue(move,pokemon){
+  if(!moveIsDamaging(move))return 0;
+  if(variableDamageMoves.has(move.name)){
+    // Never assign fictitious ordinary base power to conditional/fixed attacks.
+    if(['night-shade','seismic-toss'].includes(move.name)){
+      const level=Number(pokemon._recordedLevel)||35;
+      return level*45;
+    }
+    return 0;
+  }
+  return roughMoveValue(move,pokemon);
+}
+function moveRoleQuality(move){
+  if(!move)return 0;
+  let quality=moveUtility(move);
+  const effects=notableMoveEffects(move);
+  if(move.name==='flame-charge'||move.name==='trailblaze')quality+=2;
+  if(['growth','swords-dance','nasty-plot','calm-mind'].includes(move.name))quality+=1.2;
+  if(['yawn','spore','thunder-wave','will-o-wisp'].includes(move.name))quality+=1.2;
+  if(move.name==='sunny-day'||move.name==='rain-dance')quality+=.5;
+  if(move.name==='quick-attack'||move.name==='mach-punch')quality+=1;
+  if(effects.some(x=>x.includes('Restores HP')))quality+=.8;
+  return quality;
+}
+function moveSetScore(moves,pokemon){
+  const damaging=moves.filter(moveIsDamaging);
+  const bestByType=new Map();
+  for(const move of damaging){
+    const type=move.type?.name||'unknown',value=moveExpectedValue(move,pokemon);
+    if(!bestByType.has(type)||value>bestByType.get(type))bestByType.set(type,value);
+  }
+  const values=[...bestByType.values()].sort((a,b)=>b-a);
+  const max=Math.max(1,...moves.map(m=>moveExpectedValue(m,pokemon)));
+  const offense=values.reduce((sum,v,i)=>sum+v/max*(i===0?2.8:1.4),0);
+  const attackTypes=new Set(bestByType.keys());
+  const coverage=Object.keys(colors).filter(defense=>[...attackTypes].some(t=>(rules[t]?.[defense]??1)>1)).length;
+  const support=moves.filter(m=>!moveIsDamaging(m)).reduce((n,m)=>n+moveRoleQuality(m),0);
+  const attackUtility=damaging.reduce((n,m)=>n+moveRoleQuality(m)*.5,0);
+  const penalty=damaging.length===0?10:damaging.length===1?3.2:0;
+  const overlap=damaging.length-attackTypes.size;
+  return offense+coverage*.32+support*.75+attackUtility*.55-penalty-overlap*.3;
+}
 function decideMoveReplacement(candidate,entries,details){
   const current=entries.map(x=>x.move);
-  const baseline=moveCoverage(current);
-  const baseBest=Math.max(1,...current.map(m=>roughMoveValue(m,details)));
-  const candidateValue=roughMoveValue(candidate,details);
-  const candidateUtility=moveUtility(candidate);
+  const baseline=moveSetScore(current,details);
   const drawbacks=moveDrawbacks(candidate);
-  const candidateDamaging=!!(candidate.power>0&&candidate.damage_class?.name!=='status');
   const options=entries.map(x=>{
     const updated=current.map((m,i)=>i===x.index?candidate:m);
-    const coverage=moveCoverage(updated);
-    const lost=[...baseline].filter(t=>!coverage.has(t));
-    const gained=[...coverage].filter(t=>!baseline.has(t));
-    const removedValue=roughMoveValue(x.move,details);
-    const damageGain=(candidateValue-removedValue)/baseBest;
-    const utilityDelta=candidateUtility-moveUtility(x.move);
-    const remainingDamaging=updated.filter(m=>m?.power>0&&m.damage_class?.name!=='status').length;
-    const previousDamaging=current.filter(m=>m?.power>0&&m.damage_class?.name!=='status').length;
+    const old= x.move;
+    const oldValue=moveExpectedValue(old,details),newValue=moveExpectedValue(candidate,details);
+    const sameType=moveIsDamaging(candidate)&&moveIsDamaging(old)&&candidate.type?.name===old?.type?.name;
+    const sameRole=moveRole(candidate)===moveRole(old);
+    const lost= [...moveCoverage(current)].filter(t=>!moveCoverage(updated).has(t));
+    const gained=[...moveCoverage(updated)].filter(t=>!moveCoverage(current).has(t));
+    const previousDamaging=current.filter(moveIsDamaging).length;
+    const remainingDamaging=updated.filter(moveIsDamaging).length;
     const losingLastAttack=previousDamaging>0&&remainingDamaging===0;
     const losingSecondAttack=previousDamaging>=2&&remainingDamaging<2;
-    const oldDamaging=!!(x.move?.power>0&&x.move.damage_class?.name!=='status');
-    const sameType=!!(candidateDamaging&&oldDamaging&&x.move.type.name===candidate.type.name);
-    // Replacing an existing attack of the same type preserves its coverage.
-    // Reward that swap only if the new move is a meaningful damage upgrade.
-    const meaningfulUpgrade=sameType&&candidateValue>removedValue*1.08;
-    const redundantAttack=sameType&&candidateValue>=removedValue*.92;
-    const statusSacrifice=candidateDamaging&&!oldDamaging;
-    const existingEffects=moveUtility(x.move);
-    const sameRole=sameType&&candidate.damage_class?.name===x.move.damage_class?.name;
-    // Don't trade away a distinct tactical effect just for modest damage gains.
-    const effectLoss=oldDamaging&&existingEffects>candidateUtility+1?
-      Math.min(1.2,(existingEffects-candidateUtility)*.45):0;
-    const score=damageGain+gained.length*.85-lost.length*1.4+utilityDelta*.55+
-      (meaningfulUpgrade?2.5:redundantAttack?.65:0)-
-      (statusSacrifice?1.5:0)-effectLoss+
-      (sameRole&&meaningfulUpgrade?.45:0)-
-      (drawbacks.includes('User faints after use')?5:0)-
-      (losingLastAttack?8:losingSecondAttack?3:0);
-    return {...x,score,lost,gained,removedValue,losingLastAttack,losingSecondAttack,
-      sameType,meaningfulUpgrade,statusSacrifice};
+    const selfKO=drawbacks.includes('User faints after use');
+    const dangerous= selfKO||['counter','mirror-coat','endeavor'].includes(candidate.name);
+    const candidateConditional=variableDamageMoves.has(candidate.name);
+    let score=moveSetScore(updated,details)-baseline;
+    if(sameType&&newValue>oldValue*1.15&&newValue>0)score+=1.6;
+    if(sameType&&sameRole&&newValue>=oldValue*.95&&newValue>0)score+=.5;
+    if(sameType&&newValue<oldValue*.8)score-=1.5;
+    if(!sameType&&moveIsDamaging(candidate)&&!moveIsDamaging(old))score-=1.3;
+    if(losingLastAttack)score-=12;
+    else if(losingSecondAttack)score-=4;
+    if(selfKO)score-=12;
+    if(candidateConditional)score-=2.8;
+    // Two-turn/recharge/recoil attacks must clear a higher bar than a simple coverage gain.
+    if(drawbacks.some(x=>x.startsWith('Takes two turns')||x==='Must recharge next turn'))score-=2.6;
+    if(drawbacks.includes('Recoil damage'))score-=2.8;
+    // Protect reliable Speed boosts and priority from speculative coverage improvements.
+    if(['flame-charge','trailblaze','quick-attack'].includes(old?.name))score-=1.6;
+    if(old?.meta?.drain>0||['giga-drain','drain-punch','leech-life','horn-leech'].includes(old?.name))score-=2.6;
+    if(['sunny-day','rain-dance'].includes(candidate.name))score-=1.3;
+    if(old?.name==='razor-leaf'&&candidate.name==='energy-ball')score+=.4;
+    return {...x,score,lost,gained,removedValue:oldValue,losingLastAttack,losingSecondAttack,
+      sameType,meaningfulUpgrade:sameType&&newValue>oldValue*1.15&&!dangerous,
+      dangerous,candidateConditional};
   }).sort((a,b)=>b.score-a.score);
   return options[0];
+}
+function explainMoveDecision(candidate,replacement,pokemon,free,already){
+  if(already)return {skip:true,text:'Already known — no change needed.'};
+  const drawbacks=moveDrawbacks(candidate);
+  const special=specialMechanics[candidate.name];
+  const selfKO=drawbacks.includes('User faints after use');
+  const skip=!free&&(selfKO||replacement.score<1.2||replacement.losingLastAttack||replacement.losingSecondAttack);
+  const reasons=[];
+  if(selfKO)reasons.push('The user faints after using this move.');
+  if(special)reasons.push(special+'.');
+  if(!free&&replacement.sameType&&replacement.meaningfulUpgrade&&!skip)
+    reasons.push('Stronger '+title(candidate.type.name)+' attack without losing type coverage.');
+  if(!free&&replacement.gained?.length)reasons.push('Adds coverage against '+replacement.gained.map(title).join(', ')+'.');
+  if(!free&&replacement.lost?.length)reasons.push('Loses coverage against '+replacement.lost.map(title).join(', ')+'.');
+  if(!free&&replacement.move?.name==='flame-charge')reasons.push('You would lose a reliable Speed boost.');
+  if(!free&&replacement.move?.priority>0)reasons.push('You would lose priority.');
+  if(!free&&replacement.losingSecondAttack)reasons.push('You would be left with only one damaging move.');
+  if(!free&&replacement.losingLastAttack)reasons.push('You would lose your last damaging move.');
+  if(drawbacks.includes('Recoil damage'))reasons.push('Causes recoil damage.');
+  if(drawbacks.some(x=>x.startsWith('Takes two turns')))reasons.push('Takes two turns to attack.');
+  if(drawbacks.includes('Must recharge next turn'))reasons.push('Requires a recharge turn.');
+  if(candidate.accuracy!=null&&replacement.move?.accuracy!=null&&candidate.accuracy<replacement.move.accuracy)
+    reasons.push('Less accurate ('+candidate.accuracy+'% vs '+replacement.move.accuracy+'%).');
+  const effects=notableMoveEffects(candidate).filter(x=>!reasons.join(' ').toLowerCase().includes(x.toLowerCase()));
+  if(effects.length)reasons.push(effects[0]+'.');
+  if(!free&&!skip&&replacement.move){
+    const stat=attackingStatExplanation(candidate,replacement.move,pokemon);
+    if(stat)reasons.push(stat.replace('Uses ','Uses base '));
+  }
+  const label=free?'Use the empty move slot.':skip?'⭐ Keep Current Moves.':
+    '✓ Recommended: replace '+title(replacement.name)+'.';
+  if(skip&&reasons.length===0)reasons.push('No clear overall improvement for this moveset.');
+  if(skip&&drawbacks.some(x=>x.startsWith('Takes two turns')))reasons.unshift('Two-turn attacks are less reliable than immediate attacks.');
+  return {skip,text:[label,...reasons.slice(0,3)].join(' ')};
 }
 
 $('compareNewMove').addEventListener('click',async()=>{
@@ -1573,51 +1677,12 @@ $('compareNewMove').addEventListener('click',async()=>{
   const already=current.some(n=>normalizeMoveName(n)===normalizeMoveName(candidate.name));
   const entries=current.map((n,i)=>({name:n,move:moves[i],index:i}));
   const free=entries.find(x=>!x.name);
+  details._recordedLevel=pokemon.level;
   const replacement=free||decideMoveReplacement(candidate,entries,details);
-  const newValue=roughMoveValue(candidate,details);
-  let advice;
-  const drawbacks=moveDrawbacks(candidate);
-  const selfKO=drawbacks.includes('User faints after use');
-  const skipRecommended=!already&&(selfKO||(!free&&(replacement.score<=0||replacement.losingLastAttack||replacement.losingSecondAttack)));
-  if(already)advice='Already known — no change needed.';
-  else if(selfKO)advice='⭐ Keep Current Moves. ⚠️ Situational: '+title(candidate.name)+' causes your Pokémon to faint. Best saved as a last-resort attack.';
-  else if(free)advice='You have an empty slot. No move needs to be forgotten.';
-  else if(skipRecommended){
-    const tactical=candidate.damage_class?.name==='status';
-    advice='⭐ Keep Current Moves. '+
-      (replacement.losingLastAttack?'You would lose your only damaging move.':
-       replacement.losingSecondAttack?'Replacing '+title(replacement.name)+' would leave only one damaging move.':
-       tactical?'This status move is situational rather than a clear upgrade.':
-       'No clear overall upgrade.')+
-      ' You can still choose a replacement if you prefer.';
-  }
-  else advice='Consider replacing '+title(replacement.name)+'.'+(replacement.meaningfulUpgrade?' Stronger '+title(candidate.type.name)+' attack without losing type coverage.':'');
-  if(!free&&!already&&!selfKO){
-    if(replacement.gained?.length)advice+=' Adds coverage against '+replacement.gained.map(title).join(', ')+'.';
-    if(replacement.lost?.length)advice+=' Loses coverage against '+replacement.lost.map(title).join(', ')+'.';
-    if(candidate.power&&newValue>replacement.removedValue*1.1&&!replacement.meaningfulUpgrade)advice+=' Higher estimated damage potential.';
-    if(replacement.move?.priority>0)advice+=' You would lose a priority attack.';
-    if(replacement.move?.stat_changes?.some(x=>x.change>0))advice+=' You would lose a stat-boosting effect.';
-    if(replacement.move?.damage_class?.name==='status')advice+=' You would lose a status move.';
-  }
-  if(candidate.damage_class?.name==='status'){
-    const opponentDebuffs=(candidate.stat_changes||[]).filter(x=>x.change<0&&!['user','users-field','user-and-allies','user-or-ally','users-side'].includes(candidate.target?.name));
-    if(opponentDebuffs.length)advice+=' Lowers the opponent’s '+opponentDebuffs.map(x=>title(x.stat.name)+' by '+Math.abs(x.change)+' stage'+(Math.abs(x.change)===1?'':'s')).join(', ')+'.';
-    else advice+=' Consider its tactical effect rather than damage.';
-  }
-  if(!already&&!selfKO&&!skipRecommended&&!free){
-    const statReason=attackingStatExplanation(candidate,replacement.move,details);
-    if(statReason)advice+=' '+statReason;
-  }
-  const effects=notableMoveEffects(candidate);
-  if(effects.length)advice+=' '+effects.join(' · ')+'.';
-  if(!already&&!skipRecommended&&!selfKO&&!free&&replacement.move){
-    const previousEffects=notableMoveEffects(replacement.move);
-    const lostEffects=previousEffects.filter(effect=>!effects.includes(effect));
-    if(lostEffects.length)advice+=' You would lose: '+lostEffects.slice(0,2).join(' · ')+'.';
-  }
-  const otherDrawbacks=drawbacks.filter(x=>!selfKO||x!=='User faints after use');
-  if(otherDrawbacks.length)advice+=' ⚠️ '+otherDrawbacks.join(' · ')+'.';
+  details._recordedLevel=pokemon.level;
+  const decision=explainMoveDecision(candidate,replacement,details,free,already);
+  const skipRecommended=decision.skip;
+  const advice=decision.text;
   const summary=$('learnMoveSummary');summary.replaceChildren();
   const heading=document.createElement('strong');heading.textContent=title(candidate.name);
   const info=document.createElement('p');info.className='hint';info.textContent=moveDescription(candidate);
