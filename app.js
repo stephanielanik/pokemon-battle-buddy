@@ -68,10 +68,73 @@ function showCollection(view){
   $('analyzerDisclosure').hidden=collectionView!=='party';
 
 }
+// Reorder only within the current collection; preserve each Pokémon's record.
+function persistCardOrder(container,location){
+  const records=location==='party'?team:box;
+  const byId=new Map(records.map(p=>[p.recordId,p]));
+  const ids=[...container.querySelectorAll('.compact-teamcard')].map(el=>el.dataset.recordId);
+  if(ids.length!==records.length||ids.some(id=>!byId.has(id)))return;
+  records.splice(0,records.length,...ids.map(id=>byId.get(id)));
+  localStorage.setItem(location==='party'?'battleBuddyTeam':'battleBuddyBox',JSON.stringify(records));
+}
+function setupCardReorder(handle,card,container,location){
+  let active=false,originalIndex=-1,pointerId=null;
+  handle.addEventListener('pointerdown',event=>{
+    if(event.button!==0||active)return;
+    active=true;pointerId=event.pointerId;
+    originalIndex=[...container.children].indexOf(card);
+    document.addEventListener('pointermove',onDragMove);
+    document.addEventListener('pointerup',finish);
+    document.addEventListener('pointercancel',finish);
+    card.classList.add('card-reordering');
+    event.preventDefault();
+  });
+  function onDragMove(event){
+    if(!active||event.pointerId!==pointerId)return;
+    const siblings=[...container.querySelectorAll('.compact-teamcard')].filter(el=>el!==card);
+    const target=siblings.find(el=>event.clientY<el.getBoundingClientRect().top+el.getBoundingClientRect().height/2);
+    if(target)container.insertBefore(card,target);
+    else container.append(card);
+    // Keep dragging useful near the edges of the iPhone screen.
+    const edge=65;
+    if(event.clientY<edge)window.scrollBy(0,-15);
+    else if(event.clientY>window.innerHeight-edge)window.scrollBy(0,15);
+  }
+  function finish(event){
+    if(!active||(event.pointerId!=null&&event.pointerId!==pointerId))return;
+    active=false;pointerId=null;
+    document.removeEventListener('pointermove',onDragMove);
+    document.removeEventListener('pointerup',finish);
+    document.removeEventListener('pointercancel',finish);
+    card.classList.remove('card-reordering');
+    if(event.type==='pointercancel'){
+      const at=container.children[originalIndex];
+      if(at&&at!==card)container.insertBefore(card,at);
+      else if(!at)container.append(card);
+      return;
+    }
+    persistCardOrder(container,location);
+  }
+  handle.addEventListener('keydown',event=>{
+    if(event.key!=='ArrowUp'&&event.key!=='ArrowDown')return;
+    event.preventDefault();
+    if(event.key==='ArrowUp'&&card.previousElementSibling)container.insertBefore(card,card.previousElementSibling);
+    if(event.key==='ArrowDown'&&card.nextElementSibling)container.insertBefore(card,card.nextElementSibling.nextElementSibling);
+    persistCardOrder(container,location);
+    handle.focus();
+  });
+}
 function renderCollectionCards(list,container,location){
   container.replaceChildren();
   for(const p of list){
     const card=document.createElement('div');card.className='teamcard compact-teamcard';card.style.background=gradient(p.types);
+    card.dataset.recordId=p.recordId;
+    const handle=document.createElement('button');
+    handle.type='button';handle.className='card-drag-handle';
+    handle.textContent='⠿';
+    handle.setAttribute('aria-label','Reorder '+(p.nickname||title(p.name))+'; drag or use arrow keys');
+    handle.title='Drag to reorder';
+    setupCardReorder(handle,card,container,location);
     const img=document.createElement('img');img.src=p.artwork||'';img.alt='';
     const info=document.createElement('div');info.className='teamcard-info';
     const name=document.createElement('strong');name.textContent=p.nickname||title(p.name);
@@ -128,7 +191,7 @@ function renderCollectionCards(list,container,location){
       actions.append(remove);
     }
     info.append(heading,species,types,actions);
-    card.append(img,info);container.append(card);
+    card.append(handle,img,info);container.append(card);
   }
   if(!list.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=location==='party'?'No Pokémon in your party. Add one from Lookup or your Box.':'Your Box is empty.';container.append(empty)}
 }
@@ -308,7 +371,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.10.1';
+const APP_VERSION='1.10.2';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

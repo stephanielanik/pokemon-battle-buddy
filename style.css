@@ -370,3 +370,9 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 .quick-level-plus{min-width:36px;min-height:40px;padding:8px 10px 8px 4px!important;font-size:17px!important}
 .quick-level-plus:disabled{opacity:.35}
 @media(max-width:390px){.compact-card-heading{gap:4px}.quick-level-value{padding-left:7px!important}.quick-level-plus{min-width:32px;padding-right:6px!important}}
+
+/* v1.10.2: compact, handle-only reorder on touch and mouse */
+.compact-teamcard{position:relative}
+.compact-teamcard .card-drag-handle{position:absolute;top:7px;left:7px;z-index:2;display:flex;align-items:center;justify-content:center;width:36px;height:40px;padding:0;border:0;border-radius:12px;background:rgba(255,255,255,.55);color:#342b48;font-size:25px;line-height:1;box-shadow:none;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.compact-teamcard .card-drag-handle:active{cursor:grabbing}
+.compact-teamcard.card-reordering{outline:3px solid rgba(125,84,169,.8);outline-offset:1px;opacity:.88;z-index:3}

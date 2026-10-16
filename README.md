@@ -247,3 +247,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Compact level display beside Pokémon names in Party and Box.
 - Tap + to increment and save immediately; tap the level number to enter a specific level (1–100).
 - No card rebuild or scroll jump on level changes; saved profiles remain unchanged except for the selected Pokémon's level.
+
+## Version 1.10.2 — Drag to reorder Pokémon
+- Drag the small handle on Party or Box cards to reorder Pokémon within that collection.
+- Order is saved to existing localStorage records without changing profiles or moving Pokémon between Party and Box.
+- Keyboard users can focus a handle and use Arrow Up / Arrow Down.
