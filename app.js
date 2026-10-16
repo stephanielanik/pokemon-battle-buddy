@@ -396,8 +396,15 @@ async function refreshRaidMatchup(){
     const baseStat=stats.find(s=>s.stat.name===statName)?.base_stat||65;
     const level=Number(p.level)||null;
     // Only a relative heuristic: no IVs, EVs, nature, opponent stats or Dynamax effects.
+    // Penalize delayed and conditional moves, not just their listed power.
+    const drawbacks=moveDrawbacks(move);
+    const turns=drawbacks.some(x=>x.startsWith('Takes two turns')||x==='Must recharge next turn')?0.5:1;
+    const delayed=['future-sight','doom-desire'].includes(move.name)?0.45:1;
+    const conditional=['dynamic-punch','zap-cannon'].includes(move.name)?0.9:1;
     const strength=move.power*effectiveness*stab*accuracy*defenseWeight*
-      (baseStat/80)*(level?Math.max(.4,level/40):.7);
+      (baseStat/80)*(level?Math.pow(Math.max(.4,level/40),2):.35)*
+      turns*delayed*conditional;
+    // This is an approximate matchup estimate, not a damage prediction.
     return [{p,name:move.name||name,effectiveness,score:strength,level,risk}];
   }).sort((a,b)=>b.score-a.score);
   function bestPerPokemon(items){
@@ -427,20 +434,38 @@ async function refreshRaidMatchup(){
   }
   const unique=bestPerPokemon(ranked);
   if(battleMode==='gym'){
+    // Gym teams must be balanced, not simply the six highest single-move scores.
     const chosen=[],available=[...unique];
+    const partyLevels=team.map(p=>Number(p.level)).filter(n=>n>=1&&n<=100);
+    const benchmark=partyLevels.length?Math.round(partyLevels.reduce((a,b)=>a+b,0)/partyLevels.length):40;
+    function gymScore(x){
+      const level=x.level||0;
+      const readiness=level?Math.min(1.15,Math.pow(level/benchmark,2)):.35;
+      const weakPenalty=x.risk>=4?.55:x.risk>=2?.8:1;
+      const typeBonus=x.effectiveness>1?1.5:1;
+      const redundant=chosen.filter(y=>y.p.types.some(t=>x.p.types.includes(t))).length;
+      const attackRepeat=chosen.filter(y=>y.name===x.name).length;
+      return x.score*readiness*weakPenalty*typeBonus*
+        Math.max(.5,1-redundant*.11-attackRepeat*.08);
+    }
     while(chosen.length<6&&available.length){
-      available.sort((a,b)=>{
-        const adjusted=x=>x.score-
-          chosen.filter(y=>y.p.types.some(t=>x.p.types.includes(t))).length*x.score*.16-
-          chosen.filter(y=>y.name===x.name).length*x.score*.08;
-        return adjusted(b)-adjusted(a);
-      });
+      available.sort((a,b)=>gymScore(b)-gymScore(a));
       chosen.push(available.shift());
     }
-    status.textContent=chosen.length?'Suggested lineup for the selected type:':'No recorded damaging moves found.';
+    status.textContent=chosen.length?'Suggested lineup for the selected type, with levels and coverage considered:':'No recorded damaging moves found.';
     chosen.forEach((x,i)=>{
       const card=renderChoice(x,output,(i+1)+'. '+(box.includes(x.p)?'📦 ':''));
       if(box.includes(x.p))addBoxLink(card);
+      if(!x.level||x.level<benchmark-7){
+        const caution=document.createElement('p');caution.className='hint';
+        caution.textContent='⚠️ Level below party average or not recorded; consider training first.';
+        card.append(caution);
+      }
+      if(['future-sight','doom-desire'].includes(normalizeMoveName(x.name))){
+        const caution=document.createElement('p');caution.className='hint';
+        caution.textContent='⚠️ Delayed damage; may not be the best immediate attack.';
+        card.append(caution);
+      }
     });
     const incoming=chosen.filter(x=>box.includes(x.p));
     const outgoing=team.filter(p=>!chosen.some(x=>x.p===p));
@@ -450,6 +475,9 @@ async function refreshRaidMatchup(){
       (outgoing.length?' and boxing '+outgoing.map(p=>p.nickname||title(p.name)).join(', '):'')+'.':
       'Your current party fills the recommended slots.';
     output.append(swaps);
+    const caveat=document.createElement('p');caveat.className='hint';
+    caveat.textContent='Gym planning uses the selected type, not the gym leader’s complete roster. Review individual matchups before swapping.';
+    output.append(caveat);
   }else{
     status.textContent=partyBest.length?'Best recorded party moves:':'No usable damaging moves recorded for your party.';
     partyBest.forEach((x,i)=>renderChoice(x,output,i===0?'⭐ ':''));
@@ -564,7 +592,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.15.0';
+const APP_VERSION='1.15.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

@@ -281,3 +281,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Gym uses Party and Box together and discourages duplicate types when choosing six Pokémon.
 - Max Raid displays up to five viable Box alternatives even if none outranks the best party member.
 - Gym recommendations reflect the selected type, not every opponent on the actual gym roster. No automatic changes to Party or Box.
+
+## Version 1.15.1 — Gym scoring refinement
+- Penalize delayed, two-turn, inaccurate, and conditional attacks more heavily in matchup rankings.
+- Gym team selection now gives extra weight to super-effective attacks and readiness relative to the party's average level, with warnings for underleveled candidates.
+- Remains a selected-type heuristic, not a full gym-roster simulator. Party and Box remain unchanged.
