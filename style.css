@@ -389,3 +389,8 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 
 /* v1.14 Box recommendations for type-only raid matchup */
 .raid-box-options{margin-top:16px;border:1px solid #dfd5eb;border-radius:15px;padding:12px 14px}.raid-box-options summary{font-weight:800;cursor:pointer;min-height:38px}.raid-box-content{padding-top:12px}.raid-box-content .battle-pick{margin-bottom:10px}.raid-box-content button{min-height:42px;margin-top:7px}
+
+/* v1.15 Battle Planner modes */
+.battle-mode{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+.battle-mode button{min-height:46px;padding:10px 8px;min-width:0}
+.battle-mode button.active{background:#7952a5;color:#fff;border-color:#7952a5}

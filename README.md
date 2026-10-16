@@ -275,3 +275,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Collapsible Better Options from Your Box section shows up to three candidates when they score at least 10% above the best party option.
 - Mark candidates as ready to consider or worth training, with a shortcut to Box.
 - Estimates are approximate and cannot identify unknown raid abilities, IVs, EVs or nature. No automatic swaps or data migration.
+
+## Version 1.15.0 — Battle Planner
+- Switch between Gym (six-member lineup preview) and Max Raid (single-fighter recommendations).
+- Gym uses Party and Box together and discourages duplicate types when choosing six Pokémon.
+- Max Raid displays up to five viable Box alternatives even if none outranks the best party member.
+- Gym recommendations reflect the selected type, not every opponent on the actual gym roster. No automatic changes to Party or Box.
