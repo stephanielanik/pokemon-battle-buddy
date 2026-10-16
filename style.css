@@ -357,3 +357,6 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 
 /* v1.9.1 readiness labels in Box recommendations */
 .box-recommendation-body strong{line-height:1.4}
+
+/* v1.9.3 Box-only removal action */
+.compact-teamcard .teamcard-actions .remove-box-pokemon{background:transparent;border:1px solid var(--border);color:var(--text);font-weight:650}

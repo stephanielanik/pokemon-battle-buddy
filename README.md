@@ -231,3 +231,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 1.9.2 — Emergency startup repair
 - Correct malformed regular expression in evolution chain lookup introduced in 1.9.1, which prevented the entire app script from parsing.
 - No storage changes or data migrations.
+
+## Version 1.9.3 — Remove from Box
+- Box Pokémon cards now include Remove, with a confirmation before deleting that specific stored Pokémon profile.
+- Party cards retain Move to Box rather than permanent removal.
+- Deleted profiles can only be restored from a previously exported backup.

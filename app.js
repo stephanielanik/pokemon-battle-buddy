@@ -79,7 +79,16 @@ function renderCollectionCards(list,container,location){
     const edit=document.createElement('button');edit.type='button';edit.textContent='Edit profile';edit.addEventListener('click',()=>openProfile(p.recordId));
     const move=document.createElement('button');move.type='button';move.textContent=location==='party'?'Move to Box':'Add to Party';
     move.addEventListener('click',()=>movePokemon(p.recordId,location));
-    actions.append(edit,move);info.append(name,species,types,actions);
+    actions.append(edit,move);
+    if(location==='box'){
+      const remove=document.createElement('button');
+      remove.type='button';remove.className='remove-box-pokemon';
+      remove.textContent='Remove';
+      remove.setAttribute('aria-label','Remove '+(p.nickname||title(p.name))+' from Box');
+      remove.addEventListener('click',()=>removeBoxPokemon(p.recordId));
+      actions.append(remove);
+    }
+    info.append(name,species,types,actions);
     card.append(img,info);container.append(card);
   }
   if(!list.length){const empty=document.createElement('div');empty.className='empty';empty.textContent=location==='party'?'No Pokémon in your party. Add one from Lookup or your Box.':'Your Box is empty.';container.append(empty)}
@@ -99,6 +108,15 @@ function save(){
   localStorage.setItem('battleBuddyTeam',JSON.stringify(team));
   localStorage.setItem('battleBuddyBox',JSON.stringify(box));
   renderTeam();$('boxRecommendations').hidden=true;$('analyzerResults').replaceChildren();$('analyzerStatus').textContent='Party changed. Tap Analyze Party for updated results.';if(current)refreshMoveAdvisor(current.types);
+}
+function removeBoxPokemon(recordId){
+  const index=box.findIndex(p=>p.recordId===recordId);
+  if(index<0)return;
+  const pokemon=box[index];
+  const name=pokemon.nickname||title(pokemon.name);
+  if(!confirm('Permanently remove '+name+' from your Battle Buddy Box? This deletes its saved profile and cannot be undone without a backup.'))return;
+  box.splice(index,1);
+  save();
 }
 function movePokemon(recordId,location){
   const source=location==='party'?team:box, destination=location==='party'?box:team;
@@ -251,7 +269,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.9.2';
+const APP_VERSION='1.9.3';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
