@@ -286,3 +286,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Penalize delayed, two-turn, inaccurate, and conditional attacks more heavily in matchup rankings.
 - Gym team selection now gives extra weight to super-effective attacks and readiness relative to the party's average level, with warnings for underleveled candidates.
 - Remains a selected-type heuristic, not a full gym-roster simulator. Party and Box remain unchanged.
+
+## Version 1.16.0 — Gym TM/TR preparation
+- Gym Battle Planner checks owned TM/TR moves against Sword/Shield compatibility for boxed Pokémon.
+- Show up to five possible super-effective attacks that boxed Pokémon could learn, with level, move power, accuracy, and machine ID.
+- These suggestions do not change moves or automatically promote a Pokémon into the proposed team. Keep the inventory updated for useful recommendations.

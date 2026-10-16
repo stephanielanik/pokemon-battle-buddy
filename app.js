@@ -432,6 +432,39 @@ async function refreshRaidMatchup(){
     });
     card.append(button);
   }
+  // Gym preparation: evaluate compatible, owned TMs/TRs for boxed Pokémon.
+  // These are preparation ideas, not moves the Pokémon already knows.
+  const gymMachines=[];
+  if(battleMode==='gym'&&(game==='shield'||game==='sword')){
+    const owned=ownedMachines();
+    const ownedDetails=await Promise.all(owned.map(async machine=>({machine,move:await moveInfo(machine.name)})));
+    if(run!==raidRun||$('raid').hidden)return;
+    for(const p of box){
+      const species=profiles.get(p.name);
+      if(!species)continue;
+      const stats=species.stats||[];
+      const level=Number(p.level)||0;
+      const options=[];
+      for(const {machine,move} of ownedDetails){
+        if(!move?.power||move.damage_class?.name==='status'||!canTeachInShield(species,machine.name))continue;
+        if((p.moves||[]).some(name=>normalizeMoveName(name)===normalizeMoveName(move.name)))continue;
+        const effectiveness=types.reduce((n,t)=>n*(rules[move.type.name]?.[t]??1),1);
+        if(effectiveness<=1)continue;
+        const statName=move.damage_class.name==='physical'?'attack':'special-attack';
+        const baseStat=stats.find(x=>x.stat.name===statName)?.base_stat||65;
+        const stab=p.types.includes(move.type.name)?1.5:1;
+        const drawbacks=moveDrawbacks(move);
+        const slow=drawbacks.some(x=>x.startsWith('Takes two turns')||x==='Must recharge next turn')?.5:1;
+        const recoil=drawbacks.includes('Recoil damage')?.75:1;
+        const score=move.power*effectiveness*stab*(move.accuracy??100)/100*
+          (baseStat/80)*Math.pow(Math.max(.3,level/40),2)*slow*recoil;
+        options.push({machine,move,score,effectiveness});
+      }
+      options.sort((a,b)=>b.score-a.score);
+      if(options.length)gymMachines.push({p,best:options[0],level});
+    }
+    gymMachines.sort((a,b)=>b.best.score-a.best.score);
+  }
   const unique=bestPerPokemon(ranked);
   if(battleMode==='gym'){
     // Gym teams must be balanced, not simply the six highest single-move scores.
@@ -478,6 +511,25 @@ async function refreshRaidMatchup(){
     const caveat=document.createElement('p');caveat.className='hint';
     caveat.textContent='Gym planning uses the selected type, not the gym leader’s complete roster. Review individual matchups before swapping.';
     output.append(caveat);
+    const teaching=document.createElement('details');teaching.className='raid-group raid-box-options';
+    const teachingTitle=document.createElement('summary');teachingTitle.textContent='💿 Improve Your Box with TM/TRs';
+    const teachingBody=document.createElement('div');teachingBody.className='raid-box-content';
+    teaching.append(teachingTitle,teachingBody);output.append(teaching);
+    if(!gymMachines.length){
+      const msg=document.createElement('p');msg.className='hint';
+      msg.textContent='No compatible super-effective attacks found among your recorded TM/TR inventory. Check that your bank is up to date.';
+      teachingBody.append(msg);
+    }
+    for(const item of gymMachines.slice(0,5)){
+      const row=document.createElement('div');row.className='battle-pick';
+      const name=document.createElement('strong');
+      name.textContent=(item.p.nickname||title(item.p.name))+' (Lv. '+(item.level||'—')+')';
+      const detail=document.createElement('p');detail.className='hint';
+      detail.textContent='Teach '+title(item.best.move.name)+' ('+item.best.machine.key+') · '+title(item.best.move.type.name)+' ×'+item.best.effectiveness+' · Power '+item.best.move.power+' · Accuracy '+(item.best.move.accuracy??'—')+'%';
+      const note=document.createElement('p');note.className='hint';
+      note.textContent='Owned and compatible in Sword/Shield. This is a potential upgrade, not a guaranteed better gym choice.';
+      row.append(name,detail,note);teachingBody.append(row);
+    }
   }else{
     status.textContent=partyBest.length?'Best recorded party moves:':'No usable damaging moves recorded for your party.';
     partyBest.forEach((x,i)=>renderChoice(x,output,i===0?'⭐ ':''));
@@ -592,7 +644,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.15.1';
+const APP_VERSION='1.16.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
