@@ -527,8 +527,27 @@ async function refreshRaidMatchup(){
       const detail=document.createElement('p');detail.className='hint';
       detail.textContent='Teach '+title(item.best.move.name)+' ('+item.best.machine.key+') · '+title(item.best.move.type.name)+' ×'+item.best.effectiveness+' · Power '+item.best.move.power+' · Accuracy '+(item.best.move.accuracy??'—')+'%';
       const note=document.createElement('p');note.className='hint';
-      note.textContent='Owned and compatible in Sword/Shield. This is a potential upgrade, not a guaranteed better gym choice.';
-      row.append(name,detail,note);teachingBody.append(row);
+      const current=await Promise.all((item.p.moves||[]).map(n=>n?moveInfo(n):Promise.resolve(null)));
+      if(run!==raidRun||$('raid').hidden)return;
+      const entries=Array.from({length:4},(_,index)=>({
+        index,name:item.p.moves?.[index]||'',move:current[index]||null
+      }));
+      const empty=entries.find(x=>!x.name);
+      const details=profiles.get(item.p.name);
+      details._recordedLevel=item.level;
+      const replacement=empty||decideMoveReplacement(item.best.move,entries,details);
+      const decision=explainMoveDecision(item.best.move,replacement,details,empty,false);
+      note.textContent=decision.text;
+      const compare=document.createElement('button');compare.type='button';
+      compare.textContent='Compare Move';
+      compare.addEventListener('click',async()=>{
+        await openProfile(item.p.recordId);
+        $('learnMoveName').value=title(item.best.move.name);
+        $('compareNewMove').click();
+        $('learnMoveName').closest('details')?.setAttribute('open','');
+        $('learnMoveName').scrollIntoView({behavior:'smooth',block:'center'});
+      });
+      row.append(name,detail,note,compare);teachingBody.append(row);
     }
   }else{
     status.textContent=partyBest.length?'Best recorded party moves:':'No usable damaging moves recorded for your party.';
@@ -644,7 +663,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.16.0';
+const APP_VERSION='1.16.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

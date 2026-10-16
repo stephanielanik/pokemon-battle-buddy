@@ -291,3 +291,7 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Gym Battle Planner checks owned TM/TR moves against Sword/Shield compatibility for boxed Pokémon.
 - Show up to five possible super-effective attacks that boxed Pokémon could learn, with level, move power, accuracy, and machine ID.
 - These suggestions do not change moves or automatically promote a Pokémon into the proposed team. Keep the inventory updated for useful recommendations.
+
+## Version 1.16.1 — Compare TM/TR upgrades
+- Each Gym TM/TR suggestion evaluates replacing the Pokémon's current moves with Move Advisor 2.0 and displays a specific decision.
+- Compare Move opens the stored Pokémon profile and automatically runs the full move comparison; does not teach a move or modify stored data.
