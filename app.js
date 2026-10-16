@@ -361,9 +361,13 @@ async function refreshRaidMatchup(){
   const teamHeading=document.createElement('h3');teamHeading.textContent='Best Pokémon from your party';output.append(teamHeading);
   const status=document.createElement('p');status.className='hint';
   status.textContent='Checking your recorded moves…';output.append(status);
-  const entries=team.flatMap(p=>(p.moves||[]).filter(m=>typeof m==='string'&&m.trim()).map(name=>({p,name})));
-  if(!entries.length){status.textContent='Record moves in your party profiles to get Pokémon recommendations.';return}
+  const all=[...team,...box];
+  const entries=all.flatMap(p=>(p.moves||[]).filter(m=>typeof m==='string'&&m.trim()).map(name=>({p,name})));
+  if(!entries.length){status.textContent='Record moves in Pokémon profiles to get recommendations.';return}
   const loaded=await Promise.all(entries.map(async x=>({...x,move:await moveInfo(x.name)})));
+  if(run!==raidRun||$('raid').hidden)return;
+  const profileNames=[...new Set(all.map(p=>p.name))];
+  const profiles=new Map(await Promise.all(profileNames.map(async name=>[name,await getTeachingPokemon(name)])));
   if(run!==raidRun||$('raid').hidden)return;
   const ranked=loaded.flatMap(({p,move,name})=>{
     if(!move?.power||move.damage_class?.name==='status')return [];
@@ -373,18 +377,58 @@ async function refreshRaidMatchup(){
     const accuracy=(move.accuracy??100)/100;
     const risk=defensiveRisk(p,types).worst;
     const defenseWeight=risk>=4?.2:risk>=2?.55:risk<1?1.2:1;
-    return [{p,name:move.name||name,effectiveness,score:move.power*effectiveness*stab*accuracy*defenseWeight}];
+    const stats=profiles.get(p.name)?.stats||[];
+    const statName=move.damage_class?.name==='physical'?'attack':'special-attack';
+    const baseStat=stats.find(s=>s.stat.name===statName)?.base_stat||65;
+    const level=Number(p.level)||null;
+    // Only a relative heuristic: no IVs, EVs, nature, opponent stats or Dynamax effects.
+    const strength=move.power*effectiveness*stab*accuracy*defenseWeight*
+      (baseStat/80)*(level?Math.max(.4,level/40):.7);
+    return [{p,name:move.name||name,effectiveness,score:strength,level,risk}];
   }).sort((a,b)=>b.score-a.score);
-  const seen=new Set(),best=[];
-  for(const x of ranked){if(seen.has(x.p.recordId))continue;seen.add(x.p.recordId);best.push(x);if(best.length===3)break}
-  status.textContent=best.length?'Based on recorded moves and defensive typing:':'No usable damaging moves found for this matchup.';
-  for(const x of best){
+  function bestPerPokemon(items){
+    const seen=new Set(),result=[];
+    for(const x of items){if(seen.has(x.p.recordId))continue;seen.add(x.p.recordId);result.push(x)}
+    return result;
+  }
+  const partyBest=bestPerPokemon(ranked.filter(x=>team.includes(x.p))).slice(0,3);
+  status.textContent=partyBest.length?'Based on recorded moves, levels, stats and defensive typing:':'No usable damaging moves recorded for your party.';
+  function renderChoice(x,container,prefix=''){
     const card=document.createElement('div');card.className='battle-pick';
-    const titleEl=document.createElement('strong');titleEl.textContent=(best[0]===x?'⭐ ':'')+
-      (x.p.nickname||title(x.p.name))+' — '+title(x.name);
+    const heading=document.createElement('strong');
+    heading.textContent=prefix+(x.p.nickname||title(x.p.name))+' — '+title(x.name);
     const detail=document.createElement('p');detail.className='hint';
-    detail.textContent='Attack ×'+x.effectiveness+' · '+defensiveRiskLabel(x.p,types);
-    card.append(titleEl,detail);output.append(card);
+    detail.textContent='Lv. '+(x.level||'—')+' · Attack ×'+x.effectiveness+' · '+defensiveRiskLabel(x.p,types);
+    card.append(heading,detail);container.append(card);
+    return card;
+  }
+  partyBest.forEach((x,i)=>renderChoice(x,output,i===0?'⭐ ':''));
+  const boxSection=document.createElement('details');boxSection.className='raid-group raid-box-options';
+  const summary=document.createElement('summary');summary.textContent='📦 Better Options from Your Box';
+  const boxContent=document.createElement('div');boxContent.className='raid-box-content';
+  boxSection.append(summary,boxContent);output.append(boxSection);
+  const boxBest=bestPerPokemon(ranked.filter(x=>box.includes(x.p)));
+  const topParty=partyBest[0]?.score||0;
+  const promising=boxBest.filter(x=>x.score>topParty*1.1).slice(0,3);
+  if(!promising.length){
+    const msg=document.createElement('p');msg.className='hint';
+    msg.textContent='No boxed Pokémon clearly outperforms your strongest recorded party option for this matchup.';
+    boxContent.append(msg);
+  }
+  for(const x of promising){
+    const ready=!!x.level&&x.level>=Math.max(1,(partyBest[0]?.level||40)-5);
+    const card=renderChoice(x,boxContent,ready?'⚔️ Ready to consider · ':'🌱 Worth training · ');
+    const note=document.createElement('p');note.className='hint';
+    note.textContent=ready?'Potentially stronger for this matchup. Review ability and actual stats before swapping.':
+      'Level is lower or unknown. Train or check the profile before swapping.';
+    card.append(note);
+    const action=document.createElement('button');action.type='button';action.textContent='View in Box';
+    action.addEventListener('click',()=>{
+      document.querySelector('.tab[data-tab="team"]').click();
+      showCollection('box');
+      $('boxCards').scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    card.append(action);
   }
   const note=document.createElement('p');note.className='hint';
   note.textContent='Unknown species and ability: type-based estimates only. Levitate and other ability immunities may change the result.';
@@ -479,7 +523,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.13.0';
+const APP_VERSION='1.14.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

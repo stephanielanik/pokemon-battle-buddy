@@ -269,3 +269,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Collapsible search by species or nickname, type filter, and sorting by custom order, name, level, or Pokédex number.
 - Filters and sorts are display-only and never overwrite the saved drag order. Dragging is disabled while filtered or sorted.
 - Clear filters restores the full Box in its original custom order.
+
+## Version 1.14.0 — Box options for Type Matchup
+- Compare recorded moves, level, base attacking stats, STAB, accuracy and defensive type risk across Party and Box.
+- Collapsible Better Options from Your Box section shows up to three candidates when they score at least 10% above the best party option.
+- Mark candidates as ready to consider or worth training, with a shortcut to Box.
+- Estimates are approximate and cannot identify unknown raid abilities, IVs, EVs or nature. No automatic swaps or data migration.

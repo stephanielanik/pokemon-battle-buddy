@@ -386,3 +386,6 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 .box-filter-controls label{display:grid;gap:5px;font-size:13px;font-weight:700;min-width:0}.box-filter-controls input,.box-filter-controls select{width:100%;min-width:0;padding:10px 8px;border:1px solid #d7cbe5;border-radius:10px;background:#fff;color:#29243b;font-size:14px}
 #boxFilterReset{min-height:38px;padding:8px 12px}.card-drag-handle:disabled{opacity:.3;cursor:not-allowed}
 @media(max-width:480px){.box-filter-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.box-filter-controls label:first-child{grid-column:1/-1}}
+
+/* v1.14 Box recommendations for type-only raid matchup */
+.raid-box-options{margin-top:16px;border:1px solid #dfd5eb;border-radius:15px;padding:12px 14px}.raid-box-options summary{font-weight:800;cursor:pointer;min-height:38px}.raid-box-content{padding-top:12px}.raid-box-content .battle-pick{margin-bottom:10px}.raid-box-content button{min-height:42px;margin-top:7px}
