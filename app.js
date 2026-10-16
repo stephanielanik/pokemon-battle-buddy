@@ -48,7 +48,9 @@ function showMatch(types){
 
 async function api(path){let r=await fetch('https://pokeapi.co/api/v2/'+path);if(!r.ok)throw Error('Pokémon not found. Try its name or Pokédex number.');return r.json()}
 async function search(name,manual=false){
-  $('editLookupBoxPokemon').hidden=true;name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-f').replace('♂','-m');if(!name)return;if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);$('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;try{const p=await api('pokemon/'+name);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=p.sprites.other['official-artwork'].front_default||p.sprites.front_default;current={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);refreshMoveAdvisor(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
+  const lookupRun=++opponentLookupRun;opponentAbilityInfo=null;
+  $('editLookupBoxPokemon').hidden=true;name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-f').replace('♂','-m');if(!name)return;if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);$('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;try{const p=await api('pokemon/'+name);if(lookupRun!==opponentLookupRun)return;
+  opponentAbilityInfo=await resolveOpponentAbilities(p);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=p.sprites.other['official-artwork'].front_default||p.sprites.front_default;current={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);refreshMoveAdvisor(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
 
 function showCollection(view){
   collectionView=['party','box'].includes(view)?view:'party';
@@ -269,7 +271,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.9.3';
+const APP_VERSION='1.10.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -379,6 +381,29 @@ async function moveInfo(name){
   }
   return advisorMoveCache.get(key);
 }
+// Ability-aware matchup: only apply a species ability automatically when
+// all non-hidden standard abilities agree. Otherwise leave ability unconfirmed.
+const abilityImmunities={
+  'levitate':['ground'],'water-absorb':['water'],'storm-drain':['water'],
+  'dry-skin':['water'],'volt-absorb':['electric'],'lightning-rod':['electric'],
+  'motor-drive':['electric'],'flash-fire':['fire'],'sap-sipper':['grass'],
+  'earth-eater':['ground'],'well-baked-body':['fire']
+};
+const opponentAbilityCache=new Map();
+let opponentAbilityInfo=null,opponentLookupRun=0;
+async function resolveOpponentAbilities(pokemon){
+  const names=pokemon.abilities.filter(a=>!a.is_hidden).map(a=>a.ability.name);
+  const unique=[...new Set(names)];
+  const guaranteed=unique.length===1?unique[0]:null;
+  return {guaranteed,possible:unique,known:unique.length===1};
+}
+function abilityAdjustedEffectiveness(moveType,types,abilityInfo){
+  const raw=types.reduce((n,t)=>n*(rules[moveType]?.[t]??1),1);
+  const ability=abilityInfo?.guaranteed;
+  const blocked=!!ability&&abilityImmunities[ability]?.includes(moveType);
+  const uncertain=!blocked&&!ability&&abilityInfo?.possible?.some(a=>abilityImmunities[a]?.includes(moveType));
+  return {raw,effective:blocked?0:raw,blocked,uncertain,ability};
+}
 async function refreshMoveAdvisor(opponentTypes){
   const run=++advisorRun,status=$('advisorStatus');
   $('battlePicks').hidden=true;$('battlePickResults').replaceChildren();
@@ -395,16 +420,19 @@ async function refreshMoveAdvisor(opponentTypes){
   const ranked=details.flatMap(({pokemon,index,name,move})=>{
     if(!move||!move.type||!Number.isFinite(move.power)||move.power<=0||move.damage_class?.name==='status')return [];
     const type=move.type.name;
-    const effectiveness=opponentTypes.reduce((n,d)=>n*(rules[type]?.[d]??1),1);
+    const check=abilityAdjustedEffectiveness(type,opponentTypes,opponentAbilityInfo);
+    const effectiveness=check.effective;
     const stab=pokemon.types.includes(type)?1.5:1;
     const accuracy=move.accuracy==null?1:Math.max(0,Math.min(100,move.accuracy))/100;
     const score=move.power*effectiveness*stab*accuracy;
-    return [{pokemon,index,name:move.name||name,type,power:move.power,effectiveness,stab,accuracy:move.accuracy,score,damageClass:move.damage_class?.name||'unknown'}];
+    return [{pokemon,index,name:move.name||name,type,power:move.power,effectiveness,rawEffectiveness:check.raw,blocked:check.blocked,uncertain:check.uncertain,ability:check.ability,stab,accuracy:move.accuracy,score,damageClass:move.damage_class?.name||'unknown'}];
   }).sort((a,b)=>b.score-a.score);
   if(!ranked.length){status.textContent='No damaging moves could be evaluated. Status moves are excluded; check your move names or internet connection.';return}
-  renderBattlePicks(opponentTypes,ranked,run);
+  renderBattlePicks(opponentTypes,ranked.filter(x=>x.effectiveness>0),run);
   const failed=details.filter(x=>!x.move).length;
   status.textContent=failed?failed+' move(s) could not be found.':'';
+  const blocked=ranked.filter(x=>x.blocked);
+  if(blocked.length)status.textContent+=(status.textContent?' ':'')+'⚠️ '+title(opponentAbilityInfo.guaranteed)+' blocks '+[...new Set(blocked.map(x=>title(x.type)))].join(', ')+' moves.';
   const categoryFor=value=>value>1?'super':value===1?'neutral':value===0?'immune':'resisted';
   matchupGroups.forEach(([key])=>{
     const section=sections[key];
@@ -421,7 +449,8 @@ async function refreshMoveAdvisor(opponentTypes){
       const meta=document.createElement('p');meta.className='hint';
       meta.textContent=title(item.type)+' · '+title(item.damageClass)+' · Power '+item.power+
         ' · Type ×'+item.effectiveness+(item.stab>1?' · STAB ×1.5':'')+
-        ' · Accuracy '+(item.accuracy==null?'—':item.accuracy+'%');
+        ' · Accuracy '+(item.accuracy==null?'—':item.accuracy+'%')+
+        (item.blocked?' · '+title(item.ability)+' immunity (typing ×'+item.rawEffectiveness+')':item.uncertain?' · Possible ability immunity':'');
       const risk=document.createElement('p');risk.className='battle-risk';risk.textContent=defensiveRiskLabel(item.pokemon,opponentTypes);
       card.append(name,meta,risk);section.append(card);
     });

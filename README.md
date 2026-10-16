@@ -236,3 +236,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Box Pokémon cards now include Remove, with a confirmation before deleting that specific stored Pokémon profile.
 - Party cards retain Move to Box rather than permanent removal.
 - Deleted profiles can only be restored from a previously exported backup.
+
+## Version 1.10.0 — Ability-aware opponent attacks
+- Lookups apply guaranteed opponent ability immunities to move rankings, including Haunter's Levitate immunity to Ground attacks.
+- Where multiple regular abilities are possible, show a caution rather than guessing the active ability.
+- Blocked moves display 0x actual effectiveness and cannot become Best Pokémon to Send recommendations.
+- This is limited to standard ability-based type immunities; Mold Breaker, held items, field conditions, and special move exceptions are not fully modeled.
