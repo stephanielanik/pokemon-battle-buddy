@@ -286,9 +286,76 @@ function keepLookupSuggestionsVisible(){
 if(window.visualViewport){
   window.visualViewport.addEventListener('resize',()=>requestAnimationFrame(keepLookupSuggestionsVisible));
 }
+// Type-only matchup for unidentified Max Raid silhouettes.
+const raidFirst=$('raidTypeOne'),raidSecond=$('raidTypeTwo');
+for(const type of Object.keys(colors)){
+  for(const select of [raidFirst,raidSecond]){
+    const option=document.createElement('option');option.value=type;option.textContent=title(type);
+    select.append(option);
+  }
+}
+const noSecond=document.createElement('option');noSecond.value='';noSecond.textContent='None';
+raidSecond.prepend(noSecond);raidSecond.value='';raidFirst.value='normal';
+let raidRun=0;
+async function refreshRaidMatchup(){
+  const run=++raidRun,types=[raidFirst.value,raidSecond.value].filter(Boolean);
+  const output=$('raidResults');output.replaceChildren();
+  if(!types.length)return;
+  const heading=document.createElement('h3');heading.textContent='Best attack types';output.append(heading);
+  const groups=[['🔥 Super effective',x=>x>1],['➖ Neutral',x=>x===1],
+    ['🛡️ Resisted',x=>x>0&&x<1],['🚫 Immune',x=>x===0]];
+  const data=match(types);
+  for(const [label,filter] of groups){
+    const matches=data.filter(x=>filter(x.value));
+    const section=document.createElement('details');section.className='raid-group';section.open=label.includes('Super');
+    const summary=document.createElement('summary');summary.textContent=label+' ('+matches.length+')';
+    const chips=document.createElement('div');chips.className='chips';
+    if(!matches.length)chips.textContent='None';
+    for(const entry of matches){
+      const chip=document.createElement('span');chip.className='chip';
+      chip.style.background=colors[entry.type];chip.textContent=title(entry.type)+' ×'+entry.value;chips.append(chip);
+    }
+    section.append(summary,chips);output.append(section);
+  }
+  const teamHeading=document.createElement('h3');teamHeading.textContent='Best Pokémon from your party';output.append(teamHeading);
+  const status=document.createElement('p');status.className='hint';
+  status.textContent='Checking your recorded moves…';output.append(status);
+  const entries=team.flatMap(p=>(p.moves||[]).filter(m=>typeof m==='string'&&m.trim()).map(name=>({p,name})));
+  if(!entries.length){status.textContent='Record moves in your party profiles to get Pokémon recommendations.';return}
+  const loaded=await Promise.all(entries.map(async x=>({...x,move:await moveInfo(x.name)})));
+  if(run!==raidRun||$('raid').hidden)return;
+  const ranked=loaded.flatMap(({p,move,name})=>{
+    if(!move?.power||move.damage_class?.name==='status')return [];
+    const effectiveness=types.reduce((n,t)=>n*(rules[move.type.name]?.[t]??1),1);
+    if(effectiveness===0)return [];
+    const stab=p.types.includes(move.type.name)?1.5:1;
+    const accuracy=(move.accuracy??100)/100;
+    const risk=defensiveRisk(p,types).worst;
+    const defenseWeight=risk>=4?.2:risk>=2?.55:risk<1?1.2:1;
+    return [{p,name:move.name||name,effectiveness,score:move.power*effectiveness*stab*accuracy*defenseWeight}];
+  }).sort((a,b)=>b.score-a.score);
+  const seen=new Set(),best=[];
+  for(const x of ranked){if(seen.has(x.p.recordId))continue;seen.add(x.p.recordId);best.push(x);if(best.length===3)break}
+  status.textContent=best.length?'Based on recorded moves and defensive typing:':'No usable damaging moves found for this matchup.';
+  for(const x of best){
+    const card=document.createElement('div');card.className='battle-pick';
+    const titleEl=document.createElement('strong');titleEl.textContent=(best[0]===x?'⭐ ':'')+
+      (x.p.nickname||title(x.p.name))+' — '+title(x.name);
+    const detail=document.createElement('p');detail.className='hint';
+    detail.textContent='Attack ×'+x.effectiveness+' · '+defensiveRiskLabel(x.p,types);
+    card.append(titleEl,detail);output.append(card);
+  }
+  const note=document.createElement('p');note.className='hint';
+  note.textContent='Unknown species and ability: type-based estimates only. Levitate and other ability immunities may change the result.';
+  output.append(note);
+}
+raidFirst.addEventListener('change',refreshRaidMatchup);
+raidSecond.addEventListener('change',refreshRaidMatchup);
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
   $('lookup').hidden=b.dataset.tab!=='lookup';
+  $('raid').hidden=b.dataset.tab!=='raid';
+  if(b.dataset.tab==='raid')refreshRaidMatchup();
   $('team').hidden=b.dataset.tab!=='team';
   $('bank').hidden=b.dataset.tab!=='bank';
   $('profile').hidden=true;
@@ -315,13 +382,13 @@ let editingRecordId=null;
 const cleanText=value=>String(value??'').trim();
 function showTeamTab(){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='team'));
-  $('lookup').hidden=true;$('team').hidden=false;$('bank').hidden=true;$('profile').hidden=true;
+  $('lookup').hidden=true;$('raid').hidden=true;$('team').hidden=false;$('bank').hidden=true;$('profile').hidden=true;
 }
 async function openProfile(recordId){
   const p=[...team,...box].find(x=>x.recordId===recordId);if(!p)return;
   editingRecordId=recordId;
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='team'));
-  $('lookup').hidden=true;$('team').hidden=true;$('bank').hidden=true;$('profile').hidden=false;
+  $('lookup').hidden=true;$('raid').hidden=true;$('team').hidden=true;$('bank').hidden=true;$('profile').hidden=false;
   $('profileArt').src=p.artwork||'';$('profileArt').alt=title(p.name);
   $('profileName').textContent=title(p.name);
   $('profileDex').textContent='#'+String(p.id).padStart(3,'0');
@@ -371,7 +438,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.10.2';
+const APP_VERSION='1.11.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

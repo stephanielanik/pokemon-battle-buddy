@@ -252,3 +252,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Drag the small handle on Party or Box cards to reorder Pokémon within that collection.
 - Order is saved to existing localStorage records without changing profiles or moving Pokémon between Party and Box.
 - Keyboard users can focus a handle and use Arrow Up / Arrow Down.
+
+## Version 1.11.0 — Type Matchup for Max Raids
+- Select one or two opponent types without knowing the species name.
+- Show super-effective, neutral, resisted, and immune attacking types.
+- Rank up to three party Pokémon using recorded damaging moves, STAB, accuracy, and defensive typing.
+- Clearly warn that unknown opponent abilities may override type effectiveness.

@@ -376,3 +376,6 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 .compact-teamcard .card-drag-handle{position:absolute;top:7px;left:7px;z-index:2;display:flex;align-items:center;justify-content:center;width:36px;height:40px;padding:0;border:0;border-radius:12px;background:rgba(255,255,255,.55);color:#342b48;font-size:25px;line-height:1;box-shadow:none;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
 .compact-teamcard .card-drag-handle:active{cursor:grabbing}
 .compact-teamcard.card-reordering{outline:3px solid rgba(125,84,169,.8);outline-offset:1px;opacity:.88;z-index:3}
+
+/* v1.11: unidentified Max Raid type matchup */
+.raid-panel{padding:18px}.raid-selectors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 20px}.raid-selectors label{display:grid;gap:6px;font-weight:700}.raid-selectors select{width:100%;min-width:0;padding:12px;border:2px solid #ddcfef;border-radius:12px;background:#fff;color:#29243b;font-size:16px}.raid-group{border-top:1px solid #ddcfef;padding:12px 0}.raid-group summary{cursor:pointer;font-weight:800}.raid-group .chips{margin-top:12px}.raid-panel h3{margin:22px 0 10px}@media(max-width:390px){.raid-selectors{grid-template-columns:1fr}}
