@@ -379,3 +379,10 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 
 /* v1.11: unidentified Max Raid type matchup */
 .raid-panel{padding:18px}.raid-selectors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 20px}.raid-selectors label{display:grid;gap:6px;font-weight:700}.raid-selectors select{width:100%;min-width:0;padding:12px;border:2px solid #ddcfef;border-radius:12px;background:#fff;color:#29243b;font-size:16px}.raid-group{border-top:1px solid #ddcfef;padding:12px 0}.raid-group summary{cursor:pointer;font-weight:800}.raid-group .chips{margin-top:12px}.raid-panel h3{margin:22px 0 10px}@media(max-width:390px){.raid-selectors{grid-template-columns:1fr}}
+
+/* v1.13: compact Box filters */
+.box-filters{margin:12px 0;padding:12px 14px;border:1px solid #e1d7ed;border-radius:16px;background:rgba(255,255,255,.72)}
+.box-filters summary{cursor:pointer;font-weight:800;min-height:34px}.box-filter-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}
+.box-filter-controls label{display:grid;gap:5px;font-size:13px;font-weight:700;min-width:0}.box-filter-controls input,.box-filter-controls select{width:100%;min-width:0;padding:10px 8px;border:1px solid #d7cbe5;border-radius:10px;background:#fff;color:#29243b;font-size:14px}
+#boxFilterReset{min-height:38px;padding:8px 12px}.card-drag-handle:disabled{opacity:.3;cursor:not-allowed}
+@media(max-width:480px){.box-filter-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.box-filter-controls label:first-child{grid-column:1/-1}}

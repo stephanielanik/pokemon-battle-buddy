@@ -56,6 +56,7 @@ function showCollection(view){
   collectionView=['party','box'].includes(view)?view:'party';
   $('teamCards').hidden=collectionView!=='party';
   $('boxCards').hidden=collectionView!=='box';
+  $('boxFilters').hidden=collectionView!=='box';
   $('boxAdd').hidden=collectionView!=='box'||!boxAddExpanded;
 
   $('partyView').classList.toggle('active',collectionView==='party');
@@ -124,6 +125,43 @@ function setupCardReorder(handle,card,container,location){
     handle.focus();
   });
 }
+// Box filters only change the view, never the saved custom order.
+let boxSearch='',boxType='',boxSort='custom';
+const boxTypeSelect=$('boxFilterType');
+for(const type of Object.keys(colors).sort()){
+  const option=document.createElement('option');option.value=type;option.textContent=title(type);
+  boxTypeSelect.append(option);
+}
+function visibleBox(){
+  const filtered=box.filter(p=>{
+    const text=(p.nickname||'')+' '+(p.name||'');
+    return (!boxSearch||text.toLowerCase().includes(boxSearch))&&
+      (!boxType||(p.types||[]).includes(boxType));
+  });
+  if(boxSort==='name')filtered.sort((a,b)=>(a.nickname||title(a.name)).localeCompare(b.nickname||title(b.name)));
+  else if(boxSort==='level-desc')filtered.sort((a,b)=>(Number(b.level)||0)-(Number(a.level)||0));
+  else if(boxSort==='level-asc')filtered.sort((a,b)=>(Number(a.level)||0)-(Number(b.level)||0));
+  else if(boxSort==='dex')filtered.sort((a,b)=>(Number(a.id)||0)-(Number(b.id)||0));
+  return filtered;
+}
+function renderBoxCards(){
+  const visible=visibleBox();
+  $('boxFilterCount').textContent=visible.length===box.length?'':'('+visible.length+'/'+box.length+')';
+  renderCollectionCards(visible,$('boxCards'),'box');
+  if(!visible.length&&box.length){
+    $('boxCards').replaceChildren();
+    const empty=document.createElement('p');empty.className='hint';
+    empty.textContent='No Pokémon match your filters.';$('boxCards').append(empty);
+  }
+}
+$('boxFilterSearch').addEventListener('input',e=>{boxSearch=e.target.value.trim().toLowerCase();renderBoxCards()});
+$('boxFilterType').addEventListener('change',e=>{boxType=e.target.value;renderBoxCards()});
+$('boxSort').addEventListener('change',e=>{boxSort=e.target.value;renderBoxCards()});
+$('boxFilterReset').addEventListener('click',()=>{
+  boxSearch='';boxType='';boxSort='custom';
+  $('boxFilterSearch').value='';$('boxFilterType').value='';$('boxSort').value='custom';
+  renderBoxCards();
+});
 function renderCollectionCards(list,container,location){
   container.replaceChildren();
   for(const p of list){
@@ -135,6 +173,9 @@ function renderCollectionCards(list,container,location){
     handle.setAttribute('aria-label','Reorder '+(p.nickname||title(p.name))+'; drag or use arrow keys');
     handle.title='Drag to reorder';
     setupCardReorder(handle,card,container,location);
+    if(location==='box'&&(boxSearch||boxType||boxSort!=='custom')){
+      handle.disabled=true;handle.title='Clear filters and choose Custom order to rearrange';
+    }
     const img=document.createElement('img');img.src=p.artwork||'';img.alt='';
     const info=document.createElement('div');info.className='teamcard-info';
     const name=document.createElement('strong');name.textContent=p.nickname||title(p.name);
@@ -203,7 +244,7 @@ function renderTeam(){
   $('partySummary').textContent=team.length;
   $('boxSummary').textContent=box.length;
   renderCollectionCards(team,$('teamCards'),'party');
-  renderCollectionCards(box,$('boxCards'),'box');
+  renderBoxCards();
   showCollection(collectionView);
 }
 function save(){
@@ -438,7 +479,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.12.0';
+const APP_VERSION='1.13.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

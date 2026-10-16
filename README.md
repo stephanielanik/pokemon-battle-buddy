@@ -264,3 +264,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Raise the threshold for situational, recoil, two-turn, recharge, and conditional moves; preserve key Speed boosts and priority.
 - Explain fixed damage and conditional moves without treating their missing base power as ordinary zero-power attacks.
 - Show short, actionable recommendations with up to three specific reasons. No changes to Pokémon storage.
+
+## Version 1.13.0 — Box organization
+- Collapsible search by species or nickname, type filter, and sorting by custom order, name, level, or Pokédex number.
+- Filters and sorts are display-only and never overwrite the saved drag order. Dragging is disabled while filtered or sorted.
+- Clear filters restores the full Box in its original custom order.
