@@ -310,3 +310,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Select Lookup suggestions on touch pointerdown so the first tap works while the iOS keyboard is open.
 - Keep click as keyboard/mouse fallback; guard against duplicate selections.
 - Preserve the existing input visibility and Edit Pokémon scrolling fixes. Saved data is unchanged.
+
+## Version 1.17.0 — Pokémon Natures
+- Nature field in Edit Pokémon includes all 25 natures, with boosted/reduced stats and neutral options.
+- Nature is saved per individual Pokémon; existing profiles remain Not recorded.
+- Recorded natures affect estimated physical/special move comparison, Gym Planner, TM/TR suggestions, and battle move scores.
+- Scores remain estimates without IVs, EVs, battle modifiers, or opponent stats. No existing collection storage is cleared.

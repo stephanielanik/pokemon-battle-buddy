@@ -398,3 +398,6 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 /* v1.16.3: avoid iOS scroll anchoring jumps while editing long profiles */
 #profile{overflow-anchor:none}
 #profile input:focus,#profile textarea:focus{scroll-margin-top:16px;scroll-margin-bottom:90px}
+
+/* v1.17: readable nature effects beneath the profile dropdown */
+#profileNatureHint{display:block;margin-top:5px;line-height:1.35;font-size:12px}
