@@ -31,6 +31,33 @@ function natureSummary(nature){
  const [up,down]=NATURES[nature];
  return !up?'Neutral nature — no stat changes':'+10% '+STAT_LABELS[up]+' · −10% '+STAT_LABELS[down];
 }
+const TYPE_POWER_ITEMS={
+ magnet:'electric',charcoal:'fire',mysticwater:'water',miracleseed:'grass',
+ nevermeltice:'ice',blackbelt:'fighting',sharpbeak:'flying',softsand:'ground',
+ poisonbarb:'poison',twistedspoon:'psychic',silverpowder:'bug',hardstone:'rock',
+ spelltag:'ghost',dragonfang:'dragon',blackglasses:'dark',metalcoat:'steel',
+ silkscarf:'normal',pixieplate:'fairy',flameplate:'fire',splashplate:'water',
+ meadowplate:'grass',icicleplate:'ice',fistplate:'fighting',toxicplate:'poison',
+ earthplate:'ground',skyplate:'flying',mindplate:'psychic',insectplate:'bug',
+ stoneplate:'rock',spookyplate:'ghost',dracoplate:'dragon',dreadplate:'dark',
+ ironplate:'steel'
+};
+function heldItemBoost(pokemon,moveType,effectiveness=1,damageClass='physical'){
+ const raw=pokemon?.heldItem||pokemon?._recordedHeldItem||'';
+ const key=String(raw).toLowerCase().replace(/[^a-z0-9]/g,'');
+ if(!key)return {multiplier:1,label:''};
+ if(TYPE_POWER_ITEMS[key]===moveType)
+   return {multiplier:1.2,label:title(raw)+' boosts '+title(moveType)+' moves by 20%'};
+ if(key==='expertbelt'&&effectiveness>1)
+   return {multiplier:1.2,label:'Expert Belt boosts super-effective damage by 20%'};
+ if(key==='muscleband'&&damageClass==='physical')
+   return {multiplier:1.1,label:'Muscle Band boosts physical damage by 10%'};
+ if(key==='wiseglasses'&&damageClass==='special')
+   return {multiplier:1.1,label:'Wise Glasses boosts special damage by 10%'};
+ if(key==='lifeorb')
+   return {multiplier:1.3,label:'Life Orb boosts damage by 30% but causes recoil'};
+ return {multiplier:1,label:''};
+}
 const natureSelect=$('profileNature'),natureHint=$('profileNatureHint');
 natureSelect.innerHTML='<option value="">Not recorded</option>'+
  Object.keys(NATURES).sort().map(n=>'<option value="'+n+'">'+title(n)+' ('+
@@ -452,11 +479,12 @@ async function refreshRaidMatchup(){
     const turns=drawbacks.some(x=>x.startsWith('Takes two turns')||x==='Must recharge next turn')?0.5:1;
     const delayed=['future-sight','doom-desire'].includes(move.name)?0.45:1;
     const conditional=['dynamic-punch','zap-cannon'].includes(move.name)?0.9:1;
-    const strength=move.power*effectiveness*stab*accuracy*defenseWeight*
+    const itemBoost=heldItemBoost(p,move.type.name,effectiveness,move.damage_class?.name);
+    const strength=move.power*effectiveness*stab*accuracy*defenseWeight*itemBoost.multiplier*
       (baseStat*natureMultiplier(p.nature,statName)/80)*(level?Math.pow(Math.max(.4,level/40),2):.35)*
       turns*delayed*conditional;
     // This is an approximate matchup estimate, not a damage prediction.
-    return [{p,name:move.name||name,effectiveness,score:strength,level,risk}];
+    return [{p,name:move.name||name,effectiveness,score:strength,level,risk,itemBoost:itemBoost.multiplier,itemBoostLabel:itemBoost.label}];
   }).sort((a,b)=>b.score-a.score);
   function bestPerPokemon(items){
     const seen=new Set(),result=[];
@@ -470,7 +498,9 @@ async function refreshRaidMatchup(){
     heading.textContent=prefix+(x.p.nickname||title(x.p.name))+' — '+title(x.name);
     const detail=document.createElement('p');detail.className='hint';
     detail.textContent='Lv. '+(x.level||'—')+' · Attack ×'+x.effectiveness+' · '+defensiveRiskLabel(x.p,types);
-    card.append(heading,detail);container.append(card);
+    card.append(heading,detail);
+    if(x.itemBoostLabel){const itemNote=document.createElement('p');itemNote.className='hint';itemNote.textContent='🧲 '+x.itemBoostLabel;card.append(itemNote)}
+    container.append(card);
     return card;
   }
   function addBoxLink(card){
@@ -508,7 +538,8 @@ async function refreshRaidMatchup(){
         const slow=drawbacks.some(x=>x.startsWith('Takes two turns')||x==='Must recharge next turn')?.5:1;
         const recoil=drawbacks.includes('Recoil damage')?.75:1;
         const score=move.power*effectiveness*stab*(move.accuracy??100)/100*
-          (baseStat*natureMultiplier(p.nature,statName)/80)*Math.pow(Math.max(.3,level/40),2)*slow*recoil;
+          (baseStat*natureMultiplier(p.nature,statName)/80)*Math.pow(Math.max(.3,level/40),2)*slow*recoil*
+          heldItemBoost(p,move.type.name,effectiveness,move.damage_class.name).multiplier;
         options.push({machine,move,score,effectiveness});
       }
       options.sort((a,b)=>b.score-a.score);
@@ -717,7 +748,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.17.2';
+const APP_VERSION='1.18.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -871,8 +902,9 @@ async function refreshMoveAdvisor(opponentTypes){
     const stab=pokemon.types.includes(type)?1.5:1;
     const accuracy=move.accuracy==null?1:Math.max(0,Math.min(100,move.accuracy))/100;
     const attackStat=move.damage_class?.name==='physical'?'attack':'special-attack';
-    const score=move.power*expectedHits(move)*effectiveness*stab*accuracy*natureMultiplier(pokemon.nature,attackStat);
-    return [{pokemon,index,name:move.name||name,type,power:move.power,effectiveness,rawEffectiveness:check.raw,blocked:check.blocked,uncertain:check.uncertain,ability:check.ability,stab,accuracy:move.accuracy,score,damageClass:move.damage_class?.name||'unknown'}];
+    const itemBoost=heldItemBoost(pokemon,type,effectiveness,move.damage_class?.name);
+    const score=move.power*expectedHits(move)*effectiveness*stab*accuracy*natureMultiplier(pokemon.nature,attackStat)*itemBoost.multiplier;
+    return [{pokemon,index,name:move.name||name,type,power:move.power,effectiveness,rawEffectiveness:check.raw,blocked:check.blocked,uncertain:check.uncertain,ability:check.ability,stab,accuracy:move.accuracy,score,itemBoost:itemBoost.multiplier,itemBoostLabel:itemBoost.label,damageClass:move.damage_class?.name||'unknown'}];
   }).sort((a,b)=>b.score-a.score);
   if(!ranked.length){status.textContent='No damaging moves could be evaluated. Status moves are excluded; check your move names or internet connection.';return}
   renderBattlePicks(opponentTypes,ranked.filter(x=>x.effectiveness>0),run);
@@ -896,10 +928,11 @@ async function refreshMoveAdvisor(opponentTypes){
       const meta=document.createElement('p');meta.className='hint';
       meta.textContent=title(item.type)+' · '+title(item.damageClass)+' · Power '+item.power+
         ' · Type ×'+item.effectiveness+(item.stab>1?' · STAB ×1.5':'')+
+        (item.itemBoost>1?' · Held item ×'+item.itemBoost.toFixed(2):'')+
         ' · Accuracy '+(item.accuracy==null?'—':item.accuracy+'%')+
         (item.blocked?' · '+title(item.ability)+' immunity (typing ×'+item.rawEffectiveness+')':item.uncertain?' · Possible ability immunity':'');
       const risk=document.createElement('p');risk.className='battle-risk';risk.textContent=defensiveRiskLabel(item.pokemon,opponentTypes);
-      card.append(name,meta,risk);section.append(card);
+      card.append(name,meta,risk);if(item.itemBoostLabel){const itemNote=document.createElement('p');itemNote.className='hint';itemNote.textContent='🧲 '+item.itemBoostLabel;card.append(itemNote)}section.append(card);
     });
     if(candidates.length>2){
       const toggle=document.createElement('button');toggle.type='button';toggle.className='advisor-more';
@@ -1296,8 +1329,8 @@ async function loadMoveImprovements(p,recordId){
       if(run!==teachingRun||editingRecordId!==recordId)return;
       comparison.replaceChildren();
       const candidate=entry.info;
-      const statFor=move=>move.damage_class?.name==='physical'?atk:move.damage_class?.name==='special'?spa:0;
-      const estimate=move=>move?.power>0?move.power*statFor(move)*(p.types.includes(move.type.name)?1.5:1)*(move.accuracy==null?1:move.accuracy/100):0;
+      const statFor=move=>move.damage_class?.name==='physical'?atk*natureMultiplier(p.nature,'attack'):move.damage_class?.name==='special'?spa*natureMultiplier(p.nature,'special-attack'):0;
+      const estimate=move=>move?.power>0?move.power*statFor(move)*(p.types.includes(move.type.name)?1.5:1)*(move.accuracy==null?1:move.accuracy/100)*heldItemBoost(p,move.type?.name,1,move.damage_class?.name).multiplier:0;
       const candidateScore=estimate(candidate);
       const comparable=info.filter(x=>x.move?.power>0&&x.move?.damage_class?.name!=='status');
       const existingTypes=new Set(info.filter(x=>x.move?.power>0).map(x=>x.move.type.name));
@@ -1732,7 +1765,7 @@ function roughMoveValue(move,pokemon){
   const statName=move.damage_class?.name==='physical'?'attack':'special-attack';
   const stat=(statName==='attack'?attack:special)*natureMultiplier(pokemon._recordedNature,statName);
   const stab=pokemon.types.some(t=>t.type.name===move.type.name)?1.5:1;
-  return move.power*expectedHits(move)*stat*stab*(move.accuracy==null?1:move.accuracy/100)*movePenalty(move);
+  return move.power*expectedHits(move)*stat*stab*(move.accuracy==null?1:move.accuracy/100)*movePenalty(move)*heldItemBoost(pokemon,move.type?.name,1,move.damage_class?.name).multiplier;
 }
 function moveDescription(move){
   if(!move)return 'Details unavailable';
@@ -1965,6 +1998,8 @@ $('compareNewMove').addEventListener('click',async()=>{
   const free=entries.find(x=>!x.name);
   details._recordedLevel=pokemon.level;
   details._recordedNature=pokemon.nature||'';
+  details._recordedHeldItem=pokemon.heldItem||'';
+  details._recordedHeldItem=pokemon.heldItem||'';
   const replacement=free||decideMoveReplacement(candidate,entries,details);
   details._recordedLevel=pokemon.level;
   details._recordedNature=pokemon.nature||'';
