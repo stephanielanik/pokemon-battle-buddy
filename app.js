@@ -673,7 +673,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.16.2';
+const APP_VERSION='1.16.3';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -1366,9 +1366,13 @@ function refreshProfileMoveBadges(recordId){
 document.querySelectorAll('.profile-move').forEach(input=>{
   let timer;
   input.addEventListener('input',()=>{
+    // Updating badge visibility during typing changes the form height under
+    // iOS's on-screen keyboard. Wait until the field loses focus instead.
     clearTimeout(timer);
-    const badge=input.parentElement.querySelector('.move-type-badge');if(badge)badge.hidden=true;
-    timer=setTimeout(()=>refreshProfileMoveBadges(editingRecordId),400);
+  });
+  input.addEventListener('blur',()=>{
+    clearTimeout(timer);
+    timer=setTimeout(()=>refreshProfileMoveBadges(editingRecordId),100);
   });
 });
 

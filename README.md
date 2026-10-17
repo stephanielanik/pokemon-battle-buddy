@@ -300,3 +300,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Lookup autocomplete offers female Jellicent and displays its female sprite without changing its battle species data.
 - Selected gender and artwork are saved with newly added Pokémon.
 - iPhone autocomplete only scrolls to keep the input visible, rather than scrolling to the bottom of suggestions.
+
+## Version 1.16.3 — iPhone Edit Profile keyboard stability
+- Avoid move badge layout changes during active typing; refresh badges when the move input loses focus.
+- Disable automatic scroll anchoring inside the profile and leave space around focused fields.
+- No change to Pokémon data storage.

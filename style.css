@@ -394,3 +394,7 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 .battle-mode{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
 .battle-mode button{min-height:46px;padding:10px 8px;min-width:0}
 .battle-mode button.active{background:#7952a5;color:#fff;border-color:#7952a5}
+
+/* v1.16.3: avoid iOS scroll anchoring jumps while editing long profiles */
+#profile{overflow-anchor:none}
+#profile input:focus,#profile textarea:focus{scroll-margin-top:16px;scroll-margin-bottom:90px}
