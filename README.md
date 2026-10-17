@@ -295,3 +295,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 1.16.1 — Compare TM/TR upgrades
 - Each Gym TM/TR suggestion evaluates replacing the Pokémon's current moves with Move Advisor 2.0 and displays a specific decision.
 - Compare Move opens the stored Pokémon profile and automatically runs the full move comparison; does not teach a move or modify stored data.
+
+## Version 1.16.2 — Mobile search and female Jellicent
+- Lookup autocomplete offers female Jellicent and displays its female sprite without changing its battle species data.
+- Selected gender and artwork are saved with newly added Pokémon.
+- iPhone autocomplete only scrolls to keep the input visible, rather than scrolling to the bottom of suggestions.

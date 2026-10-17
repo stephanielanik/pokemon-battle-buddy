@@ -49,8 +49,16 @@ function showMatch(types){
 async function api(path){let r=await fetch('https://pokeapi.co/api/v2/'+path);if(!r.ok)throw Error('Pokémon not found. Try its name or Pokédex number.');return r.json()}
 async function search(name,manual=false){
   const lookupRun=++opponentLookupRun;opponentAbilityInfo=null;
-  $('editLookupBoxPokemon').hidden=true;name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-f').replace('♂','-m');if(!name)return;if(!manual&&!/-(galar|alola|hisui)$/.test(name))name=preferredName(name);$('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;try{const p=await api('pokemon/'+name);if(lookupRun!==opponentLookupRun)return;
-  opponentAbilityInfo=await resolveOpponentAbilities(p);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=p.sprites.other['official-artwork'].front_default||p.sprites.front_default;current={id:p.id,name:p.name,types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);refreshMoveAdvisor(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
+  $('editLookupBoxPokemon').hidden=true;
+  name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-female').replace('♂','-male');
+  if(!name)return;
+  const requestedFemale=name==='jellicent-female';
+  if(requestedFemale)name='jellicent-male';
+  if(!manual&&!/-(galar|alola|hisui|male)$/.test(name))name=preferredName(name);
+  $('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;
+  try{const p=await api('pokemon/'+name);if(lookupRun!==opponentLookupRun)return;
+  opponentAbilityInfo=await resolveOpponentAbilities(p);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=requestedFemale?(p.sprites.other?.home?.front_female||p.sprites.front_female||'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/593.png'):(p.sprites.other['official-artwork'].front_default||p.sprites.front_default);current={id:p.id,name:p.name,gender:requestedFemale?'female':'male',types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=requestedFemale?'Jellicent Female':title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);refreshMoveAdvisor(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(p.species.name==='jellicent'){forms.length=0;forms.push({pokemon:{name:'jellicent-male'}},{pokemon:{name:'jellicent-female'}})}
+  if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
 
 function showCollection(view){
   collectionView=['party','box'].includes(view)?view:'party';
@@ -178,7 +186,7 @@ function renderCollectionCards(list,container,location){
     }
     const img=document.createElement('img');img.src=p.artwork||'';img.alt='';
     const info=document.createElement('div');info.className='teamcard-info';
-    const name=document.createElement('strong');name.textContent=p.nickname||title(p.name);
+    const name=document.createElement('strong');name.textContent=p.nickname||(p.gender==='female'&&p.name==='jellicent-male'?'Jellicent Female':title(p.name));
     const heading=document.createElement('div');heading.className='compact-card-heading';
     const levelControl=document.createElement('div');levelControl.className='quick-level';
     const levelValue=document.createElement('button');levelValue.type='button';levelValue.className='quick-level-value';
@@ -306,7 +314,8 @@ $('search').addEventListener('focus',()=>{
   $('suggestions').replaceChildren();
 });
 $('go').onclick=()=>search($('search').value);$('search').addEventListener('keydown',e=>{if(e.key==='Enter')search($('search').value)});
-let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{const q=$('search').value.toLowerCase().trim();let hits=allNames.filter(n=>n.includes(q)).slice(0,9);$('suggestions').hidden=!q||!hits.length;$('suggestions').innerHTML=hits.map(n=>{const id=allNames.indexOf(n)+1;const picked=preferredName(n);return `<button data-name="${n}"><img loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png" alt=""><strong>${title(n)}</strong>${picked!==n?'<span class="sub">Galar preferred</span>':''}</button>`}).join('');$('suggestions').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{const q=$('search').value.toLowerCase().trim();let hits=allNames.filter(n=>n.includes(q)).slice(0,9);
+  if(q&&('jellicent-female'.includes(q)||'jellicent'.includes(q)))hits=[...new Set(['jellicent-female',...hits])].slice(0,9);$('suggestions').hidden=!q||!hits.length;$('suggestions').innerHTML=hits.map(n=>{const female=n==='jellicent-female';const id=female?593:allNames.indexOf(n)+1;const picked=preferredName(n);return `<button data-name="${n}"><img loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${n==='jellicent-female'?'female/':''}${id}.png" alt=""><strong>${title(n)}</strong>${picked!==n?'<span class="sub">Galar preferred</span>':''}</button>`}).join('');$('suggestions').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
   $('search').value=title(b.dataset.name);
   $('search').blur();
   $('suggestions').hidden=true;
@@ -319,9 +328,10 @@ function keepLookupSuggestionsVisible(){
   if(document.activeElement!==input||list.hidden||!list.children.length)return;
   const viewport=window.visualViewport;
   const visibleBottom=viewport?viewport.offsetTop+viewport.height:window.innerHeight;
-  const listBottom=list.getBoundingClientRect().bottom;
-  if(listBottom>visibleBottom-12){
-    window.scrollBy({top:listBottom-visibleBottom+20,behavior:'auto'});
+  const inputRect=input.getBoundingClientRect();
+  // Never chase the bottom of a growing suggestion list: that hides the input.
+  if(inputRect.bottom>visibleBottom-12){
+    window.scrollBy({top:inputRect.bottom-visibleBottom+24,behavior:'auto'});
   }
 }
 if(window.visualViewport){
@@ -615,7 +625,7 @@ async function openProfile(recordId){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab==='team'));
   $('lookup').hidden=true;$('raid').hidden=true;$('team').hidden=true;$('bank').hidden=true;$('profile').hidden=false;
   $('profileArt').src=p.artwork||'';$('profileArt').alt=title(p.name);
-  $('profileName').textContent=title(p.name);
+  $('profileName').textContent=p.gender==='female'&&p.name==='jellicent-male'?'Jellicent Female':title(p.name);
   $('profileDex').textContent='#'+String(p.id).padStart(3,'0');
   $('profileTypes').innerHTML=p.types.map(pill).join('');
   $('profileNickname').value=p.nickname||'';
@@ -663,7 +673,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.16.1';
+const APP_VERSION='1.16.2';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
