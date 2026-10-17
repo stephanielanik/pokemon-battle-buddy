@@ -321,3 +321,7 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - The Add Pokémon to Box panel stays visible as a compact collapsed heading when browsing Box.
 - Tap its heading or the Add Pokémon button to expand or collapse it; existing search, add, and quick-edit actions remain inside.
 - No changes to stored Pokémon or collection ordering.
+
+## Version 1.17.2 — No iPhone Filter Zoom
+- Keep Box Filter & Sort search and dropdown controls at 16px to prevent Safari's focus zoom.
+- Retains the collapsible Box Add panel introduced in v1.17.1.
