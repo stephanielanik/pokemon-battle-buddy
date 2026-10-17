@@ -331,3 +331,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Held-item bonuses are included in Move Advisor rankings, Gym/Max Raid candidate estimates, TM/TR move estimates, and Move comparison estimates where supported.
 - UI calls out the held-item bonus when it contributes to a recommendation.
 - Other items without an implemented, reliable effect remain unmodeled; scores are still heuristics, not exact damage calculations.
+
+## Version 1.18.1 — Held-item autocomplete
+- Edit Pokémon's Held item field now offers a searchable native datalist with commonly used held items and the items tracked in the player's collection context.
+- Users can still type and save custom or unlisted item names.
+- Does not change existing held items or Pokémon data.

@@ -58,6 +58,25 @@ function heldItemBoost(pokemon,moveType,effectiveness=1,damageClass='physical'){
    return {multiplier:1.3,label:'Life Orb boosts damage by 30% but causes recoil'};
  return {multiplier:1,label:''};
 }
+const HELD_ITEM_SUGGESTIONS=[
+'Amulet Coin','Assault Vest','Air Balloon','Black Belt','Black Glasses','Black Sludge','Bright Powder',
+'Cell Battery','Charcoal','Choice Band','Choice Scarf','Choice Specs','Cleanse Tag','Coba Berry',
+'Covert Cloak','Eject Button','Eject Pack','Eviolite','Expert Belt','Exp. Share','Focus Band','Focus Sash',
+'Full Incense','Grip Claw','Hard Stone','Heat Rock','Heavy-Duty Boots','Icy Rock','Iron Ball','King’s Rock',
+'Lagging Tail','Leftovers','Life Orb','Light Clay','Lucky Egg','Magnet','Mental Herb','Metal Coat','Metronome',
+'Miracle Seed','Misty Seed','Muscle Band','Mystic Water','Never-Melt Ice','Pixie Plate','Power Herb',
+'Protective Pads','Quick Claw','Quick Powder','Razor Claw','Razor Fang','Red Card','Rocky Helmet',
+'Room Service','Safety Goggles','Scope Lens','Shed Shell','Shell Bell','Silk Scarf','Silver Powder',
+'Smoke Ball','Smooth Rock','Snowball','Soft Sand','Soothe Bell','Spell Tag','Sitrus Berry','Terrain Extender',
+'Throat Spray','Toxic Orb','Twisted Spoon','Weakness Policy','Wise Glasses','White Herb','Zoom Lens',
+'Rawst Berry','Lum Berry','Chesto Berry','Pecha Berry','Cheri Berry','Aspear Berry','Occa Berry',
+'Passho Berry','Wacan Berry','Rindo Berry','Yache Berry','Shuca Berry','Coba Berry','Payapa Berry',
+'Kebia Berry','Tanga Berry','Charti Berry','Kasib Berry','Haban Berry','Colbur Berry','Babiri Berry',
+'Chilan Berry','Figy Berry','Wiki Berry','Mago Berry','Aguav Berry','Iapapa Berry'
+];
+const heldItemList=$('heldItemSuggestions');
+const heldItems=[...new Set(HELD_ITEM_SUGGESTIONS)].sort((a,b)=>a.localeCompare(b));
+heldItemList.replaceChildren(...heldItems.map(item=>{const option=document.createElement('option');option.value=item;return option}));
 const natureSelect=$('profileNature'),natureHint=$('profileNatureHint');
 natureSelect.innerHTML='<option value="">Not recorded</option>'+
  Object.keys(NATURES).sort().map(n=>'<option value="'+n+'">'+title(n)+' ('+
@@ -748,7 +767,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.18.0';
+const APP_VERSION='1.18.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
