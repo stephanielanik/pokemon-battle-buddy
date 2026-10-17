@@ -401,3 +401,6 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 
 /* v1.17: readable nature effects beneath the profile dropdown */
 #profileNatureHint{display:block;margin-top:5px;line-height:1.35;font-size:12px}
+
+/* v1.17.1: compact collapsible Add Pokémon to Box */
+#boxAdd{margin:12px 0}#boxAdd summary{cursor:pointer;font-weight:800;min-height:40px;display:list-item}#boxAdd form{margin-top:14px}#boxAdd .box-add-search-label{display:block;margin-bottom:8px;font-size:13px;font-weight:650}

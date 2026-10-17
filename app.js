@@ -91,7 +91,7 @@ function showCollection(view){
   $('teamCards').hidden=collectionView!=='party';
   $('boxCards').hidden=collectionView!=='box';
   $('boxFilters').hidden=collectionView!=='box';
-  $('boxAdd').hidden=collectionView!=='box'||!boxAddExpanded;
+  $('boxAdd').hidden=collectionView!=='box';
 
   $('partyView').classList.toggle('active',collectionView==='party');
   $('boxView').classList.toggle('active',collectionView==='box');
@@ -303,13 +303,15 @@ function movePokemon(recordId,location){
 }
 $('partyView').addEventListener('click',()=>showCollection('party'));
 $('boxView').addEventListener('click',()=>showCollection('box'));
-let boxAddExpanded=false;
 $('toggleBoxAdd').addEventListener('click',()=>{
   if(collectionView!=='box')showCollection('box');
-  boxAddExpanded=!boxAddExpanded;
-  $('boxAdd').hidden=!boxAddExpanded;
-  $('toggleBoxAdd').setAttribute('aria-expanded',String(boxAddExpanded));
-  if(boxAddExpanded)$('boxPokemonSearch').focus();
+  $('boxAdd').open=!$('boxAdd').open;
+  if($('boxAdd').open)$('boxPokemonSearch').focus();
+});
+$('boxAdd').addEventListener('toggle',()=>{
+  const expanded=$('boxAdd').open;
+  $('toggleBoxAdd').setAttribute('aria-expanded',String(expanded));
+  $('toggleBoxAdd').textContent=expanded?'− Close Add Pokémon':'＋ Add Pokémon';
 });
 $('add').onclick=()=>{
   if(!current)return;
@@ -715,7 +717,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.17.0';
+const APP_VERSION='1.17.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

@@ -316,3 +316,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Nature is saved per individual Pokémon; existing profiles remain Not recorded.
 - Recorded natures affect estimated physical/special move comparison, Gym Planner, TM/TR suggestions, and battle move scores.
 - Scores remain estimates without IVs, EVs, battle modifiers, or opponent stats. No existing collection storage is cleared.
+
+## Version 1.17.1 — Collapsible Box Add
+- The Add Pokémon to Box panel stays visible as a compact collapsed heading when browsing Box.
+- Tap its heading or the Add Pokémon button to expand or collapse it; existing search, add, and quick-edit actions remain inside.
+- No changes to stored Pokémon or collection ordering.
