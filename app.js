@@ -315,12 +315,25 @@ $('search').addEventListener('focus',()=>{
 });
 $('go').onclick=()=>search($('search').value);$('search').addEventListener('keydown',e=>{if(e.key==='Enter')search($('search').value)});
 let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=setTimeout(()=>{const q=$('search').value.toLowerCase().trim();let hits=allNames.filter(n=>n.includes(q)).slice(0,9);
-  if(q&&('jellicent-female'.includes(q)||'jellicent'.includes(q)))hits=[...new Set(['jellicent-female',...hits])].slice(0,9);$('suggestions').hidden=!q||!hits.length;$('suggestions').innerHTML=hits.map(n=>{const female=n==='jellicent-female';const id=female?593:allNames.indexOf(n)+1;const picked=preferredName(n);return `<button data-name="${n}"><img loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${n==='jellicent-female'?'female/':''}${id}.png" alt=""><strong>${title(n)}</strong>${picked!==n?'<span class="sub">Galar preferred</span>':''}</button>`}).join('');$('suggestions').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
-  $('search').value=title(b.dataset.name);
-  $('search').blur();
-  $('suggestions').hidden=true;
-  search(b.dataset.name);
-}));
+  if(q&&('jellicent-female'.includes(q)||'jellicent'.includes(q)))hits=[...new Set(['jellicent-female',...hits])].slice(0,9);$('suggestions').hidden=!q||!hits.length;$('suggestions').innerHTML=hits.map(n=>{const female=n==='jellicent-female';const id=female?593:allNames.indexOf(n)+1;const picked=preferredName(n);return `<button data-name="${n}"><img loading="lazy" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${n==='jellicent-female'?'female/':''}${id}.png" alt=""><strong>${title(n)}</strong>${picked!==n?'<span class="sub">Galar preferred</span>':''}</button>`}).join('');$('suggestions').querySelectorAll('button').forEach(b=>{
+  b.type='button';
+  let selected=false;
+  const choose=()=>{
+    if(selected)return;
+    selected=true;
+    const name=b.dataset.name;
+    $('search').value=title(name);
+    $('suggestions').hidden=true;
+    $('search').blur();
+    search(name);
+  };
+  // On iOS the first tap can dismiss the keyboard without delivering click.
+  // Handle touch at pointerdown while the suggestion is still mounted.
+  b.addEventListener('pointerdown',e=>{
+    if(e.pointerType==='touch'){e.preventDefault();choose();}
+  });
+  b.addEventListener('click',choose);
+});
 requestAnimationFrame(keepLookupSuggestionsVisible);},150)});
 // Keep the autocomplete list reachable above the iPhone on-screen keyboard.
 function keepLookupSuggestionsVisible(){
@@ -673,7 +686,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.16.3';
+const APP_VERSION='1.16.4';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

@@ -305,3 +305,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Avoid move badge layout changes during active typing; refresh badges when the move input loses focus.
 - Disable automatic scroll anchoring inside the profile and leave space around focused fields.
 - No change to Pokémon data storage.
+
+## Version 1.16.4 — iPhone autocomplete tap fix
+- Select Lookup suggestions on touch pointerdown so the first tap works while the iOS keyboard is open.
+- Keep click as keyboard/mouse fallback; guard against duplicate selections.
+- Preserve the existing input visibility and Edit Pokémon scrolling fixes. Saved data is unchanged.
