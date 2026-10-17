@@ -685,6 +685,8 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   if(b.dataset.tab==='raid')refreshRaidMatchup();
   $('team').hidden=b.dataset.tab!=='team';
   $('bank').hidden=b.dataset.tab!=='bank';
+  $('items').hidden=b.dataset.tab!=='items';
+  if(b.dataset.tab==='items')renderItemBank();
   $('profile').hidden=true;
   if(b.dataset.tab==='bank')renderMachineBank();
 });
@@ -767,7 +769,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.18.1';
+const APP_VERSION='1.19.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -803,9 +805,135 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkForUp
 window.addEventListener('pageshow',()=>checkForUpdates());
 
 // v0.6.2: portable backups. Never clear device storage during an app update.
+// Item Bank: quantities are local/device-specific and included in backups.
+const ITEM_CATALOG=[
+ ['Amulet Coin','held'],['Assault Vest','held'],['Air Balloon','held'],['Big Root','held'],
+ ['Black Belt','held'],['Black Glasses','held'],['Black Sludge','held'],['Bright Powder','held'],
+ ['Charcoal','held'],['Choice Band','held'],['Choice Scarf','held'],['Choice Specs','held'],
+ ['Cleanse Tag','held'],['Covert Cloak','held'],['Eject Button','held'],['Eject Pack','held'],
+ ['Eviolite','held'],['Expert Belt','held'],['Focus Band','held'],['Focus Sash','held'],
+ ['Grip Claw','held'],['Hard Stone','held'],['Heat Rock','held'],['Heavy-Duty Boots','held'],
+ ['Icy Rock','held'],['King\'s Rock','held'],['Lagging Tail','held'],['Leftovers','held'],
+ ['Life Orb','held'],['Light Ball','held'],['Light Clay','held'],['Magnet','held'],
+ ['Metal Coat','held'],['Metronome','held'],['Miracle Seed','held'],['Muscle Band','held'],
+ ['Mystic Water','held'],['Never-Melt Ice','held'],['Pixie Plate','held'],['Power Herb','held'],
+ ['Quick Claw','held'],['Rocky Helmet','held'],['Safety Goggles','held'],['Scope Lens','held'],
+ ['Shell Bell','held'],['Silk Scarf','held'],['Silver Powder','held'],['Snowball','held'],
+ ['Soft Sand','held'],['Spell Tag','held'],['Terrain Extender','held'],['Throat Spray','held'],
+ ['Twisted Spoon','held'],['White Herb','held'],['Wise Glasses','held'],['Zoom Lens','held'],
+ ['Rawst Berry','berries'],['Sitrus Berry','berries'],['Lum Berry','berries'],['Chesto Berry','berries'],
+ ['Pecha Berry','berries'],['Cheri Berry','berries'],['Aspear Berry','berries'],['Occa Berry','berries'],
+ ['Passho Berry','berries'],['Wacan Berry','berries'],['Rindo Berry','berries'],['Yache Berry','berries'],
+ ['Shuca Berry','berries'],['Coba Berry','berries'],['Payapa Berry','berries'],['Kebia Berry','berries'],
+ ['Tanga Berry','berries'],['Charti Berry','berries'],['Kasib Berry','berries'],['Haban Berry','berries'],
+ ['Colbur Berry','berries'],['Babiri Berry','berries'],['Chilan Berry','berries'],
+ ['Cracked Pot','evolution'],['Dusk Stone','evolution'],['Everstone','evolution'],
+ ['Fire Stone','evolution'],['Galarica Twig','evolution'],['Leaf Stone','evolution'],
+ ['Protector','evolution'],['Shiny Stone','evolution'],['Dynamax Candy','other'],
+ ['HP Up','other'],['PP Up','other'],['Clever Feather','other'],['Blue Apricorn','other'],
+ ['Green Apricorn','other'],['Red Apricorn','other'],['White Apricorn','other'],
+ ['Repel','other'],['Big Nugget','other'],['Dynamite Candy','other']
+];
+const ITEM_CATEGORY_LABELS={held:'Held items',berries:'Berries',evolution:'Evolution items',other:'Other'};
+const ITEM_NAME_CATALOG=[...new Map(ITEM_CATALOG.map(([name,category])=>[name.toLowerCase(),{name,category}])).values()];
+const ITEM_NAME_MAP=new Map(ITEM_NAME_CATALOG.map(x=>[x.name.toLowerCase(),x]));
+function addHeldItemSuggestion(name){
+ const list=$('heldItemSuggestions');
+ if([...list.options].some(option=>itemKey(option.value)===itemKey(name)))return;
+ const option=document.createElement('option');option.value=name;list.append(option);
+}
+const REPORTED_ITEMS=['Big Root','Black Belt','Charcoal','Cleanse Tag','Clever Feather','Cracked Pot','Dusk Stone','Blue Apricorn','Dynamax Candy','Everstone','Eviolite','Light Ball','Expert Belt','Fire Stone','Focus Sash','Galarica Twig','Green Apricorn','Grip Claw','Heat Rock','Heavy-Duty Boots','HP Up','King\'s Rock','Leaf Stone','Leftovers','Light Clay','Magnet','Metal Coat','PP Up','Protector','Red Apricorn','Repel','Rocky Helmet','Safety Goggles','Scope Lens','Shell Bell','Shiny Stone','Snowball','Terrain Extender','Throat Spray','White Apricorn','White Herb','Wise Glasses','Zoom Lens','Amulet Coin','Muscle Band','Pixie Plate'];
+function validateItemBank(value){
+ if(!Array.isArray(value)||value.length>500)throw Error('Invalid Item Bank.');
+ const seen=new Set(),out=[];
+ for(const entry of value){
+  if(!entry||typeof entry.name!=='string'||entry.name.trim().length>80||!Number.isInteger(entry.quantity)||entry.quantity<0||entry.quantity>999)throw Error('Invalid Item Bank entry.');
+  const key=entry.name.trim().toLowerCase();if(seen.has(key))throw Error('Duplicate Item Bank item.');
+  seen.add(key);const known=ITEM_NAME_MAP.get(key);
+  out.push({name:known?.name||entry.name.trim(),category:known?.category||(['berries','evolution','other'].includes(entry.category)?entry.category:'held'),quantity:entry.quantity});
+ }
+ return out;
+}
+let itemBank=[],itemCategory='all';
+try{
+ const stored=localStorage.getItem('battleBuddyItemBank');
+ if(stored!==null)itemBank=validateItemBank(JSON.parse(stored));
+ else{
+  itemBank=REPORTED_ITEMS.map(name=>({name,category:ITEM_NAME_MAP.get(name.toLowerCase())?.category||'held',quantity:1}));
+  localStorage.setItem('battleBuddyItemBank',JSON.stringify(itemBank));
+ }
+}catch(e){itemBank=[]}
+function saveItemBank(){localStorage.setItem('battleBuddyItemBank',JSON.stringify(itemBank))}
+function refreshItemSuggestions(){ITEM_NAME_CATALOG.forEach(x=>addHeldItemSuggestion(x.name));itemBank.forEach(x=>addHeldItemSuggestion(x.name))}
+function itemKey(value){return String(value||'').trim().toLowerCase().replace(/[^a-z0-9]/g,'')}
+function itemHolders(name){return [...team,...box].filter(p=>itemKey(p.heldItem)===itemKey(name))}
+function itemCount(name){return itemBank.find(x=>itemKey(x.name)===itemKey(name))?.quantity||0}
+function addOrIncrementItem(name){
+ const key=itemKey(name);if(!key)return;
+ addHeldItemSuggestion(name);
+ let entry=itemBank.find(x=>itemKey(x.name)===key);
+ if(!entry){const known=ITEM_NAME_MAP.get(String(name).trim().toLowerCase());entry={name:known?.name||String(name).trim(),category:known?.category||'held',quantity:0};itemBank.push(entry)}
+ entry.quantity=Math.min(999,entry.quantity+1);saveItemBank();renderItemBank();
+}
+function assignItem(name,recordId){
+ const p=[...team,...box].find(x=>x.recordId===recordId);if(!p)return;
+ const holders=itemHolders(name).filter(x=>x.recordId!==recordId);
+ const available=itemCount(name)-holders.length-(itemHolders(name).some(x=>x.recordId===recordId)?0:0);
+ if(available<=0){
+  const holder=holders[0];if(!holder){$('itemBankNotice').textContent='Add at least one copy of this item before assigning it.';return}
+  if(!confirm('All recorded copies are already held. Move '+name+' from '+(holder.nickname||title(holder.name))+' to '+(p.nickname||title(p.name))+'?'))return;
+  holder.heldItem='';
+ }
+ p.heldItem=name;save();saveItemBank();renderItemBank();
+ $('itemBankNotice').textContent=name+' assigned to '+(p.nickname||title(p.name))+'.';
+}
+refreshItemSuggestions();
+function renderItemBank(){
+ const query=$('itemBankSearch').value.trim().toLowerCase();
+ const list=$('itemBankItems');list.replaceChildren();
+ const owned=itemBank.filter(x=>x.quantity>0&&
+  (itemCategory==='all'||x.category===itemCategory)&&
+  (!query||x.name.toLowerCase().includes(query)));
+ const assignedTotal=itemBank.reduce((sum,x)=>sum+Math.min(x.quantity,itemHolders(x.name).length),0);
+ $('itemBankCount').textContent=owned.length+' item types shown · '+itemBank.reduce((n,x)=>n+x.quantity,0)+' total copies recorded · '+assignedTotal+' held by Pokémon';
+ for(const entry of owned.sort((a,b)=>a.name.localeCompare(b.name))){
+  const row=document.createElement('article');row.className='item-bank-row';
+  const head=document.createElement('div');head.className='item-bank-row-head';
+  const info=document.createElement('div');info.className='item-bank-item-info';
+  const name=document.createElement('strong');name.textContent=entry.name;
+  const meta=document.createElement('p');meta.className='hint';meta.textContent=ITEM_CATEGORY_LABELS[entry.category]+' · '+itemHolders(entry.name).length+' held · '+Math.max(0,entry.quantity-itemHolders(entry.name).length)+' available';
+  info.append(name,meta);
+  const qty=document.createElement('div');qty.className='item-bank-qty';
+  const minus=document.createElement('button');minus.type='button';minus.textContent='−';minus.setAttribute('aria-label','Decrease '+entry.name+' quantity');
+  const value=document.createElement('span');value.textContent=entry.quantity;
+  const plus=document.createElement('button');plus.type='button';plus.textContent='+';plus.setAttribute('aria-label','Increase '+entry.name+' quantity');
+  minus.disabled=entry.quantity<=itemHolders(entry.name).length;
+  minus.addEventListener('click',()=>{entry.quantity=Math.max(itemHolders(entry.name).length,entry.quantity-1);saveItemBank();renderItemBank()});
+  plus.addEventListener('click',()=>{entry.quantity=Math.min(999,entry.quantity+1);saveItemBank();renderItemBank()});
+  qty.append(minus,value,plus);head.append(info,qty);row.append(head);
+  const assign=document.createElement('details');assign.className='item-assign';
+  const summary=document.createElement('summary');summary.textContent='Assign to Pokémon';assign.append(summary);
+  const select=document.createElement('select');select.setAttribute('aria-label','Choose Pokémon for '+entry.name);
+  const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Choose a Pokémon…';select.append(placeholder);
+  [...team,...box].forEach(p=>{const opt=document.createElement('option');opt.value=p.recordId;opt.textContent=(p.nickname||title(p.name))+' · Lv. '+(p.level||'?')+(itemKey(p.heldItem)===itemKey(entry.name)?' (already holding)':'');select.append(opt)});
+  const button=document.createElement('button');button.type='button';button.textContent='Assign item';
+  button.addEventListener('click',()=>{if(!select.value){$('itemBankNotice').textContent='Choose a Pokémon first.';return}assignItem(entry.name,select.value)});
+  assign.append(select,button);row.append(assign);list.append(row);
+ }
+ if(!owned.length){const empty=document.createElement('p');empty.className='hint';empty.textContent=query?'No owned items match this search.':'No recorded items in this category. Use Add an item to inventory above.';list.append(empty)}
+}
+$('itemAddSelect').innerHTML='<option value="">Choose an item…</option>'+ITEM_NAME_CATALOG.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(x=>'<option value="'+x.name.replace(/"/g,'&quot;')+'">'+x.name+'</option>').join('');
+$('itemAddForm').addEventListener('submit',e=>{e.preventDefault();if(!$('itemAddSelect').value)return;addOrIncrementItem($('itemAddSelect').value);$('itemAddSelect').value=''});
+$('itemBankSearch').addEventListener('input',()=>renderItemBank());
+document.querySelectorAll('[data-item-category]').forEach(button=>button.addEventListener('click',()=>{
+ itemCategory=button.dataset.itemCategory;
+ document.querySelectorAll('[data-item-category]').forEach(b=>b.classList.toggle('active',b===button));
+ renderItemBank();
+}));
+
 function backupPayload(){
-  return {format:'pokemon-battle-buddy-backup',schemaVersion:3,exportedAt:new Date().toISOString(),
-    team,box,machineBanks,game:localStorage.getItem('battleBuddyGame')||'shield',
+  return {format:'pokemon-battle-buddy-backup',schemaVersion:4,exportedAt:new Date().toISOString(),
+    team,box,machineBanks,itemBank,game:localStorage.getItem('battleBuddyGame')||'shield',
     theme:localStorage.getItem('battleBuddyTheme')||'battle'};
 }
 $('exportTeam').addEventListener('click',()=>{
@@ -824,7 +952,7 @@ $('backupFile').addEventListener('change',async event=>{
   try{
     if(file.size>1024*1024)throw Error('Backup is too large.');
     const data=JSON.parse(await file.text());
-    if(data.format!=='pokemon-battle-buddy-backup'||![1,2,3].includes(data.schemaVersion))throw Error('This is not a supported Battle Buddy backup.');
+    if(data.format!=='pokemon-battle-buddy-backup'||![1,2,3,4].includes(data.schemaVersion))throw Error('This is not a supported Battle Buddy backup.');
     if(!Array.isArray(data.team)||data.team.length>6|| (data.schemaVersion===2&&(!Array.isArray(data.box)||data.box.length>500)))throw Error('Backup contains an invalid party or Box.');
     const validTypes=Object.keys(colors);
     const restoreRecords=records=>records.map(p=>{
@@ -841,13 +969,16 @@ $('backupFile').addEventListener('change',async event=>{
         level:Number.isInteger(p.level)&&p.level>=1&&p.level<=100?p.level:null,
         ability:typeof p.ability==='string'?p.ability.slice(0,100):'',
         heldItem:typeof p.heldItem==='string'?p.heldItem.slice(0,100):'',
+        gender:['female','male'].includes(p.gender)?p.gender:undefined,
+        nature:typeof p.nature==='string'&&NATURES[p.nature.toLowerCase()]?p.nature.toLowerCase():'',
         pokerus:['unknown','never','active','cured'].includes(p.pokerus)?p.pokerus:'unknown',
         moves:(p.moves||[]).slice(0,4),tags:[]};
     });
     const restored=restoreRecords(data.team);
     const restoredBox=restoreRecords(data.schemaVersion>=2?data.box:[]);
     ensureRecordIds([...restored,...restoredBox]);
-    const importedBanks=data.schemaVersion===3?validateMachineBanks(data.machineBanks):{};
+    const importedBanks=data.schemaVersion>=3?validateMachineBanks(data.machineBanks):{};
+    const importedItems=data.schemaVersion>=4?validateItemBank(data.itemBank):itemBank;
     const allowedGames=['shield','sword','lets-go-pikachu','lets-go-eevee','legends-za'];
     if(!allowedGames.includes(data.game)||!['battle','cozy'].includes(data.theme))throw Error('Backup settings are invalid.');
     if(!confirm('Replace your current party and Box with '+restored.length+' party Pokémon and '+restoredBox.length+' boxed Pokémon from this backup?')){status.textContent='Import cancelled.';return}
@@ -855,10 +986,11 @@ $('backupFile').addEventListener('change',async event=>{
     localStorage.setItem('battleBuddyTeam',JSON.stringify(restored));
     localStorage.setItem('battleBuddyBox',JSON.stringify(restoredBox));
     localStorage.setItem('battleBuddyMachineBanks',JSON.stringify(importedBanks));
+    localStorage.setItem('battleBuddyItemBank',JSON.stringify(importedItems));
     localStorage.setItem('battleBuddyGame',data.game);
-    team=restored;box=restoredBox;machineBanks=importedBanks;game=data.game;$('game').value=game;updateGameLabel();
+    team=restored;box=restoredBox;machineBanks=importedBanks;itemBank=importedItems;game=data.game;$('game').value=game;updateGameLabel();
     setTheme(data.theme);renderTeam();editingRecordId=null;
-    status.textContent='Restored your party, Box, TM/TR bank, and preferences.';
+    status.textContent='Restored your party, Box, TM/TR bank, Item Bank, and preferences.';
   }catch(error){status.textContent='Import failed: '+error.message}
   finally{event.target.value=''}
 });

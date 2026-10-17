@@ -336,3 +336,10 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Edit Pokémon's Held item field now offers a searchable native datalist with commonly used held items and the items tracked in the player's collection context.
 - Users can still type and save custom or unlisted item names.
 - Does not change existing held items or Pokémon data.
+
+## Version 1.19.0 — Item Bank
+- New separate, searchable Item Bank with Held items, Berries, Evolution, and Other category filters.
+- Track quantities, add items from a catalog, and see recorded counts held by Pokémon vs. available.
+- Assign an item directly to a Party or Box Pokémon; if all copies are assigned, confirm before moving one from another holder.
+- Seeds the first inventory with the item names the user reported, using quantity 1 because exact counts were not provided; edit quantities to match the Bag. Existing held items such as Magnet/Amulet Coin remain assigned.
+- Item Bank is included in schema v4 backups/imports, while backups from v1–v3 remain importable.
