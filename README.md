@@ -354,3 +354,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Removed the Lookup visualViewport resize handler and scripted window scrolling that ran while the iPhone keyboard opened or closed.
 - Autocomplete suggestions remain independently scrollable and use the existing touch-first selection behavior.
 - Preserves Item Bank, held-item suggestions, Pokémon profiles, and inventory data.
+
+## Version 1.19.3 — Restore Native iPhone Scroll Anchoring
+- Removed custom `overflow-anchor:none` overrides on the whole page and Edit Pokémon profile, allowing iOS Safari to manage keyboard-driven focus positioning natively.
+- Kept input sizing, autocomplete behavior, and all Item Bank functionality intact.
+- No changes to Pokémon data, held items, or inventory counts.
