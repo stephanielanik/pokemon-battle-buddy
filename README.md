@@ -349,3 +349,8 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Broadened the catalog across held items, incenses, gems, berries, evolution items, feathers, battle consumables, and utility items.
 - Add item uses a searchable datalist but accepts custom names too, so uncatalogued items can be tracked without waiting for a code update.
 - Existing quantities are preserved; newly confirmed item names are added at quantity 1 where absent so the user can correct counts to match the Bag.
+
+## Version 1.19.2 — Stop automatic keyboard scrolling
+- Removed the Lookup visualViewport resize handler and scripted window scrolling that ran while the iPhone keyboard opened or closed.
+- Autocomplete suggestions remain independently scrollable and use the existing touch-first selection behavior.
+- Preserves Item Bank, held-item suggestions, Pokémon profiles, and inventory data.

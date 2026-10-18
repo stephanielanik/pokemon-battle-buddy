@@ -408,22 +408,9 @@ let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=se
   });
   b.addEventListener('click',choose);
 });
-requestAnimationFrame(keepLookupSuggestionsVisible);},150)});
-// Keep the autocomplete list reachable above the iPhone on-screen keyboard.
-function keepLookupSuggestionsVisible(){
-  const input=$('search'),list=$('suggestions');
-  if(document.activeElement!==input||list.hidden||!list.children.length)return;
-  const viewport=window.visualViewport;
-  const visibleBottom=viewport?viewport.offsetTop+viewport.height:window.innerHeight;
-  const inputRect=input.getBoundingClientRect();
-  // Never chase the bottom of a growing suggestion list: that hides the input.
-  if(inputRect.bottom>visibleBottom-12){
-    window.scrollBy({top:inputRect.bottom-visibleBottom+24,behavior:'auto'});
-  }
-}
-if(window.visualViewport){
-  window.visualViewport.addEventListener('resize',()=>requestAnimationFrame(keepLookupSuggestionsVisible));
-}
+},150)});
+// Do not auto-scroll the document on visualViewport resize. iOS keyboard
+// animation can fire this while focus is moving between unrelated fields.
 // Type-only matchup for unidentified Max Raid silhouettes.
 const raidFirst=$('raidTypeOne'),raidSecond=$('raidTypeTwo');
 for(const type of Object.keys(colors)){
@@ -769,7 +756,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.19.1';
+const APP_VERSION='1.19.2';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

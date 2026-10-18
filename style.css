@@ -414,3 +414,7 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 
 /* v1.19.1: Item Bank accepts catalog suggestions or custom item names. */
 .item-add-controls input{flex:1;min-width:0;font-size:16px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--input);color:var(--text)}
+
+/* v1.19.2: keyboard focus must not trigger scripted document jumps. */
+html,body{overflow-anchor:none}
+#suggestions{max-height:min(250px,32vh,220px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
