@@ -769,7 +769,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.19.0';
+const APP_VERSION='1.19.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -810,6 +810,43 @@ const ITEM_CATALOG=[
  ['Amulet Coin','held'],['Assault Vest','held'],['Air Balloon','held'],['Big Root','held'],
  ['Black Belt','held'],['Black Glasses','held'],['Black Sludge','held'],['Bright Powder','held'],
  ['Charcoal','held'],['Choice Band','held'],['Choice Scarf','held'],['Choice Specs','held'],
+ ['Flame Orb','held'],['Toxic Orb','held'],['Normal Gem','held'],['Fighting Gem','held'],['Fire Gem','held'],
+ ['Water Gem','held'],['Electric Gem','held'],['Grass Gem','held'],['Ice Gem','held'],['Poison Gem','held'],
+ ['Ground Gem','held'],['Flying Gem','held'],['Psychic Gem','held'],['Bug Gem','held'],['Rock Gem','held'],
+ ['Ghost Gem','held'],['Dragon Gem','held'],['Dark Gem','held'],['Steel Gem','held'],['Fairy Gem','held'],
+ ['Sea Incense','held'],['Wave Incense','held'],['Lax Incense','held'],['Odd Incense','held'],
+ ['Rock Incense','held'],['Rose Incense','held'],['Full Incense','held'],['Luck Incense','held'],
+ ['Smooth Rock','held'],['Thick Club','held'],['Dragon Fang','held'],['Flame Plate','held'],
+ ['Splash Plate','held'],['Meadow Plate','held'],['Icicle Plate','held'],['Fist Plate','held'],
+ ['Toxic Plate','held'],['Earth Plate','held'],['Sky Plate','held'],['Mind Plate','held'],
+ ['Insect Plate','held'],['Stone Plate','held'],['Spooky Plate','held'],['Draco Plate','held'],
+ ['Dread Plate','held'],['Iron Plate','held'],['Lustrous Orb','held'],['Adamant Orb','held'],
+ ['Griseous Orb','held'],['Red Card','held'],['Ring Target','held'],['Sticky Barb','held'],
+ ['Binding Band','held'],['Destiny Knot','held'],['Shed Shell','held'],['Smoke Ball','held'],
+ ['Quick Powder','held'],['Metal Powder','held'],['Leek','held'],['Wide Lens','held'],
+ ['Lansat Berry','berries'],['Starf Berry','berries'],['Enigma Berry','berries'],
+ ['Micle Berry','berries'],['Jaboca Berry','berries'],['Rowap Berry','berries'],['Kee Berry','berries'],
+ ['Maranga Berry','berries'],['Roseli Berry','berries'],['Berry Sweet','evolution'],['Clover Sweet','evolution'],
+ ['Flower Sweet','evolution'],['Love Sweet','evolution'],['Ribbon Sweet','evolution'],['Star Sweet','evolution'],
+ ['Sweet Apple','evolution'],['Tart Apple','evolution'],['Chipped Pot','evolution'],['Ice Stone','evolution'],
+ ['Moon Stone','evolution'],['Sun Stone','evolution'],['Thunder Stone','evolution'],['Water Stone','evolution'],
+ ['Dawn Stone','evolution'],['Oval Stone','evolution'],['Dragon Scale','evolution'],['Dubious Disc','evolution'],
+ ['Electirizer','evolution'],['Magmarizer','evolution'],['Prism Scale','evolution'],['Reaper Cloth','evolution'],
+ ['Sachet','evolution'],['Upgrade','evolution'],['Whipped Dream','evolution'],['Razor Claw','evolution'],
+ ['Razor Fang','evolution'],['Galarica Cuff','evolution'],['Galarica Wreath','evolution'],
+ ['Resist Feather','other'],['Health Feather','other'],['Genius Feather','other'],['Muscle Feather','other'],
+ ['Swift Feather','other'],['Pretty Feather','other'],['Rare Candy','other'],['Exp. Candy XS','other'],
+ ['Exp. Candy S','other'],['Exp. Candy M','other'],['Exp. Candy L','other'],['Exp. Candy XL','other'],
+ ['Max Repel','other'],['Super Repel','other'],['Escape Rope','other'],['Max Revive','other'],
+ ['Revive','other'],['Hyper Potion','other'],['Max Potion','other'],['Full Restore','other'],
+ ['Poke Doll','other'],['Wishing Piece','other'],['Armorite Ore','other'],['Dynite Ore','other'],
+ ['Balm Mushroom','other'],['Pearl','other'],['Big Pearl','other'],['Star Piece','other'],
+ ['Stardust','other'],['Comet Shard','other'],['Tiny Mushroom','other'],['Big Mushroom','other'],
+ ['Rare Bone','other'],['Nugget','other'],['Bottle Cap','other'],['Gold Bottle Cap','other'],
+ ['Ability Capsule','other'],['Ability Patch','other'],['PP Max','other'],['Calcium','other'],
+ ['Carbos','other'],['Iron','other'],['Protein','other'],['Zinc','other'],
+ ['Pomeg Berry','berries'],['Kelpsy Berry','berries'],['Hondew Berry','berries'],['Tamato Berry','berries'],
+ ['Chople Berry','berries'],
  ['Cleanse Tag','held'],['Covert Cloak','held'],['Eject Button','held'],['Eject Pack','held'],
  ['Eviolite','held'],['Expert Belt','held'],['Focus Band','held'],['Focus Sash','held'],
  ['Grip Claw','held'],['Hard Stone','held'],['Heat Rock','held'],['Heavy-Duty Boots','held'],
@@ -842,7 +879,7 @@ function addHeldItemSuggestion(name){
  if([...list.options].some(option=>itemKey(option.value)===itemKey(name)))return;
  const option=document.createElement('option');option.value=name;list.append(option);
 }
-const REPORTED_ITEMS=['Big Root','Black Belt','Charcoal','Cleanse Tag','Clever Feather','Cracked Pot','Dusk Stone','Blue Apricorn','Dynamax Candy','Everstone','Eviolite','Light Ball','Expert Belt','Fire Stone','Focus Sash','Galarica Twig','Green Apricorn','Grip Claw','Heat Rock','Heavy-Duty Boots','HP Up','King\'s Rock','Leaf Stone','Leftovers','Light Clay','Magnet','Metal Coat','PP Up','Protector','Red Apricorn','Repel','Rocky Helmet','Safety Goggles','Scope Lens','Shell Bell','Shiny Stone','Snowball','Terrain Extender','Throat Spray','White Apricorn','White Herb','Wise Glasses','Zoom Lens','Amulet Coin','Muscle Band','Pixie Plate'];
+const REPORTED_ITEMS=['Sun Stone','Smooth Rock','Thick Club','Flame Orb','Moon Stone','Normal Gem','Sea Incense','Resist Feather','Big Root','Black Belt','Charcoal','Cleanse Tag','Clever Feather','Cracked Pot','Dusk Stone','Blue Apricorn','Dynamax Candy','Everstone','Eviolite','Light Ball','Expert Belt','Fire Stone','Focus Sash','Galarica Twig','Green Apricorn','Grip Claw','Heat Rock','Heavy-Duty Boots','HP Up','King\'s Rock','Leaf Stone','Leftovers','Light Clay','Magnet','Metal Coat','PP Up','Protector','Red Apricorn','Repel','Rocky Helmet','Safety Goggles','Scope Lens','Shell Bell','Shiny Stone','Snowball','Terrain Extender','Throat Spray','White Apricorn','White Herb','Wise Glasses','Zoom Lens','Amulet Coin','Muscle Band','Pixie Plate'];
 function validateItemBank(value){
  if(!Array.isArray(value)||value.length>500)throw Error('Invalid Item Bank.');
  const seen=new Set(),out=[];
@@ -863,6 +900,13 @@ try{
   localStorage.setItem('battleBuddyItemBank',JSON.stringify(itemBank));
  }
 }catch(e){itemBank=[]}
+// Add newly confirmed inventory entries once without resetting quantities users tracked.
+for(const name of ['Sun Stone','Smooth Rock','Thick Club','Flame Orb','Moon Stone','Normal Gem','Sea Incense','Resist Feather']){
+ if(!itemBank.some(x=>itemKey(x.name)===itemKey(name))){
+  itemBank.push({name,category:ITEM_NAME_MAP.get(name.toLowerCase())?.category||'other',quantity:1});
+ }
+}
+try{localStorage.setItem('battleBuddyItemBank',JSON.stringify(itemBank))}catch(e){}
 function saveItemBank(){localStorage.setItem('battleBuddyItemBank',JSON.stringify(itemBank))}
 function refreshItemSuggestions(){ITEM_NAME_CATALOG.forEach(x=>addHeldItemSuggestion(x.name));itemBank.forEach(x=>addHeldItemSuggestion(x.name))}
 function itemKey(value){return String(value||'').trim().toLowerCase().replace(/[^a-z0-9]/g,'')}
@@ -922,7 +966,7 @@ function renderItemBank(){
  }
  if(!owned.length){const empty=document.createElement('p');empty.className='hint';empty.textContent=query?'No owned items match this search.':'No recorded items in this category. Use Add an item to inventory above.';list.append(empty)}
 }
-$('itemAddSelect').innerHTML='<option value="">Choose an item…</option>'+ITEM_NAME_CATALOG.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(x=>'<option value="'+x.name.replace(/"/g,'&quot;')+'">'+x.name+'</option>').join('');
+$('itemCatalogSuggestions').innerHTML=ITEM_NAME_CATALOG.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(x=>'<option value="'+x.name.replace(/"/g,'&quot;')+'">'+x.name+'</option>').join('');
 $('itemAddForm').addEventListener('submit',e=>{e.preventDefault();if(!$('itemAddSelect').value)return;addOrIncrementItem($('itemAddSelect').value);$('itemAddSelect').value=''});
 $('itemBankSearch').addEventListener('input',()=>renderItemBank());
 document.querySelectorAll('[data-item-category]').forEach(button=>button.addEventListener('click',()=>{

@@ -343,3 +343,9 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Assign an item directly to a Party or Box Pokémon; if all copies are assigned, confirm before moving one from another holder.
 - Seeds the first inventory with the item names the user reported, using quantity 1 because exact counts were not provided; edit quantities to match the Bag. Existing held items such as Magnet/Amulet Coin remain assigned.
 - Item Bank is included in schema v4 backups/imports, while backups from v1–v3 remain importable.
+
+## Version 1.19.1 — Expanded Item Catalog
+- Added reported items Sun Stone, Smooth Rock, Thick Club, Flame Orb, Moon Stone, Normal Gem, Sea Incense, and Resist Feather.
+- Broadened the catalog across held items, incenses, gems, berries, evolution items, feathers, battle consumables, and utility items.
+- Add item uses a searchable datalist but accepts custom names too, so uncatalogued items can be tracked without waiting for a code update.
+- Existing quantities are preserved; newly confirmed item names are added at quantity 1 where absent so the user can correct counts to match the Bag.
