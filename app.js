@@ -134,7 +134,7 @@ $('game').addEventListener('change',()=>{
   $('analyzerResults').replaceChildren();
   $('boxRecommendations').hidden=true;
   $('analyzerStatus').textContent='Switched games. Analyze Party for recommendations for this game.';
-  renderTeam();renderItemBank();
+  renderTeam();renderItemBank();renderMachineBank();
   if(current){
     const base=current.name.replace(/-(galar|alola|hisui)$/,'');
     current=null;$('result').hidden=true;
