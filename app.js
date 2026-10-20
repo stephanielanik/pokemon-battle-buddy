@@ -209,7 +209,7 @@ function persistCardOrder(container,location){
   const ids=[...container.querySelectorAll('.compact-teamcard')].map(el=>el.dataset.recordId);
   if(ids.length!==records.length||ids.some(id=>!byId.has(id)))return;
   records.splice(0,records.length,...ids.map(id=>byId.get(id)));
-  localStorage.setItem(location==='party'?'battleBuddyTeam':'battleBuddyBox',JSON.stringify(records));
+  saveGameCollections();
 }
 function setupCardReorder(handle,card,container,location){
   let active=false,originalIndex=-1,pointerId=null;
@@ -807,7 +807,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.19.3';
+const APP_VERSION='1.20.0';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;

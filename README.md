@@ -1,4 +1,4 @@
-# Pokémon Battle Buddy v0.1
+# Pokémon Battle Buddy v1.20.0
 
 Mobile-friendly, ad-free Pokémon type matchup lookup and six-Pokémon team tracker.
 
