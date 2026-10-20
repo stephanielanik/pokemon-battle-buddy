@@ -807,7 +807,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.20.0';
+const APP_VERSION='1.20.1';
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
@@ -816,7 +816,9 @@ async function checkForUpdates(manual=false){
   const status=$('updateStatus'),button=$('checkUpdates');
   if(manual){status.textContent='Checking for updates…';button.disabled=true}
   try{
-    const url=new URL(window.location.href);
+    // Read the version marker from the GitHub source rather than the live Pages
+    // document, which may be served from an edge cache despite cache-busting.
+    const url=new URL('https://raw.githubusercontent.com/stephanielanik/pokemon-battle-buddy/main/index.html');
     url.searchParams.set('_bb_check',String(Date.now()));
     const response=await fetch(url.toString(),{cache:'no-store',redirect:'follow'});
     if(!response.ok)throw Error('Update check failed');
@@ -827,9 +829,10 @@ async function checkForUpdates(manual=false){
       updateAvailable=true;$('updateBanner').hidden=false;
       status.textContent='Version '+latest+' is available.';
     }else if(latest===APP_VERSION){
+      updateAvailable=false;
       if(manual)status.textContent='You have the latest version.';
     }else if(manual)status.textContent='Could not determine the latest version. Try again shortly.';
-  }catch(e){if(manual)status.textContent='Unable to check. Verify your connection and try again.'}
+  }catch(e){if(manual)status.textContent='Unable to check GitHub for updates. Try opening the latest app page once, then check again.'}
   finally{updateChecking=false;button.disabled=false}
 }
 $('checkUpdates').addEventListener('click',()=>checkForUpdates(true));
