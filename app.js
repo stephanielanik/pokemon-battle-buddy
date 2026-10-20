@@ -2,15 +2,45 @@ const colors={normal:'#a8a29e',fire:'#f58a52',water:'#5aa7e8',electric:'#e6b83f'
 // Each row is the attacking type; entries are defending types and their multipliers.
 const rules={normal:{rock:.5,ghost:0,steel:.5},fire:{fire:.5,water:.5,grass:2,ice:2,bug:2,rock:.5,dragon:.5,steel:2},water:{fire:2,water:.5,grass:.5,ground:2,rock:2,dragon:.5},electric:{water:2,electric:.5,grass:.5,ground:0,flying:2,dragon:.5},grass:{fire:.5,water:2,grass:.5,poison:.5,ground:2,flying:.5,bug:.5,rock:2,dragon:.5,steel:.5},ice:{fire:.5,water:.5,grass:2,ice:.5,ground:2,flying:2,dragon:2,steel:.5},fighting:{normal:2,ice:2,poison:.5,flying:.5,psychic:.5,bug:.5,rock:2,ghost:0,dark:2,steel:2,fairy:.5},poison:{grass:2,poison:.5,ground:.5,rock:.5,ghost:.5,steel:0,fairy:2},ground:{fire:2,electric:2,grass:.5,poison:2,flying:0,bug:.5,rock:2,steel:2},flying:{electric:.5,grass:2,fighting:2,bug:2,rock:.5,steel:.5},psychic:{fighting:2,poison:2,psychic:.5,dark:0,steel:.5},bug:{fire:.5,grass:2,fighting:.5,poison:.5,flying:.5,psychic:2,ghost:.5,dark:2,steel:.5,fairy:.5},rock:{fire:2,ice:2,fighting:.5,ground:.5,flying:2,bug:2,steel:.5},ghost:{normal:0,psychic:2,ghost:2,dark:.5},dragon:{dragon:2,steel:.5,fairy:0},dark:{fighting:.5,psychic:2,ghost:2,dark:.5,fairy:.5},steel:{fire:.5,water:.5,electric:.5,ice:2,rock:2,steel:.5,fairy:2},fairy:{fire:.5,fighting:2,poison:.5,dragon:2,dark:2,steel:.5}};
 const $=id=>document.getElementById(id), title=s=>s.replace(/-/g,' ').replace(/\b\w/g,x=>x.toUpperCase());
-let team=JSON.parse(localStorage.getItem('battleBuddyTeam')||'[]'),current=null,allNames=[];
-let box=JSON.parse(localStorage.getItem('battleBuddyBox')||'[]');
-let collectionView='party';
+const GAME_KEYS=['shield','sword','lets-go-pikachu','lets-go-eevee','legends-za'];
+let game=localStorage.getItem('battleBuddyGame')||'shield';
+if(!GAME_KEYS.includes(game))game='shield';
+$('game').value=game;
+let current=null,allNames=[],collectionView='party';
+function readStoredArray(key){try{const value=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(value)?value:[]}catch(e){return []}}
+function emptyGameCollections(){return Object.fromEntries(GAME_KEYS.map(key=>[key,{team:[],box:[]}]))}
+let gameCollections;
+function saveGameCollections(){
+  gameCollections[game]={team,box};
+  localStorage.setItem('battleBuddyGameCollections',JSON.stringify(gameCollections));
+  if(game==='shield'){
+    localStorage.setItem('battleBuddyTeam',JSON.stringify(team));
+    localStorage.setItem('battleBuddyBox',JSON.stringify(box));
+  }
+}
+try{
+  const stored=localStorage.getItem('battleBuddyGameCollections');
+  if(stored!==null){
+    const parsed=JSON.parse(stored);
+    if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))throw Error('Invalid game collections');
+    gameCollections=emptyGameCollections();
+    for(const key of GAME_KEYS){
+      const value=parsed[key];
+      if(value&&Array.isArray(value.team)&&Array.isArray(value.box))gameCollections[key]={team:value.team,box:value.box};
+    }
+  }
+}catch(e){gameCollections=null}
+if(!gameCollections){
+  // One-time migration: the existing shared collection belongs to Shield.
+  gameCollections=emptyGameCollections();
+  gameCollections.shield={team:readStoredArray('battleBuddyTeam'),box:readStoredArray('battleBuddyBox')};
+  localStorage.setItem('battleBuddyGameCollections',JSON.stringify(gameCollections));
+}
+let team=gameCollections[game]?.team||[],box=gameCollections[game]?.box||[];
 function newPokemonId(){return globalThis.crypto?.randomUUID?.()||('pokemon-'+Date.now()+'-'+Math.random().toString(36).slice(2))}
 function ensureRecordIds(records){const seen=new Set();records.forEach(p=>{if(typeof p.recordId!=='string'||!p.recordId||seen.has(p.recordId))p.recordId=newPokemonId();seen.add(p.recordId)})}
 ensureRecordIds([...team,...box]);
-localStorage.setItem('battleBuddyTeam',JSON.stringify(team));
-localStorage.setItem('battleBuddyBox',JSON.stringify(box));
-let game=localStorage.getItem('battleBuddyGame')||'shield';$('game').value=game;
+saveGameCollections();
 function updateGameLabel(){$('activeGame').textContent=$('game').selectedOptions[0]?.textContent||'Pokémon Shield'}
 updateGameLabel();
 // All 25 Pokémon natures. Neutral natures do not change stats.
@@ -88,7 +118,30 @@ updateNatureHint();
 const regional={shield:'galar',sword:'galar','lets-go-pikachu':'','lets-go-eevee':'','legends-za':''};
 const galarDefaults=new Set(['meowth','ponyta','rapidash','farfetchd','weezing','mr-mime','corsola','zigzagoon','linoone','darumaka','darmanitan','yamask','stunfisk','slowpoke','slowbro','slowking','articuno','zapdos','moltres']);
 function preferredName(name){const region=regional[game];return region==='galar'&&galarDefaults.has(name)?name+'-galar':name}
-$('game').addEventListener('change',()=>{game=$('game').value;localStorage.setItem('battleBuddyGame',game);updateGameLabel();if(current){const base=current.name.replace(/-(galar|alola|hisui)$/,'');search(base)}});
+$('game').addEventListener('change',()=>{
+  saveGameCollections();
+  saveItemBank();
+  game=$('game').value;
+  if(!GAME_KEYS.includes(game))game='shield';
+  localStorage.setItem('battleBuddyGame',game);
+  $('game').value=game;
+  team=gameCollections[game]?.team||[];
+  box=gameCollections[game]?.box||[];
+  itemBank=gameItemBanks[game]||[];
+  ensureRecordIds([...team,...box]);
+  saveGameCollections();
+  updateGameLabel();
+  $('analyzerResults').replaceChildren();
+  $('boxRecommendations').hidden=true;
+  $('analyzerStatus').textContent='Switched games. Analyze Party for recommendations for this game.';
+  renderTeam();renderItemBank();
+  if(current){
+    const base=current.name.replace(/-(galar|alola|hisui)$/,'');
+    current=null;$('result').hidden=true;
+    $('message').textContent='Game changed. Search for a Pokémon to continue.';
+    if(base)search(base);
+  }
+});
 function pill(t){return `<span class="pill" style="background:${colors[t]}">${title(t)}</span>`}
 function gradient(types){return `linear-gradient(125deg,${colors[types[0]]||'#d9b4ee'}bb,${colors[types[1]||types[0]]||'#e0c1ed'}aa)`}
 function match(types){return Object.keys(colors).map(a=>({type:a,value:types.reduce((n,d)=>n*(rules[a]?.[d]??1),1)}))}
@@ -275,8 +328,7 @@ function renderCollectionCards(list,container,location){
     function setQuickLevel(value){
       if(!Number.isInteger(value)||value<1||value>100)return;
       p.level=value;
-      localStorage.setItem('battleBuddyTeam',JSON.stringify(team));
-      localStorage.setItem('battleBuddyBox',JSON.stringify(box));
+      saveGameCollections();
       refreshLevel();
       // A level change should not rebuild cards or jump the page.
       $('analyzerResults').replaceChildren();
@@ -328,8 +380,7 @@ function renderTeam(){
   showCollection(collectionView);
 }
 function save(){
-  localStorage.setItem('battleBuddyTeam',JSON.stringify(team));
-  localStorage.setItem('battleBuddyBox',JSON.stringify(box));
+  saveGameCollections();
   renderTeam();$('boxRecommendations').hidden=true;$('analyzerResults').replaceChildren();$('analyzerStatus').textContent='Party changed. Tap Analyze Party for updated results.';if(current)refreshMoveAdvisor(current.types);
 }
 function removeBoxPokemon(recordId){
@@ -878,23 +929,36 @@ function validateItemBank(value){
  }
  return out;
 }
-let itemBank=[],itemCategory='all';
+function emptyGameItemBanks(){return Object.fromEntries(GAME_KEYS.map(key=>[key,[]]))}
+function validateGameItemBanks(value){
+  if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Invalid per-game Item Banks.');
+  const result=emptyGameItemBanks();
+  for(const key of GAME_KEYS)if(value[key]!==undefined)result[key]=validateItemBank(value[key]);
+  return result;
+}
+let itemBank=[],itemCategory='all',gameItemBanks;
 try{
- const stored=localStorage.getItem('battleBuddyItemBank');
- if(stored!==null)itemBank=validateItemBank(JSON.parse(stored));
+ const storedByGame=localStorage.getItem('battleBuddyGameItemBanks');
+ if(storedByGame!==null)gameItemBanks=validateGameItemBanks(JSON.parse(storedByGame));
  else{
-  itemBank=REPORTED_ITEMS.map(name=>({name,category:ITEM_NAME_MAP.get(name.toLowerCase())?.category||'held',quantity:1}));
-  localStorage.setItem('battleBuddyItemBank',JSON.stringify(itemBank));
+  gameItemBanks=emptyGameItemBanks();
+  const legacy=localStorage.getItem('battleBuddyItemBank');
+  if(legacy!==null)gameItemBanks.shield=validateItemBank(JSON.parse(legacy));
+  else gameItemBanks.shield=REPORTED_ITEMS.map(name=>({name,category:ITEM_NAME_MAP.get(name.toLowerCase())?.category||'held',quantity:1}));
+  localStorage.setItem('battleBuddyGameItemBanks',JSON.stringify(gameItemBanks));
  }
-}catch(e){itemBank=[]}
-// Add newly confirmed inventory entries once without resetting quantities users tracked.
-for(const name of ['Sun Stone','Smooth Rock','Thick Club','Flame Orb','Moon Stone','Normal Gem','Sea Incense','Resist Feather']){
- if(!itemBank.some(x=>itemKey(x.name)===itemKey(name))){
-  itemBank.push({name,category:ITEM_NAME_MAP.get(name.toLowerCase())?.category||'other',quantity:1});
+ itemBank=gameItemBanks[game]||[];
+}catch(e){gameItemBanks=emptyGameItemBanks();itemBank=[]}
+if(game==='shield'){
+ for(const name of ['Sun Stone','Smooth Rock','Thick Club','Flame Orb','Moon Stone','Normal Gem','Sea Incense','Resist Feather']){
+  if(!itemBank.some(x=>itemKey(x.name)===itemKey(name)))itemBank.push({name,category:ITEM_NAME_MAP.get(name.toLowerCase())?.category||'other',quantity:1});
  }
 }
-try{localStorage.setItem('battleBuddyItemBank',JSON.stringify(itemBank))}catch(e){}
-function saveItemBank(){localStorage.setItem('battleBuddyItemBank',JSON.stringify(itemBank))}
+function saveItemBank(){
+ gameItemBanks[game]=itemBank;
+ localStorage.setItem('battleBuddyGameItemBanks',JSON.stringify(gameItemBanks));
+ if(game==='shield')localStorage.setItem('battleBuddyItemBank',JSON.stringify(itemBank));
+}
 function refreshItemSuggestions(){ITEM_NAME_CATALOG.forEach(x=>addHeldItemSuggestion(x.name));itemBank.forEach(x=>addHeldItemSuggestion(x.name))}
 function itemKey(value){return String(value||'').trim().toLowerCase().replace(/[^a-z0-9]/g,'')}
 function itemHolders(name){return [...team,...box].filter(p=>itemKey(p.heldItem)===itemKey(name))}
@@ -918,6 +982,7 @@ function assignItem(name,recordId){
  p.heldItem=name;save();saveItemBank();renderItemBank();
  $('itemBankNotice').textContent=name+' assigned to '+(p.nickname||title(p.name))+'.';
 }
+saveItemBank();
 refreshItemSuggestions();
 function renderItemBank(){
  const query=$('itemBankSearch').value.trim().toLowerCase();
@@ -963,8 +1028,9 @@ document.querySelectorAll('[data-item-category]').forEach(button=>button.addEven
 }));
 
 function backupPayload(){
-  return {format:'pokemon-battle-buddy-backup',schemaVersion:4,exportedAt:new Date().toISOString(),
-    team,box,machineBanks,itemBank,game:localStorage.getItem('battleBuddyGame')||'shield',
+  saveGameCollections();saveItemBank();
+  return {format:'pokemon-battle-buddy-backup',schemaVersion:5,exportedAt:new Date().toISOString(),
+    team,box,machineBanks,itemBank,gameCollections,gameItemBanks,game:localStorage.getItem('battleBuddyGame')||'shield',
     theme:localStorage.getItem('battleBuddyTheme')||'battle'};
 }
 $('exportTeam').addEventListener('click',()=>{
@@ -983,7 +1049,7 @@ $('backupFile').addEventListener('change',async event=>{
   try{
     if(file.size>1024*1024)throw Error('Backup is too large.');
     const data=JSON.parse(await file.text());
-    if(data.format!=='pokemon-battle-buddy-backup'||![1,2,3,4].includes(data.schemaVersion))throw Error('This is not a supported Battle Buddy backup.');
+    if(data.format!=='pokemon-battle-buddy-backup'||![1,2,3,4,5].includes(data.schemaVersion))throw Error('This is not a supported Battle Buddy backup.');
     if(!Array.isArray(data.team)||data.team.length>6|| (data.schemaVersion===2&&(!Array.isArray(data.box)||data.box.length>500)))throw Error('Backup contains an invalid party or Box.');
     const validTypes=Object.keys(colors);
     const restoreRecords=records=>records.map(p=>{
@@ -1010,18 +1076,33 @@ $('backupFile').addEventListener('change',async event=>{
     ensureRecordIds([...restored,...restoredBox]);
     const importedBanks=data.schemaVersion>=3?validateMachineBanks(data.machineBanks):{};
     const importedItems=data.schemaVersion>=4?validateItemBank(data.itemBank):itemBank;
-    const allowedGames=['shield','sword','lets-go-pikachu','lets-go-eevee','legends-za'];
-    if(!allowedGames.includes(data.game)||!['battle','cozy'].includes(data.theme))throw Error('Backup settings are invalid.');
-    if(!confirm('Replace your current party and Box with '+restored.length+' party Pokémon and '+restoredBox.length+' boxed Pokémon from this backup?')){status.textContent='Import cancelled.';return}
-    // Write only after the entire backup has been checked and confirmed.
-    localStorage.setItem('battleBuddyTeam',JSON.stringify(restored));
-    localStorage.setItem('battleBuddyBox',JSON.stringify(restoredBox));
+    if(!GAME_KEYS.includes(data.game)||!['battle','cozy'].includes(data.theme))throw Error('Backup settings are invalid.');
+    let restoredGameCollections,restoredGameItemBanks;
+    if(data.schemaVersion>=5&&data.gameCollections){
+      if(!data.gameCollections||typeof data.gameCollections!=='object'||Array.isArray(data.gameCollections))throw Error('Backup game collections are invalid.');
+      restoredGameCollections=emptyGameCollections();
+      for(const key of GAME_KEYS){
+        const entry=data.gameCollections[key]||{team:[],box:[]};
+        if(!entry||!Array.isArray(entry.team)||entry.team.length>6||!Array.isArray(entry.box)||entry.box.length>500)throw Error('Backup contains invalid Pokémon collections for '+key+'.');
+        restoredGameCollections[key]={team:restoreRecords(entry.team),box:restoreRecords(entry.box)};
+        ensureRecordIds([...restoredGameCollections[key].team,...restoredGameCollections[key].box]);
+      }
+    }else{
+      restoredGameCollections=JSON.parse(JSON.stringify(gameCollections));
+      restoredGameCollections[data.game]={team:restored,box:restoredBox};
+    }
+    if(data.schemaVersion>=5&&data.gameItemBanks)restoredGameItemBanks=validateGameItemBanks(data.gameItemBanks);
+    else{restoredGameItemBanks=JSON.parse(JSON.stringify(gameItemBanks));restoredGameItemBanks[data.game]=importedItems;}
+    const totalParty=Object.values(restoredGameCollections).reduce((sum,entry)=>sum+entry.team.length,0);
+    const totalBox=Object.values(restoredGameCollections).reduce((sum,entry)=>sum+entry.box.length,0);
+    if(!confirm('Import backup? This restores '+totalParty+' party Pokémon and '+totalBox+' boxed Pokémon across all game profiles.')){status.textContent='Import cancelled.';return}
+    gameCollections=restoredGameCollections;gameItemBanks=restoredGameItemBanks;
+    game=data.game;team=gameCollections[game].team;box=gameCollections[game].box;itemBank=gameItemBanks[game]||[];
+    localStorage.setItem('battleBuddyGame',game);saveGameCollections();saveItemBank();
     localStorage.setItem('battleBuddyMachineBanks',JSON.stringify(importedBanks));
-    localStorage.setItem('battleBuddyItemBank',JSON.stringify(importedItems));
-    localStorage.setItem('battleBuddyGame',data.game);
-    team=restored;box=restoredBox;machineBanks=importedBanks;itemBank=importedItems;game=data.game;$('game').value=game;updateGameLabel();
-    setTheme(data.theme);renderTeam();editingRecordId=null;
-    status.textContent='Restored your party, Box, TM/TR bank, Item Bank, and preferences.';
+    machineBanks=importedBanks;$('game').value=game;updateGameLabel();
+    setTheme(data.theme);renderTeam();renderItemBank();editingRecordId=null;
+    status.textContent='Restored all game profiles, TM/TR data, Item Banks, and preferences.';
   }catch(error){status.textContent='Import failed: '+error.message}
   finally{event.target.value=''}
 });

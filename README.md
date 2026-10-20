@@ -359,3 +359,11 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Removed custom `overflow-anchor:none` overrides on the whole page and Edit Pokémon profile, allowing iOS Safari to manage keyboard-driven focus positioning natively.
 - Kept input sizing, autocomplete behavior, and all Item Bank functionality intact.
 - No changes to Pokémon data, held items, or inventory counts.
+
+
+## Version 1.20.0 — Game-specific collections
+- Party, Box, and Item Bank now have separate data for Shield, Sword, Let's Go Pikachu, Let's Go Eevee, and Legends: Z-A.
+- On first load, existing shared Party and Box records and the existing Item Bank migrate to the Shield profile; other game profiles start empty.
+- Game switching saves the current profile and loads the selected game's collections without mixing saved Pokémon or item inventories.
+- Export backups use schema v5 and include all game profiles. Import remains compatible with schema v1–v4 backups; older backups restore their records into the game identified by the backup.
+- TM/TR tracking and teaching recommendations remain supported for Sword and Shield only; this change does not claim complete Legends: Z-A learnset support.
