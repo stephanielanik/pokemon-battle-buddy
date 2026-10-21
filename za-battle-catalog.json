@@ -1,20 +1,24 @@
 {
   "schemaVersion": 1,
   "game": "legends-za",
-  "catalogVersion": "1.0.0",
+  "catalogVersion": "1.1.0",
   "checkedAt": "2026-10-21",
-  "description": "Curated foundation data for a Pokémon Legends: Z-A Battle Advisor. This is intentionally a partial, source-tracked catalog; it is not yet the complete ZA move, species, form, or learnset database.",
+  "description": "Expanded, source-tracked foundation data for the Legends: Z-A Battle Advisor. The Lumiose regional-number map is populated for 001-232. Species forms and move coverage are partial; this is not yet a complete ZA learnset database.",
   "coverage": {
     "pokemonAvailability": {
-      "status": "starter-slice",
-      "complete": false,
-      "recordCount": 26,
-      "scope": "Lumiose Pokédex entries 001-026 only"
+      "status": "regional-numbers-001-232-covered",
+      "complete": true,
+      "recordCount": 237,
+      "uniqueLumioseNumbers": 232,
+      "scope": "All 232 Lumiose regional-number entries have at least one species/type record. The list also retains separate records for alternate forms in the supplementary community reference and one non-Lumiose-Dex Volcanion record.",
+      "missingLumioseNumbers": [],
+      "note": "Regional coverage is complete by number; individual source-imported records have not all been independently rechecked."
     },
     "forms": {
-      "status": "not-yet-populated",
+      "status": "partial",
       "complete": false,
-      "recordCount": 0
+      "recordCount": 8,
+      "scope": "Some mechanically distinct or listed forms appear as separate rows; selected flower, gender, pattern and size variants are grouped under availableForms. This is not an exhaustive form catalogue."
     },
     "learnsets": {
       "status": "not-yet-populated",
@@ -24,8 +28,8 @@
     "moves": {
       "status": "curated-slice",
       "complete": false,
-      "recordCount": 17,
-      "scope": "Selected moves with ZA power, cooldown, distance and frame data checked against individual move references"
+      "recordCount": 29,
+      "scope": "29 move records with ZA power, base cooldown, distance, raw frame data and effects when listed in individual reference pages."
     },
     "megaEvolutionData": {
       "status": "not-yet-populated",
@@ -35,289 +39,4067 @@
     "readyForAutomaticRanking": false
   },
   "dataNotes": [
-    "Cooldown values are the base cooldown listed by the source. Legends: Z-A cooldown can be modified by the Pokémon's Speed and certain status/effects; no final cooldown calculator is included in this data foundation.",
-    "Distances are stored as reported game-distance values. Do not label them near/far or infer hitbox geometry without further verification.",
-    "Wind-up and attack-loop values are raw frame values as reported by the source. Conversion to seconds depends on the game's frame rate and needs to be implemented consistently before user-facing calculations.",
-    "Do not recommend a move solely because it exists in this catalog. The owning Pokémon's ZA learnset or the user's recorded moveset must be checked.",
-    "The community move index flags incomplete coverage for the Mega Dimension version 2.0.0 update. DLC-specific moves/forms must be individually verified before adding.",
-    "The starter species slice records species and types only; it does not imply a complete form list or learnset."
+    "The species list is a work-in-progress reference. All 232 Lumiose regional numbers now have at least one record, but source-imported species/type/form records are not all individually cross-checked.",
+    "Community data was used only as a supplementary name/form/type/number reference. Descriptions, images, catch-rate calculations and stat blocks from the community file were not copied into this catalog; the repository does not declare a license.",
+    "Forms can have different statistics or type combinations. Do not collapse an alternate form onto a base form when the form affects battle behavior.",
+    "Cooldown values are the base cooldown listed by the source. In-battle cooldown can be modified by Speed and certain effects; do not present base cooldown as a guaranteed timer.",
+    "Distances and frame counts are stored as the reference reports them. Do not infer exact hitbox geometry or convert frames to seconds until the game timing basis is verified.",
+    "A move in this catalog is not proof a Pokémon can learn it in ZA. The owning Pokémon's ZA learnset or the user's recorded moveset must be checked before recommending that move.",
+    "The move catalog is a curated slice, not the full move roster. The current community index flags incomplete identification of Mega Dimension version 2.0.0 additions; DLC moves and forms require additional verification.",
+    "Volcanion is retained as a non-Lumiose-Dex community-reference entry with lumioseDex null. Its in-game availability needs confirmation before it is shown as normally obtainable."
   ],
   "sources": [
     {
-      "id": "pokemondb-lumiose-pokedex",
-      "name": "Pokémon Database — Legends: Z-A Pokédex",
-      "url": "https://pokemondb.net/pokedex/game/legends-z-a",
-      "supports": "Lumiose Pokédex numbers, species names, and types for the starter slice.",
-      "scope": "Community reference. Only entries 001-026 were entered in this initial catalog."
+      "id": "bulbapedia-lumiose-pokedex",
+      "name": "Bulbapedia — List of Pokémon by Lumiose Pokédex number",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/ZAdex",
+      "supports": "Lumiose regional number sequence, species names, types, and listed form variations across entries 001-232.",
+      "scope": "Used to fill missing regional entries and verify regional-number coverage."
+    },
+    {
+      "id": "serebii-lumiose-pokedex",
+      "name": "Serebii — The Lumiose Pokédex",
+      "url": "https://www.serebii.net/legendsz-a/availablepokemon.shtml",
+      "supports": "Cross-reference for Pokémon obtainable in Legends: Z-A and associated type information.",
+      "scope": "Used as a secondary index, not treated as a complete source for all forms or learnsets."
+    },
+    {
+      "id": "community-pokeza-catch-calc",
+      "name": "PokeZACatchCalc community reference data",
+      "url": "https://github.com/TheFauxDreamer/PokeZACatchCalc",
+      "supports": "Supplementary species names, form keys, types, national numbers, and regional number values.",
+      "scope": "Community repository has no declared license. Only concise factual metadata fields were used; its descriptions, images, stat blocks, and calculations were not copied. Imported entries remain marked as not individually rechecked."
     },
     {
       "id": "serebii-attackdex",
-      "name": "Serebii — AttackDex Legends: Z-A move data",
+      "name": "Serebii — individual Legends: Z-A AttackDex pages",
       "url": "https://www.serebii.net/attackdex-sv/",
-      "supports": "Move type/category, Z-A base power, base cooldown, distance, wind-up and attack-loop frames where listed.",
-      "scope": "Values were checked on individual move pages; listed data can change and should be reverified for major game updates."
-    },
-    {
-      "id": "bulbapedia-za-move-index",
-      "name": "Bulbapedia — List of moves in Pokémon Legends: Z-A",
-      "url": "https://bulbapedia.bulbagarden.net/wiki/List_of_moves_in_Pok%C3%A9mon_Legends:_Z-A",
-      "supports": "Cross-check for the game's move roster and the existence of move variants.",
-      "scope": "The article itself notes that the version 2.0.0 Mega Dimension additions are not fully identified; not used as a complete DLC source."
+      "supports": "Per-move base power, cooldown, distance, raw charge/attack-loop frame values, and listed effects.",
+      "scope": "Individual source URLs are recorded on each move. Values should be rechecked after major game updates."
     },
     {
       "id": "nintendo-za-tips",
-      "name": "Nintendo — 12 tips and tricks for Pokémon Legends: Z-A",
+      "name": "Nintendo — Pokémon Legends: Z-A battle tips",
       "url": "https://www.nintendo.com/us/whatsnew/12-tips-and-tricks-for-pokemon-legends-z-a/",
-      "supports": "General battle behavior such as real-time positioning, recalling Pokémon to avoid attacks, and move-area considerations."
+      "supports": "General real-time battle behavior, movement and recalling Pokémon to avoid attacks.",
+      "scope": "General game-behavior reference; not used as a move-stat table."
     }
   ],
   "species": [
     {
-      "lumioseDex": 1,
+      "id": "chikorita::standard",
       "name": "chikorita",
+      "displayName": "Chikorita",
+      "formKey": "standard",
+      "nationalDex": 152,
+      "lumioseDex": 1,
+      "inLumioseDex": true,
       "types": [
         "grass"
       ],
-      "formKey": "chikorita",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 2,
+      "id": "bayleef::standard",
       "name": "bayleef",
+      "displayName": "Bayleef",
+      "formKey": "standard",
+      "nationalDex": 153,
+      "lumioseDex": 2,
+      "inLumioseDex": true,
       "types": [
         "grass"
       ],
-      "formKey": "bayleef",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 3,
+      "id": "meganium::standard",
       "name": "meganium",
+      "displayName": "Meganium",
+      "formKey": "standard",
+      "nationalDex": 154,
+      "lumioseDex": 3,
+      "inLumioseDex": true,
       "types": [
         "grass"
       ],
-      "formKey": "meganium",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 4,
+      "id": "tepig::standard",
       "name": "tepig",
+      "displayName": "Tepig",
+      "formKey": "standard",
+      "nationalDex": 498,
+      "lumioseDex": 4,
+      "inLumioseDex": true,
       "types": [
         "fire"
       ],
-      "formKey": "tepig",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 5,
+      "id": "pignite::standard",
       "name": "pignite",
+      "displayName": "Pignite",
+      "formKey": "standard",
+      "nationalDex": 499,
+      "lumioseDex": 5,
+      "inLumioseDex": true,
       "types": [
         "fire",
         "fighting"
       ],
-      "formKey": "pignite",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
     },
     {
-      "lumioseDex": 6,
+      "id": "emboar::standard",
       "name": "emboar",
+      "displayName": "Emboar",
+      "formKey": "standard",
+      "nationalDex": 500,
+      "lumioseDex": 6,
+      "inLumioseDex": true,
       "types": [
         "fire",
         "fighting"
       ],
-      "formKey": "emboar",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 7,
+      "id": "totodile::standard",
       "name": "totodile",
+      "displayName": "Totodile",
+      "formKey": "standard",
+      "nationalDex": 158,
+      "lumioseDex": 7,
+      "inLumioseDex": true,
       "types": [
         "water"
       ],
-      "formKey": "totodile",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 8,
+      "id": "croconaw::standard",
       "name": "croconaw",
+      "displayName": "Croconaw",
+      "formKey": "standard",
+      "nationalDex": 159,
+      "lumioseDex": 8,
+      "inLumioseDex": true,
       "types": [
         "water"
       ],
-      "formKey": "croconaw",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 9,
+      "id": "feraligatr::standard",
       "name": "feraligatr",
+      "displayName": "Feraligatr",
+      "formKey": "standard",
+      "nationalDex": 160,
+      "lumioseDex": 9,
+      "inLumioseDex": true,
       "types": [
         "water"
       ],
-      "formKey": "feraligatr",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 10,
+      "id": "fletchling::standard",
       "name": "fletchling",
+      "displayName": "Fletchling",
+      "formKey": "standard",
+      "nationalDex": 661,
+      "lumioseDex": 10,
+      "inLumioseDex": true,
       "types": [
         "normal",
         "flying"
       ],
-      "formKey": "fletchling",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 11,
+      "id": "fletchinder::standard",
       "name": "fletchinder",
+      "displayName": "Fletchinder",
+      "formKey": "standard",
+      "nationalDex": 662,
+      "lumioseDex": 11,
+      "inLumioseDex": true,
       "types": [
         "fire",
         "flying"
       ],
-      "formKey": "fletchinder",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 12,
+      "id": "talonflame::standard",
       "name": "talonflame",
+      "displayName": "Talonflame",
+      "formKey": "standard",
+      "nationalDex": 663,
+      "lumioseDex": 12,
+      "inLumioseDex": true,
       "types": [
         "fire",
         "flying"
       ],
-      "formKey": "talonflame",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 13,
+      "id": "bunnelby::standard",
       "name": "bunnelby",
+      "displayName": "Bunnelby",
+      "formKey": "standard",
+      "nationalDex": 659,
+      "lumioseDex": 13,
+      "inLumioseDex": true,
       "types": [
         "normal"
       ],
-      "formKey": "bunnelby",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 14,
+      "id": "diggersby::standard",
       "name": "diggersby",
+      "displayName": "Diggersby",
+      "formKey": "standard",
+      "nationalDex": 660,
+      "lumioseDex": 14,
+      "inLumioseDex": true,
       "types": [
         "normal",
         "ground"
       ],
-      "formKey": "diggersby",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 15,
+      "id": "scatterbug::standard",
       "name": "scatterbug",
+      "displayName": "Scatterbug",
+      "formKey": "standard",
+      "nationalDex": 664,
+      "lumioseDex": 15,
+      "inLumioseDex": true,
       "types": [
         "bug"
       ],
-      "formKey": "scatterbug",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
     },
     {
-      "lumioseDex": 16,
+      "id": "spewpa::standard",
       "name": "spewpa",
+      "displayName": "Spewpa",
+      "formKey": "standard",
+      "nationalDex": 665,
+      "lumioseDex": 16,
+      "inLumioseDex": true,
       "types": [
         "bug"
       ],
-      "formKey": "spewpa",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
     },
     {
-      "lumioseDex": 17,
+      "id": "vivillon::standard",
       "name": "vivillon",
+      "displayName": "Vivillon",
+      "formKey": "standard",
+      "nationalDex": 666,
+      "lumioseDex": 17,
+      "inLumioseDex": true,
       "types": [
         "bug",
         "flying"
       ],
-      "formKey": "vivillon",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types",
+      "availableForms": [
+        "icy-snow",
+        "polar",
+        "tundra",
+        "continental",
+        "garden",
+        "elegant",
+        "meadow",
+        "modern",
+        "marine",
+        "archipelago",
+        "high-plains",
+        "sandstorm",
+        "river",
+        "monsoon",
+        "savanna",
+        "sun",
+        "ocean",
+        "jungle",
+        "fancy"
+      ]
     },
     {
-      "lumioseDex": 18,
+      "id": "weedle::standard",
       "name": "weedle",
+      "displayName": "Weedle",
+      "formKey": "standard",
+      "nationalDex": 13,
+      "lumioseDex": 18,
+      "inLumioseDex": true,
       "types": [
         "bug",
         "poison"
       ],
-      "formKey": "weedle",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 19,
+      "id": "kakuna::standard",
       "name": "kakuna",
+      "displayName": "Kakuna",
+      "formKey": "standard",
+      "nationalDex": 14,
+      "lumioseDex": 19,
+      "inLumioseDex": true,
       "types": [
         "bug",
         "poison"
       ],
-      "formKey": "kakuna",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 20,
+      "id": "beedrill::standard",
       "name": "beedrill",
+      "displayName": "Beedrill",
+      "formKey": "standard",
+      "nationalDex": 15,
+      "lumioseDex": 20,
+      "inLumioseDex": true,
       "types": [
         "bug",
         "poison"
       ],
-      "formKey": "beedrill",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 21,
+      "id": "pidgey::standard",
       "name": "pidgey",
+      "displayName": "Pidgey",
+      "formKey": "standard",
+      "nationalDex": 16,
+      "lumioseDex": 21,
+      "inLumioseDex": true,
       "types": [
         "normal",
         "flying"
       ],
-      "formKey": "pidgey",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
     },
     {
-      "lumioseDex": 22,
+      "id": "pidgeotto::standard",
       "name": "pidgeotto",
+      "displayName": "Pidgeotto",
+      "formKey": "standard",
+      "nationalDex": 17,
+      "lumioseDex": 22,
+      "inLumioseDex": true,
       "types": [
         "normal",
         "flying"
       ],
-      "formKey": "pidgeotto",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
     },
     {
-      "lumioseDex": 23,
+      "id": "pidgeot::standard",
       "name": "pidgeot",
+      "displayName": "Pidgeot",
+      "formKey": "standard",
+      "nationalDex": 18,
+      "lumioseDex": 23,
+      "inLumioseDex": true,
       "types": [
         "normal",
         "flying"
       ],
-      "formKey": "pidgeot",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
     },
     {
-      "lumioseDex": 24,
+      "id": "mareep::standard",
       "name": "mareep",
+      "displayName": "Mareep",
+      "formKey": "standard",
+      "nationalDex": 179,
+      "lumioseDex": 24,
+      "inLumioseDex": true,
       "types": [
         "electric"
       ],
-      "formKey": "mareep",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 25,
+      "id": "flaaffy::standard",
       "name": "flaaffy",
+      "displayName": "Flaaffy",
+      "formKey": "standard",
+      "nationalDex": 180,
+      "lumioseDex": 25,
+      "inLumioseDex": true,
       "types": [
         "electric"
       ],
-      "formKey": "flaaffy",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     },
     {
-      "lumioseDex": 26,
+      "id": "ampharos::standard",
       "name": "ampharos",
+      "displayName": "Ampharos",
+      "formKey": "standard",
+      "nationalDex": 181,
+      "lumioseDex": 26,
+      "inLumioseDex": true,
       "types": [
         "electric"
       ],
-      "formKey": "ampharos",
-      "sourceId": "pokemondb-lumiose-pokedex"
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "patrat::standard",
+      "name": "patrat",
+      "displayName": "Patrat",
+      "formKey": "standard",
+      "nationalDex": 504,
+      "lumioseDex": 27,
+      "inLumioseDex": true,
+      "types": [
+        "normal"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "watchog::standard",
+      "name": "watchog",
+      "displayName": "Watchog",
+      "formKey": "standard",
+      "nationalDex": 505,
+      "lumioseDex": 28,
+      "inLumioseDex": true,
+      "types": [
+        "normal"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "budew::standard",
+      "name": "budew",
+      "displayName": "Budew",
+      "formKey": "standard",
+      "nationalDex": 406,
+      "lumioseDex": 29,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "roselia::standard",
+      "name": "roselia",
+      "displayName": "Roselia",
+      "formKey": "standard",
+      "nationalDex": 315,
+      "lumioseDex": 30,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "roserade::standard",
+      "name": "roserade",
+      "displayName": "Roserade",
+      "formKey": "standard",
+      "nationalDex": 407,
+      "lumioseDex": 31,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "magikarp::standard",
+      "name": "magikarp",
+      "displayName": "Magikarp",
+      "formKey": "standard",
+      "nationalDex": 129,
+      "lumioseDex": 32,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "gyarados::standard",
+      "name": "gyarados",
+      "displayName": "Gyarados",
+      "formKey": "standard",
+      "nationalDex": 130,
+      "lumioseDex": 33,
+      "inLumioseDex": true,
+      "types": [
+        "water",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "binacle::standard",
+      "name": "binacle",
+      "displayName": "Binacle",
+      "formKey": "standard",
+      "nationalDex": 688,
+      "lumioseDex": 34,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "barbaracle::standard",
+      "name": "barbaracle",
+      "displayName": "Barbaracle",
+      "formKey": "standard",
+      "nationalDex": 689,
+      "lumioseDex": 35,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "staryu::standard",
+      "name": "staryu",
+      "displayName": "Staryu",
+      "formKey": "standard",
+      "nationalDex": 120,
+      "lumioseDex": 36,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "starmie::standard",
+      "name": "starmie",
+      "displayName": "Starmie",
+      "formKey": "standard",
+      "nationalDex": 121,
+      "lumioseDex": 37,
+      "inLumioseDex": true,
+      "types": [
+        "water",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "flabebe::standard",
+      "name": "flabebe",
+      "displayName": "Flabébé",
+      "formKey": "standard",
+      "nationalDex": 669,
+      "lumioseDex": 38,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types",
+      "availableForms": [
+        "red-flower",
+        "yellow-flower",
+        "orange-flower",
+        "blue-flower",
+        "white-flower"
+      ]
+    },
+    {
+      "id": "floette::standard",
+      "name": "floette",
+      "displayName": "Floette",
+      "formKey": "standard",
+      "nationalDex": 670,
+      "lumioseDex": 39,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types",
+      "availableForms": [
+        "red-flower",
+        "yellow-flower",
+        "orange-flower",
+        "blue-flower",
+        "white-flower",
+        "eternal-flower"
+      ]
+    },
+    {
+      "id": "florges::standard",
+      "name": "florges",
+      "displayName": "Florges",
+      "formKey": "standard",
+      "nationalDex": 671,
+      "lumioseDex": 40,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types",
+      "availableForms": [
+        "red-flower",
+        "yellow-flower",
+        "orange-flower",
+        "blue-flower",
+        "white-flower"
+      ]
+    },
+    {
+      "id": "skiddo::standard",
+      "name": "skiddo",
+      "displayName": "Skiddo",
+      "formKey": "standard",
+      "nationalDex": 672,
+      "lumioseDex": 41,
+      "inLumioseDex": true,
+      "types": [
+        "grass"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "gogoat::standard",
+      "name": "gogoat",
+      "displayName": "Gogoat",
+      "formKey": "standard",
+      "nationalDex": 673,
+      "lumioseDex": 42,
+      "inLumioseDex": true,
+      "types": [
+        "grass"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "espurr::standard",
+      "name": "espurr",
+      "displayName": "Espurr",
+      "formKey": "standard",
+      "nationalDex": 677,
+      "lumioseDex": 43,
+      "inLumioseDex": true,
+      "types": [
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "meowstic::male",
+      "name": "meowstic",
+      "displayName": "Meowstic",
+      "formKey": "male",
+      "nationalDex": 678,
+      "lumioseDex": 44,
+      "inLumioseDex": true,
+      "types": [
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked",
+      "formSourceLabel": "male"
+    },
+    {
+      "id": "litleo::standard",
+      "name": "litleo",
+      "displayName": "Litleo",
+      "formKey": "standard",
+      "nationalDex": 667,
+      "lumioseDex": 45,
+      "inLumioseDex": true,
+      "types": [
+        "fire",
+        "normal"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "pyroar::standard",
+      "name": "pyroar",
+      "displayName": "Pyroar",
+      "formKey": "standard",
+      "nationalDex": 668,
+      "lumioseDex": 46,
+      "inLumioseDex": true,
+      "types": [
+        "fire",
+        "normal"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types",
+      "availableForms": [
+        "male",
+        "female"
+      ]
+    },
+    {
+      "id": "pancham::standard",
+      "name": "pancham",
+      "displayName": "Pancham",
+      "formKey": "standard",
+      "nationalDex": 674,
+      "lumioseDex": 47,
+      "inLumioseDex": true,
+      "types": [
+        "fighting"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "pangoro::standard",
+      "name": "pangoro",
+      "displayName": "Pangoro",
+      "formKey": "standard",
+      "nationalDex": 675,
+      "lumioseDex": 48,
+      "inLumioseDex": true,
+      "types": [
+        "fighting",
+        "dark"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "trubbish::standard",
+      "name": "trubbish",
+      "displayName": "Trubbish",
+      "formKey": "standard",
+      "nationalDex": 568,
+      "lumioseDex": 49,
+      "inLumioseDex": true,
+      "types": [
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "garbodor::standard",
+      "name": "garbodor",
+      "displayName": "Garbodor",
+      "formKey": "standard",
+      "nationalDex": 569,
+      "lumioseDex": 50,
+      "inLumioseDex": true,
+      "types": [
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "dedenne::standard",
+      "name": "dedenne",
+      "displayName": "Dedenne",
+      "formKey": "standard",
+      "nationalDex": 702,
+      "lumioseDex": 51,
+      "inLumioseDex": true,
+      "types": [
+        "electric",
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "pichu::standard",
+      "name": "pichu",
+      "displayName": "Pichu",
+      "formKey": "standard",
+      "nationalDex": 172,
+      "lumioseDex": 52,
+      "inLumioseDex": true,
+      "types": [
+        "electric"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "pikachu::standard",
+      "name": "pikachu",
+      "displayName": "Pikachu",
+      "formKey": "standard",
+      "nationalDex": 25,
+      "lumioseDex": 53,
+      "inLumioseDex": true,
+      "types": [
+        "electric"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "raichu::standard",
+      "name": "raichu",
+      "displayName": "Raichu",
+      "formKey": "standard",
+      "nationalDex": 26,
+      "lumioseDex": 54,
+      "inLumioseDex": true,
+      "types": [
+        "electric"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "cleffa::standard",
+      "name": "cleffa",
+      "displayName": "Cleffa",
+      "formKey": "standard",
+      "nationalDex": 173,
+      "lumioseDex": 55,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "clefairy::standard",
+      "name": "clefairy",
+      "displayName": "Clefairy",
+      "formKey": "standard",
+      "nationalDex": 35,
+      "lumioseDex": 56,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "clefable::standard",
+      "name": "clefable",
+      "displayName": "Clefable",
+      "formKey": "standard",
+      "nationalDex": 36,
+      "lumioseDex": 57,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "spinarak::standard",
+      "name": "spinarak",
+      "displayName": "Spinarak",
+      "formKey": "standard",
+      "nationalDex": 167,
+      "lumioseDex": 58,
+      "inLumioseDex": true,
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "ariados::standard",
+      "name": "ariados",
+      "displayName": "Ariados",
+      "formKey": "standard",
+      "nationalDex": 168,
+      "lumioseDex": 59,
+      "inLumioseDex": true,
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "ekans::standard",
+      "name": "ekans",
+      "displayName": "Ekans",
+      "formKey": "standard",
+      "nationalDex": 23,
+      "lumioseDex": 60,
+      "inLumioseDex": true,
+      "types": [
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "arbok::standard",
+      "name": "arbok",
+      "displayName": "Arbok",
+      "formKey": "standard",
+      "nationalDex": 24,
+      "lumioseDex": 61,
+      "inLumioseDex": true,
+      "types": [
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "abra::standard",
+      "name": "abra",
+      "displayName": "Abra",
+      "formKey": "standard",
+      "nationalDex": 63,
+      "lumioseDex": 62,
+      "inLumioseDex": true,
+      "types": [
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "kadabra::standard",
+      "name": "kadabra",
+      "displayName": "Kadabra",
+      "formKey": "standard",
+      "nationalDex": 64,
+      "lumioseDex": 63,
+      "inLumioseDex": true,
+      "types": [
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "alakazam::standard",
+      "name": "alakazam",
+      "displayName": "Alakazam",
+      "formKey": "standard",
+      "nationalDex": 65,
+      "lumioseDex": 64,
+      "inLumioseDex": true,
+      "types": [
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "gastly::standard",
+      "name": "gastly",
+      "displayName": "Gastly",
+      "formKey": "standard",
+      "nationalDex": 92,
+      "lumioseDex": 65,
+      "inLumioseDex": true,
+      "types": [
+        "ghost",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "haunter::standard",
+      "name": "haunter",
+      "displayName": "Haunter",
+      "formKey": "standard",
+      "nationalDex": 93,
+      "lumioseDex": 66,
+      "inLumioseDex": true,
+      "types": [
+        "ghost",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "gengar::standard",
+      "name": "gengar",
+      "displayName": "Gengar",
+      "formKey": "standard",
+      "nationalDex": 94,
+      "lumioseDex": 67,
+      "inLumioseDex": true,
+      "types": [
+        "ghost",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "venipede::standard",
+      "name": "venipede",
+      "displayName": "Venipede",
+      "formKey": "standard",
+      "nationalDex": 543,
+      "lumioseDex": 68,
+      "inLumioseDex": true,
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "whirlipede::standard",
+      "name": "whirlipede",
+      "displayName": "Whirlipede",
+      "formKey": "standard",
+      "nationalDex": 544,
+      "lumioseDex": 69,
+      "inLumioseDex": true,
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "scolipede::standard",
+      "name": "scolipede",
+      "displayName": "Scolipede",
+      "formKey": "standard",
+      "nationalDex": 545,
+      "lumioseDex": 70,
+      "inLumioseDex": true,
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "honedge::standard",
+      "name": "honedge",
+      "displayName": "Honedge",
+      "formKey": "standard",
+      "nationalDex": 679,
+      "lumioseDex": 71,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "ghost"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "doublade::standard",
+      "name": "doublade",
+      "displayName": "Doublade",
+      "formKey": "standard",
+      "nationalDex": 680,
+      "lumioseDex": 72,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "ghost"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "aegislash::blade",
+      "name": "aegislash",
+      "displayName": "Aegislash (Blade)",
+      "formKey": "blade",
+      "nationalDex": 681,
+      "lumioseDex": 73,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "ghost"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked",
+      "formSourceLabel": "blade"
+    },
+    {
+      "id": "aegislash::shield",
+      "name": "aegislash",
+      "displayName": "Aegislash (Shield)",
+      "formKey": "shield",
+      "nationalDex": 681,
+      "lumioseDex": 73,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "ghost"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked",
+      "formSourceLabel": "shield"
+    },
+    {
+      "id": "bellsprout::standard",
+      "name": "bellsprout",
+      "displayName": "Bellsprout",
+      "formKey": "standard",
+      "nationalDex": 69,
+      "lumioseDex": 74,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "weepinbell::standard",
+      "name": "weepinbell",
+      "displayName": "Weepinbell",
+      "formKey": "standard",
+      "nationalDex": 70,
+      "lumioseDex": 75,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "victreebel::standard",
+      "name": "victreebel",
+      "displayName": "Victreebel",
+      "formKey": "standard",
+      "nationalDex": 71,
+      "lumioseDex": 76,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "pansage::standard",
+      "name": "pansage",
+      "displayName": "Pansage",
+      "formKey": "standard",
+      "nationalDex": 511,
+      "lumioseDex": 77,
+      "inLumioseDex": true,
+      "types": [
+        "grass"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "simisage::standard",
+      "name": "simisage",
+      "displayName": "Simisage",
+      "formKey": "standard",
+      "nationalDex": 512,
+      "lumioseDex": 78,
+      "inLumioseDex": true,
+      "types": [
+        "grass"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "pansear::standard",
+      "name": "pansear",
+      "displayName": "Pansear",
+      "formKey": "standard",
+      "nationalDex": 513,
+      "lumioseDex": 79,
+      "inLumioseDex": true,
+      "types": [
+        "fire"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "simisear::standard",
+      "name": "simisear",
+      "displayName": "Simisear",
+      "formKey": "standard",
+      "nationalDex": 514,
+      "lumioseDex": 80,
+      "inLumioseDex": true,
+      "types": [
+        "fire"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "panpour::standard",
+      "name": "panpour",
+      "displayName": "Panpour",
+      "formKey": "standard",
+      "nationalDex": 515,
+      "lumioseDex": 81,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "simipour::standard",
+      "name": "simipour",
+      "displayName": "Simipour",
+      "formKey": "standard",
+      "nationalDex": 516,
+      "lumioseDex": 82,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "meditite::standard",
+      "name": "meditite",
+      "displayName": "Meditite",
+      "formKey": "standard",
+      "nationalDex": 307,
+      "lumioseDex": 83,
+      "inLumioseDex": true,
+      "types": [
+        "fighting",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "medicham::standard",
+      "name": "medicham",
+      "displayName": "Medicham",
+      "formKey": "standard",
+      "nationalDex": 308,
+      "lumioseDex": 84,
+      "inLumioseDex": true,
+      "types": [
+        "fighting",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "electrike::standard",
+      "name": "electrike",
+      "displayName": "Electrike",
+      "formKey": "standard",
+      "nationalDex": 309,
+      "lumioseDex": 85,
+      "inLumioseDex": true,
+      "types": [
+        "electric"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "manectric::standard",
+      "name": "manectric",
+      "displayName": "Manectric",
+      "formKey": "standard",
+      "nationalDex": 310,
+      "lumioseDex": 86,
+      "inLumioseDex": true,
+      "types": [
+        "electric"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "ralts::standard",
+      "name": "ralts",
+      "displayName": "Ralts",
+      "formKey": "standard",
+      "nationalDex": 280,
+      "lumioseDex": 87,
+      "inLumioseDex": true,
+      "types": [
+        "psychic",
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "kirlia::standard",
+      "name": "kirlia",
+      "displayName": "Kirlia",
+      "formKey": "standard",
+      "nationalDex": 281,
+      "lumioseDex": 88,
+      "inLumioseDex": true,
+      "types": [
+        "psychic",
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "gardevoir::standard",
+      "name": "gardevoir",
+      "displayName": "Gardevoir",
+      "formKey": "standard",
+      "nationalDex": 282,
+      "lumioseDex": 89,
+      "inLumioseDex": true,
+      "types": [
+        "psychic",
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "gallade::standard",
+      "name": "gallade",
+      "displayName": "Gallade",
+      "formKey": "standard",
+      "nationalDex": 475,
+      "lumioseDex": 90,
+      "inLumioseDex": true,
+      "types": [
+        "psychic",
+        "fighting"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "houndour::standard",
+      "name": "houndour",
+      "displayName": "Houndour",
+      "formKey": "standard",
+      "nationalDex": 228,
+      "lumioseDex": 91,
+      "inLumioseDex": true,
+      "types": [
+        "dark",
+        "fire"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "houndoom::standard",
+      "name": "houndoom",
+      "displayName": "Houndoom",
+      "formKey": "standard",
+      "nationalDex": 229,
+      "lumioseDex": 92,
+      "inLumioseDex": true,
+      "types": [
+        "dark",
+        "fire"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "swablu::standard",
+      "name": "swablu",
+      "displayName": "Swablu",
+      "formKey": "standard",
+      "nationalDex": 333,
+      "lumioseDex": 93,
+      "inLumioseDex": true,
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "altaria::standard",
+      "name": "altaria",
+      "displayName": "Altaria",
+      "formKey": "standard",
+      "nationalDex": 334,
+      "lumioseDex": 94,
+      "inLumioseDex": true,
+      "types": [
+        "dragon",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "audino::standard",
+      "name": "audino",
+      "displayName": "Audino",
+      "formKey": "standard",
+      "nationalDex": 531,
+      "lumioseDex": 95,
+      "inLumioseDex": true,
+      "types": [
+        "normal"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "spritzee::standard",
+      "name": "spritzee",
+      "displayName": "Spritzee",
+      "formKey": "standard",
+      "nationalDex": 682,
+      "lumioseDex": 96,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "aromatisse::standard",
+      "name": "aromatisse",
+      "displayName": "Aromatisse",
+      "formKey": "standard",
+      "nationalDex": 683,
+      "lumioseDex": 97,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "swirlix::standard",
+      "name": "swirlix",
+      "displayName": "Swirlix",
+      "formKey": "standard",
+      "nationalDex": 684,
+      "lumioseDex": 98,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "slurpuff::standard",
+      "name": "slurpuff",
+      "displayName": "Slurpuff",
+      "formKey": "standard",
+      "nationalDex": 685,
+      "lumioseDex": 99,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "eevee::standard",
+      "name": "eevee",
+      "displayName": "Eevee",
+      "formKey": "standard",
+      "nationalDex": 133,
+      "lumioseDex": 100,
+      "inLumioseDex": true,
+      "types": [
+        "normal"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "vaporeon::standard",
+      "name": "vaporeon",
+      "displayName": "Vaporeon",
+      "formKey": "standard",
+      "nationalDex": 134,
+      "lumioseDex": 101,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "jolteon::standard",
+      "name": "jolteon",
+      "displayName": "Jolteon",
+      "formKey": "standard",
+      "nationalDex": 135,
+      "lumioseDex": 102,
+      "inLumioseDex": true,
+      "types": [
+        "electric"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "flareon::standard",
+      "name": "flareon",
+      "displayName": "Flareon",
+      "formKey": "standard",
+      "nationalDex": 136,
+      "lumioseDex": 103,
+      "inLumioseDex": true,
+      "types": [
+        "fire"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "espeon::standard",
+      "name": "espeon",
+      "displayName": "Espeon",
+      "formKey": "standard",
+      "nationalDex": 196,
+      "lumioseDex": 104,
+      "inLumioseDex": true,
+      "types": [
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "umbreon::standard",
+      "name": "umbreon",
+      "displayName": "Umbreon",
+      "formKey": "standard",
+      "nationalDex": 197,
+      "lumioseDex": 105,
+      "inLumioseDex": true,
+      "types": [
+        "dark"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "leafeon::standard",
+      "name": "leafeon",
+      "displayName": "Leafeon",
+      "formKey": "standard",
+      "nationalDex": 470,
+      "lumioseDex": 106,
+      "inLumioseDex": true,
+      "types": [
+        "grass"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "glaceon::standard",
+      "name": "glaceon",
+      "displayName": "Glaceon",
+      "formKey": "standard",
+      "nationalDex": 471,
+      "lumioseDex": 107,
+      "inLumioseDex": true,
+      "types": [
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "sylveon::standard",
+      "name": "sylveon",
+      "displayName": "Sylveon",
+      "formKey": "standard",
+      "nationalDex": 700,
+      "lumioseDex": 108,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "buneary::standard",
+      "name": "buneary",
+      "displayName": "Buneary",
+      "formKey": "standard",
+      "nationalDex": 427,
+      "lumioseDex": 109,
+      "inLumioseDex": true,
+      "types": [
+        "normal"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "lopunny::standard",
+      "name": "lopunny",
+      "displayName": "Lopunny",
+      "formKey": "standard",
+      "nationalDex": 428,
+      "lumioseDex": 110,
+      "inLumioseDex": true,
+      "types": [
+        "normal"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "shuppet::standard",
+      "name": "shuppet",
+      "displayName": "Shuppet",
+      "formKey": "standard",
+      "nationalDex": 353,
+      "lumioseDex": 111,
+      "inLumioseDex": true,
+      "types": [
+        "ghost"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "banette::standard",
+      "name": "banette",
+      "displayName": "Banette",
+      "formKey": "standard",
+      "nationalDex": 354,
+      "lumioseDex": 112,
+      "inLumioseDex": true,
+      "types": [
+        "ghost"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "vanillite::standard",
+      "name": "vanillite",
+      "displayName": "Vanillite",
+      "formKey": "standard",
+      "nationalDex": 582,
+      "lumioseDex": 113,
+      "inLumioseDex": true,
+      "types": [
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "vanillish::standard",
+      "name": "vanillish",
+      "displayName": "Vanillish",
+      "formKey": "standard",
+      "nationalDex": 583,
+      "lumioseDex": 114,
+      "inLumioseDex": true,
+      "types": [
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "vanilluxe::standard",
+      "name": "vanilluxe",
+      "displayName": "Vanilluxe",
+      "formKey": "standard",
+      "nationalDex": 584,
+      "lumioseDex": 115,
+      "inLumioseDex": true,
+      "types": [
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "numel::standard",
+      "name": "numel",
+      "displayName": "Numel",
+      "formKey": "standard",
+      "nationalDex": 322,
+      "lumioseDex": 116,
+      "inLumioseDex": true,
+      "types": [
+        "fire",
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "camerupt::standard",
+      "name": "camerupt",
+      "displayName": "Camerupt",
+      "formKey": "standard",
+      "nationalDex": 323,
+      "lumioseDex": 117,
+      "inLumioseDex": true,
+      "types": [
+        "fire",
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "hippopotas::standard",
+      "name": "hippopotas",
+      "displayName": "Hippopotas",
+      "formKey": "standard",
+      "nationalDex": 449,
+      "lumioseDex": 118,
+      "inLumioseDex": true,
+      "types": [
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "hippowdon::standard",
+      "name": "hippowdon",
+      "displayName": "Hippowdon",
+      "formKey": "standard",
+      "nationalDex": 450,
+      "lumioseDex": 119,
+      "inLumioseDex": true,
+      "types": [
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "drilbur::standard",
+      "name": "drilbur",
+      "displayName": "Drilbur",
+      "formKey": "standard",
+      "nationalDex": 529,
+      "lumioseDex": 120,
+      "inLumioseDex": true,
+      "types": [
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "excadrill::standard",
+      "name": "excadrill",
+      "displayName": "Excadrill",
+      "formKey": "standard",
+      "nationalDex": 530,
+      "lumioseDex": 121,
+      "inLumioseDex": true,
+      "types": [
+        "ground",
+        "steel"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "sandile::standard",
+      "name": "sandile",
+      "displayName": "Sandile",
+      "formKey": "standard",
+      "nationalDex": 551,
+      "lumioseDex": 122,
+      "inLumioseDex": true,
+      "types": [
+        "ground",
+        "dark"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "krokorok::standard",
+      "name": "krokorok",
+      "displayName": "Krokorok",
+      "formKey": "standard",
+      "nationalDex": 552,
+      "lumioseDex": 123,
+      "inLumioseDex": true,
+      "types": [
+        "ground",
+        "dark"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "krookodile::standard",
+      "name": "krookodile",
+      "displayName": "Krookodile",
+      "formKey": "standard",
+      "nationalDex": 553,
+      "lumioseDex": 124,
+      "inLumioseDex": true,
+      "types": [
+        "ground",
+        "dark"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "machop::standard",
+      "name": "machop",
+      "displayName": "Machop",
+      "formKey": "standard",
+      "nationalDex": 66,
+      "lumioseDex": 125,
+      "inLumioseDex": true,
+      "types": [
+        "fighting"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "machoke::standard",
+      "name": "machoke",
+      "displayName": "Machoke",
+      "formKey": "standard",
+      "nationalDex": 67,
+      "lumioseDex": 126,
+      "inLumioseDex": true,
+      "types": [
+        "fighting"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "machamp::standard",
+      "name": "machamp",
+      "displayName": "Machamp",
+      "formKey": "standard",
+      "nationalDex": 68,
+      "lumioseDex": 127,
+      "inLumioseDex": true,
+      "types": [
+        "fighting"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "gible::standard",
+      "name": "gible",
+      "displayName": "Gible",
+      "formKey": "standard",
+      "nationalDex": 443,
+      "lumioseDex": 128,
+      "inLumioseDex": true,
+      "types": [
+        "dragon",
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "gabite::standard",
+      "name": "gabite",
+      "displayName": "Gabite",
+      "formKey": "standard",
+      "nationalDex": 444,
+      "lumioseDex": 129,
+      "inLumioseDex": true,
+      "types": [
+        "dragon",
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "garchomp::standard",
+      "name": "garchomp",
+      "displayName": "Garchomp",
+      "formKey": "standard",
+      "nationalDex": 445,
+      "lumioseDex": 130,
+      "inLumioseDex": true,
+      "types": [
+        "dragon",
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "carbink::standard",
+      "name": "carbink",
+      "displayName": "Carbink",
+      "formKey": "standard",
+      "nationalDex": 703,
+      "lumioseDex": 131,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "sableye::standard",
+      "name": "sableye",
+      "displayName": "Sableye",
+      "formKey": "standard",
+      "nationalDex": 302,
+      "lumioseDex": 132,
+      "inLumioseDex": true,
+      "types": [
+        "dark",
+        "ghost"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "mawile::standard",
+      "name": "mawile",
+      "displayName": "Mawile",
+      "formKey": "standard",
+      "nationalDex": 303,
+      "lumioseDex": 133,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "absol::standard",
+      "name": "absol",
+      "displayName": "Absol",
+      "formKey": "standard",
+      "nationalDex": 359,
+      "lumioseDex": 134,
+      "inLumioseDex": true,
+      "types": [
+        "dark"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "riolu::standard",
+      "name": "riolu",
+      "displayName": "Riolu",
+      "formKey": "standard",
+      "nationalDex": 447,
+      "lumioseDex": 135,
+      "inLumioseDex": true,
+      "types": [
+        "fighting"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "lucario::standard",
+      "name": "lucario",
+      "displayName": "Lucario",
+      "formKey": "standard",
+      "nationalDex": 448,
+      "lumioseDex": 136,
+      "inLumioseDex": true,
+      "types": [
+        "fighting",
+        "steel"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "slowpoke::standard",
+      "name": "slowpoke",
+      "displayName": "Slowpoke",
+      "formKey": "standard",
+      "nationalDex": 79,
+      "lumioseDex": 137,
+      "inLumioseDex": true,
+      "types": [
+        "water",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "slowbro::standard",
+      "name": "slowbro",
+      "displayName": "Slowbro",
+      "formKey": "standard",
+      "nationalDex": 80,
+      "lumioseDex": 138,
+      "inLumioseDex": true,
+      "types": [
+        "water",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "slowking::standard",
+      "name": "slowking",
+      "displayName": "Slowking",
+      "formKey": "standard",
+      "nationalDex": 199,
+      "lumioseDex": 139,
+      "inLumioseDex": true,
+      "types": [
+        "water",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "carvanha::standard",
+      "name": "carvanha",
+      "displayName": "Carvanha",
+      "formKey": "standard",
+      "nationalDex": 318,
+      "lumioseDex": 140,
+      "inLumioseDex": true,
+      "types": [
+        "water",
+        "dark"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "sharpedo::standard",
+      "name": "sharpedo",
+      "displayName": "Sharpedo",
+      "formKey": "standard",
+      "nationalDex": 319,
+      "lumioseDex": 141,
+      "inLumioseDex": true,
+      "types": [
+        "water",
+        "dark"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "tynamo::standard",
+      "name": "tynamo",
+      "displayName": "Tynamo",
+      "formKey": "standard",
+      "nationalDex": 602,
+      "lumioseDex": 142,
+      "inLumioseDex": true,
+      "types": [
+        "electric"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "eelektrik::standard",
+      "name": "eelektrik",
+      "displayName": "Eelektrik",
+      "formKey": "standard",
+      "nationalDex": 603,
+      "lumioseDex": 143,
+      "inLumioseDex": true,
+      "types": [
+        "electric"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "eelektross::standard",
+      "name": "eelektross",
+      "displayName": "Eelektross",
+      "formKey": "standard",
+      "nationalDex": 604,
+      "lumioseDex": 144,
+      "inLumioseDex": true,
+      "types": [
+        "electric"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "dratini::standard",
+      "name": "dratini",
+      "displayName": "Dratini",
+      "formKey": "standard",
+      "nationalDex": 147,
+      "lumioseDex": 145,
+      "inLumioseDex": true,
+      "types": [
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "dragonair::standard",
+      "name": "dragonair",
+      "displayName": "Dragonair",
+      "formKey": "standard",
+      "nationalDex": 148,
+      "lumioseDex": 146,
+      "inLumioseDex": true,
+      "types": [
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "dragonite::standard",
+      "name": "dragonite",
+      "displayName": "Dragonite",
+      "formKey": "standard",
+      "nationalDex": 149,
+      "lumioseDex": 147,
+      "inLumioseDex": true,
+      "types": [
+        "dragon",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "bulbasaur::standard",
+      "name": "bulbasaur",
+      "displayName": "Bulbasaur",
+      "formKey": "standard",
+      "nationalDex": 1,
+      "lumioseDex": 148,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "ivysaur::standard",
+      "name": "ivysaur",
+      "displayName": "Ivysaur",
+      "formKey": "standard",
+      "nationalDex": 2,
+      "lumioseDex": 149,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "venusaur::standard",
+      "name": "venusaur",
+      "displayName": "Venusaur",
+      "formKey": "standard",
+      "nationalDex": 3,
+      "lumioseDex": 150,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "poison"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "charmander::standard",
+      "name": "charmander",
+      "displayName": "Charmander",
+      "formKey": "standard",
+      "nationalDex": 4,
+      "lumioseDex": 151,
+      "inLumioseDex": true,
+      "types": [
+        "fire"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "charmeleon::standard",
+      "name": "charmeleon",
+      "displayName": "Charmeleon",
+      "formKey": "standard",
+      "nationalDex": 5,
+      "lumioseDex": 152,
+      "inLumioseDex": true,
+      "types": [
+        "fire"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "charizard::standard",
+      "name": "charizard",
+      "displayName": "Charizard",
+      "formKey": "standard",
+      "nationalDex": 6,
+      "lumioseDex": 153,
+      "inLumioseDex": true,
+      "types": [
+        "fire",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "squirtle::standard",
+      "name": "squirtle",
+      "displayName": "Squirtle",
+      "formKey": "standard",
+      "nationalDex": 7,
+      "lumioseDex": 154,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "wartortle::standard",
+      "name": "wartortle",
+      "displayName": "Wartortle",
+      "formKey": "standard",
+      "nationalDex": 8,
+      "lumioseDex": 155,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "blastoise::standard",
+      "name": "blastoise",
+      "displayName": "Blastoise",
+      "formKey": "standard",
+      "nationalDex": 9,
+      "lumioseDex": 156,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "stunfisk::standard",
+      "name": "stunfisk",
+      "displayName": "Stunfisk",
+      "formKey": "standard",
+      "nationalDex": 618,
+      "lumioseDex": 157,
+      "inLumioseDex": true,
+      "types": [
+        "ground",
+        "electric"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "furfrou::natural",
+      "name": "furfrou",
+      "displayName": "Furfrou",
+      "formKey": "natural",
+      "nationalDex": 676,
+      "lumioseDex": 158,
+      "inLumioseDex": true,
+      "types": [
+        "normal"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked",
+      "formSourceLabel": "natural"
+    },
+    {
+      "id": "inkay::standard",
+      "name": "inkay",
+      "displayName": "Inkay",
+      "formKey": "standard",
+      "nationalDex": 686,
+      "lumioseDex": 159,
+      "inLumioseDex": true,
+      "types": [
+        "dark",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "malamar::standard",
+      "name": "malamar",
+      "displayName": "Malamar",
+      "formKey": "standard",
+      "nationalDex": 687,
+      "lumioseDex": 160,
+      "inLumioseDex": true,
+      "types": [
+        "dark",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "skrelp::standard",
+      "name": "skrelp",
+      "displayName": "Skrelp",
+      "formKey": "standard",
+      "nationalDex": 690,
+      "lumioseDex": 161,
+      "inLumioseDex": true,
+      "types": [
+        "poison",
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "dragalge::standard",
+      "name": "dragalge",
+      "displayName": "Dragalge",
+      "formKey": "standard",
+      "nationalDex": 691,
+      "lumioseDex": 162,
+      "inLumioseDex": true,
+      "types": [
+        "poison",
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "clauncher::standard",
+      "name": "clauncher",
+      "displayName": "Clauncher",
+      "formKey": "standard",
+      "nationalDex": 692,
+      "lumioseDex": 163,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "clawitzer::standard",
+      "name": "clawitzer",
+      "displayName": "Clawitzer",
+      "formKey": "standard",
+      "nationalDex": 693,
+      "lumioseDex": 164,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "goomy::standard",
+      "name": "goomy",
+      "displayName": "Goomy",
+      "formKey": "standard",
+      "nationalDex": 704,
+      "lumioseDex": 165,
+      "inLumioseDex": true,
+      "types": [
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "sliggoo::hisuian",
+      "name": "sliggoo",
+      "displayName": "Sliggoo (Hisuian)",
+      "formKey": "hisuian",
+      "nationalDex": 705,
+      "lumioseDex": 166,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked",
+      "formSourceLabel": "hisuian"
+    },
+    {
+      "id": "sliggoo::standard",
+      "name": "sliggoo",
+      "displayName": "Sliggoo",
+      "formKey": "standard",
+      "nationalDex": 705,
+      "lumioseDex": 166,
+      "inLumioseDex": true,
+      "types": [
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "goodra::hisuian",
+      "name": "goodra",
+      "displayName": "Goodra (Hisuian)",
+      "formKey": "hisuian",
+      "nationalDex": 706,
+      "lumioseDex": 167,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked",
+      "formSourceLabel": "hisuian"
+    },
+    {
+      "id": "goodra::standard",
+      "name": "goodra",
+      "displayName": "Goodra",
+      "formKey": "standard",
+      "nationalDex": 706,
+      "lumioseDex": 167,
+      "inLumioseDex": true,
+      "types": [
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "delibird::standard",
+      "name": "delibird",
+      "displayName": "Delibird",
+      "formKey": "standard",
+      "nationalDex": 225,
+      "lumioseDex": 168,
+      "inLumioseDex": true,
+      "types": [
+        "ice",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "snorunt::standard",
+      "name": "snorunt",
+      "displayName": "Snorunt",
+      "formKey": "standard",
+      "nationalDex": 361,
+      "lumioseDex": 169,
+      "inLumioseDex": true,
+      "types": [
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "glalie::standard",
+      "name": "glalie",
+      "displayName": "Glalie",
+      "formKey": "standard",
+      "nationalDex": 362,
+      "lumioseDex": 170,
+      "inLumioseDex": true,
+      "types": [
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "froslass::standard",
+      "name": "froslass",
+      "displayName": "Froslass",
+      "formKey": "standard",
+      "nationalDex": 478,
+      "lumioseDex": 171,
+      "inLumioseDex": true,
+      "types": [
+        "ice",
+        "ghost"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "snover::standard",
+      "name": "snover",
+      "displayName": "Snover",
+      "formKey": "standard",
+      "nationalDex": 459,
+      "lumioseDex": 172,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "abomasnow::standard",
+      "name": "abomasnow",
+      "displayName": "Abomasnow",
+      "formKey": "standard",
+      "nationalDex": 460,
+      "lumioseDex": 173,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "bergmite::standard",
+      "name": "bergmite",
+      "displayName": "Bergmite",
+      "formKey": "standard",
+      "nationalDex": 712,
+      "lumioseDex": 174,
+      "inLumioseDex": true,
+      "types": [
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "avalugg::hisuian",
+      "name": "avalugg",
+      "displayName": "Avalugg (Hisuian)",
+      "formKey": "hisuian",
+      "nationalDex": 713,
+      "lumioseDex": 175,
+      "inLumioseDex": true,
+      "types": [
+        "ice",
+        "rock"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked",
+      "formSourceLabel": "hisuian"
+    },
+    {
+      "id": "avalugg::standard",
+      "name": "avalugg",
+      "displayName": "Avalugg",
+      "formKey": "standard",
+      "nationalDex": 713,
+      "lumioseDex": 175,
+      "inLumioseDex": true,
+      "types": [
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "scyther::standard",
+      "name": "scyther",
+      "displayName": "Scyther",
+      "formKey": "standard",
+      "nationalDex": 123,
+      "lumioseDex": 176,
+      "inLumioseDex": true,
+      "types": [
+        "bug",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "scizor::standard",
+      "name": "scizor",
+      "displayName": "Scizor",
+      "formKey": "standard",
+      "nationalDex": 212,
+      "lumioseDex": 177,
+      "inLumioseDex": true,
+      "types": [
+        "bug",
+        "steel"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "pinsir::standard",
+      "name": "pinsir",
+      "displayName": "Pinsir",
+      "formKey": "standard",
+      "nationalDex": 127,
+      "lumioseDex": 178,
+      "inLumioseDex": true,
+      "types": [
+        "bug"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "heracross::standard",
+      "name": "heracross",
+      "displayName": "Heracross",
+      "formKey": "standard",
+      "nationalDex": 214,
+      "lumioseDex": 179,
+      "inLumioseDex": true,
+      "types": [
+        "bug",
+        "fighting"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "emolga::standard",
+      "name": "emolga",
+      "displayName": "Emolga",
+      "formKey": "standard",
+      "nationalDex": 587,
+      "lumioseDex": 180,
+      "inLumioseDex": true,
+      "types": [
+        "electric",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "hawlucha::standard",
+      "name": "hawlucha",
+      "displayName": "Hawlucha",
+      "formKey": "standard",
+      "nationalDex": 701,
+      "lumioseDex": 181,
+      "inLumioseDex": true,
+      "types": [
+        "fighting",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "phantump::standard",
+      "name": "phantump",
+      "displayName": "Phantump",
+      "formKey": "standard",
+      "nationalDex": 708,
+      "lumioseDex": 182,
+      "inLumioseDex": true,
+      "types": [
+        "ghost",
+        "grass"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "trevenant::standard",
+      "name": "trevenant",
+      "displayName": "Trevenant",
+      "formKey": "standard",
+      "nationalDex": 709,
+      "lumioseDex": 183,
+      "inLumioseDex": true,
+      "types": [
+        "ghost",
+        "grass"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "scraggy::standard",
+      "name": "scraggy",
+      "displayName": "Scraggy",
+      "formKey": "standard",
+      "nationalDex": 559,
+      "lumioseDex": 184,
+      "inLumioseDex": true,
+      "types": [
+        "dark",
+        "fighting"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "scrafty::standard",
+      "name": "scrafty",
+      "displayName": "Scrafty",
+      "formKey": "standard",
+      "nationalDex": 560,
+      "lumioseDex": 185,
+      "inLumioseDex": true,
+      "types": [
+        "dark",
+        "fighting"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "noibat::standard",
+      "name": "noibat",
+      "displayName": "Noibat",
+      "formKey": "standard",
+      "nationalDex": 714,
+      "lumioseDex": 186,
+      "inLumioseDex": true,
+      "types": [
+        "flying",
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "noivern::standard",
+      "name": "noivern",
+      "displayName": "Noivern",
+      "formKey": "standard",
+      "nationalDex": 715,
+      "lumioseDex": 187,
+      "inLumioseDex": true,
+      "types": [
+        "flying",
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "klefki::standard",
+      "name": "klefki",
+      "displayName": "Klefki",
+      "formKey": "standard",
+      "nationalDex": 707,
+      "lumioseDex": 188,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "litwick::standard",
+      "name": "litwick",
+      "displayName": "Litwick",
+      "formKey": "standard",
+      "nationalDex": 607,
+      "lumioseDex": 189,
+      "inLumioseDex": true,
+      "types": [
+        "ghost",
+        "fire"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "lampent::standard",
+      "name": "lampent",
+      "displayName": "Lampent",
+      "formKey": "standard",
+      "nationalDex": 608,
+      "lumioseDex": 190,
+      "inLumioseDex": true,
+      "types": [
+        "ghost",
+        "fire"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "chandelure::standard",
+      "name": "chandelure",
+      "displayName": "Chandelure",
+      "formKey": "standard",
+      "nationalDex": 609,
+      "lumioseDex": 191,
+      "inLumioseDex": true,
+      "types": [
+        "ghost",
+        "fire"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "aerodactyl::standard",
+      "name": "aerodactyl",
+      "displayName": "Aerodactyl",
+      "formKey": "standard",
+      "nationalDex": 142,
+      "lumioseDex": 192,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "tyrunt::standard",
+      "name": "tyrunt",
+      "displayName": "Tyrunt",
+      "formKey": "standard",
+      "nationalDex": 696,
+      "lumioseDex": 193,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "tyrantrum::standard",
+      "name": "tyrantrum",
+      "displayName": "Tyrantrum",
+      "formKey": "standard",
+      "nationalDex": 697,
+      "lumioseDex": 194,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "amaura::standard",
+      "name": "amaura",
+      "displayName": "Amaura",
+      "formKey": "standard",
+      "nationalDex": 698,
+      "lumioseDex": 195,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "aurorus::standard",
+      "name": "aurorus",
+      "displayName": "Aurorus",
+      "formKey": "standard",
+      "nationalDex": 699,
+      "lumioseDex": 196,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "ice"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "onix::standard",
+      "name": "onix",
+      "displayName": "Onix",
+      "formKey": "standard",
+      "nationalDex": 95,
+      "lumioseDex": 197,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "steelix::standard",
+      "name": "steelix",
+      "displayName": "Steelix",
+      "formKey": "standard",
+      "nationalDex": 208,
+      "lumioseDex": 198,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "aron::standard",
+      "name": "aron",
+      "displayName": "Aron",
+      "formKey": "standard",
+      "nationalDex": 304,
+      "lumioseDex": 199,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "rock"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "lairon::standard",
+      "name": "lairon",
+      "displayName": "Lairon",
+      "formKey": "standard",
+      "nationalDex": 305,
+      "lumioseDex": 200,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "rock"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "aggron::standard",
+      "name": "aggron",
+      "displayName": "Aggron",
+      "formKey": "standard",
+      "nationalDex": 306,
+      "lumioseDex": 201,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "rock"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "helioptile::standard",
+      "name": "helioptile",
+      "displayName": "Helioptile",
+      "formKey": "standard",
+      "nationalDex": 694,
+      "lumioseDex": 202,
+      "inLumioseDex": true,
+      "types": [
+        "electric",
+        "normal"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "heliolisk::standard",
+      "name": "heliolisk",
+      "displayName": "Heliolisk",
+      "formKey": "standard",
+      "nationalDex": 695,
+      "lumioseDex": 203,
+      "inLumioseDex": true,
+      "types": [
+        "electric",
+        "normal"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "pumpkaboo::standard",
+      "name": "pumpkaboo",
+      "displayName": "Pumpkaboo",
+      "formKey": "standard",
+      "nationalDex": 710,
+      "lumioseDex": 204,
+      "inLumioseDex": true,
+      "types": [
+        "ghost",
+        "grass"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types",
+      "availableForms": [
+        "small",
+        "average",
+        "large",
+        "super"
+      ]
+    },
+    {
+      "id": "gourgeist::standard",
+      "name": "gourgeist",
+      "displayName": "Gourgeist",
+      "formKey": "standard",
+      "nationalDex": 711,
+      "lumioseDex": 205,
+      "inLumioseDex": true,
+      "types": [
+        "ghost",
+        "grass"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types",
+      "availableForms": [
+        "small",
+        "average",
+        "large",
+        "super"
+      ]
+    },
+    {
+      "id": "larvitar::standard",
+      "name": "larvitar",
+      "displayName": "Larvitar",
+      "formKey": "standard",
+      "nationalDex": 246,
+      "lumioseDex": 206,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "pupitar::standard",
+      "name": "pupitar",
+      "displayName": "Pupitar",
+      "formKey": "standard",
+      "nationalDex": 247,
+      "lumioseDex": 207,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "ground"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "tyranitar::standard",
+      "name": "tyranitar",
+      "displayName": "Tyranitar",
+      "formKey": "standard",
+      "nationalDex": 248,
+      "lumioseDex": 208,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "dark"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "froakie::standard",
+      "name": "froakie",
+      "displayName": "Froakie",
+      "formKey": "standard",
+      "nationalDex": 656,
+      "lumioseDex": 209,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "frogadier::standard",
+      "name": "frogadier",
+      "displayName": "Frogadier",
+      "formKey": "standard",
+      "nationalDex": 657,
+      "lumioseDex": 210,
+      "inLumioseDex": true,
+      "types": [
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "greninja::standard",
+      "name": "greninja",
+      "displayName": "Greninja",
+      "formKey": "standard",
+      "nationalDex": 658,
+      "lumioseDex": 211,
+      "inLumioseDex": true,
+      "types": [
+        "water",
+        "dark"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "falinks::standard",
+      "name": "falinks",
+      "displayName": "Falinks",
+      "formKey": "standard",
+      "nationalDex": 870,
+      "lumioseDex": 212,
+      "inLumioseDex": true,
+      "types": [
+        "fighting"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "chespin::standard",
+      "name": "chespin",
+      "displayName": "Chespin",
+      "formKey": "standard",
+      "nationalDex": 650,
+      "lumioseDex": 213,
+      "inLumioseDex": true,
+      "types": [
+        "grass"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "quilladin::standard",
+      "name": "quilladin",
+      "displayName": "Quilladin",
+      "formKey": "standard",
+      "nationalDex": 651,
+      "lumioseDex": 214,
+      "inLumioseDex": true,
+      "types": [
+        "grass"
+      ],
+      "sourceIds": [
+        "bulbapedia-lumiose-pokedex",
+        "serebii-lumiose-pokedex"
+      ],
+      "verificationStatus": "cross-checked-pokedex-number-and-types"
+    },
+    {
+      "id": "chesnaught::standard",
+      "name": "chesnaught",
+      "displayName": "Chesnaught",
+      "formKey": "standard",
+      "nationalDex": 652,
+      "lumioseDex": 215,
+      "inLumioseDex": true,
+      "types": [
+        "grass",
+        "fighting"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "skarmory::standard",
+      "name": "skarmory",
+      "displayName": "Skarmory",
+      "formKey": "standard",
+      "nationalDex": 227,
+      "lumioseDex": 216,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "fennekin::standard",
+      "name": "fennekin",
+      "displayName": "Fennekin",
+      "formKey": "standard",
+      "nationalDex": 653,
+      "lumioseDex": 217,
+      "inLumioseDex": true,
+      "types": [
+        "fire"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "braixen::standard",
+      "name": "braixen",
+      "displayName": "Braixen",
+      "formKey": "standard",
+      "nationalDex": 654,
+      "lumioseDex": 218,
+      "inLumioseDex": true,
+      "types": [
+        "fire"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "delphox::standard",
+      "name": "delphox",
+      "displayName": "Delphox",
+      "formKey": "standard",
+      "nationalDex": 655,
+      "lumioseDex": 219,
+      "inLumioseDex": true,
+      "types": [
+        "fire",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "bagon::standard",
+      "name": "bagon",
+      "displayName": "Bagon",
+      "formKey": "standard",
+      "nationalDex": 371,
+      "lumioseDex": 220,
+      "inLumioseDex": true,
+      "types": [
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "shelgon::standard",
+      "name": "shelgon",
+      "displayName": "Shelgon",
+      "formKey": "standard",
+      "nationalDex": 372,
+      "lumioseDex": 221,
+      "inLumioseDex": true,
+      "types": [
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "salamence::standard",
+      "name": "salamence",
+      "displayName": "Salamence",
+      "formKey": "standard",
+      "nationalDex": 373,
+      "lumioseDex": 222,
+      "inLumioseDex": true,
+      "types": [
+        "dragon",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "kangaskhan::standard",
+      "name": "kangaskhan",
+      "displayName": "Kangaskhan",
+      "formKey": "standard",
+      "nationalDex": 115,
+      "lumioseDex": 223,
+      "inLumioseDex": true,
+      "types": [
+        "normal"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "drampa::standard",
+      "name": "drampa",
+      "displayName": "Drampa",
+      "formKey": "standard",
+      "nationalDex": 780,
+      "lumioseDex": 224,
+      "inLumioseDex": true,
+      "types": [
+        "normal",
+        "dragon"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "beldum::standard",
+      "name": "beldum",
+      "displayName": "Beldum",
+      "formKey": "standard",
+      "nationalDex": 374,
+      "lumioseDex": 225,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "metang::standard",
+      "name": "metang",
+      "displayName": "Metang",
+      "formKey": "standard",
+      "nationalDex": 375,
+      "lumioseDex": 226,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "metagross::standard",
+      "name": "metagross",
+      "displayName": "Metagross",
+      "formKey": "standard",
+      "nationalDex": 376,
+      "lumioseDex": 227,
+      "inLumioseDex": true,
+      "types": [
+        "steel",
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "xerneas::standard",
+      "name": "xerneas",
+      "displayName": "Xerneas",
+      "formKey": "standard",
+      "nationalDex": 716,
+      "lumioseDex": 228,
+      "inLumioseDex": true,
+      "types": [
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "yveltal::standard",
+      "name": "yveltal",
+      "displayName": "Yveltal",
+      "formKey": "standard",
+      "nationalDex": 717,
+      "lumioseDex": 229,
+      "inLumioseDex": true,
+      "types": [
+        "dark",
+        "flying"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "zygarde::fifty-percent",
+      "name": "zygarde",
+      "displayName": "Zygarde",
+      "formKey": "fifty-percent",
+      "nationalDex": 718,
+      "lumioseDex": 230,
+      "inLumioseDex": true,
+      "types": [
+        "dragon",
+        "ground"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked",
+      "formSourceLabel": "fifty-percent"
+    },
+    {
+      "id": "diancie::standard",
+      "name": "diancie",
+      "displayName": "Diancie",
+      "formKey": "standard",
+      "nationalDex": 719,
+      "lumioseDex": 231,
+      "inLumioseDex": true,
+      "types": [
+        "rock",
+        "fairy"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "mewtwo::standard",
+      "name": "mewtwo",
+      "displayName": "Mewtwo",
+      "formKey": "standard",
+      "nationalDex": 150,
+      "lumioseDex": 232,
+      "inLumioseDex": true,
+      "types": [
+        "psychic"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
+    },
+    {
+      "id": "volcanion::standard",
+      "name": "volcanion",
+      "displayName": "Volcanion",
+      "formKey": "standard",
+      "nationalDex": 721,
+      "lumioseDex": null,
+      "inLumioseDex": false,
+      "types": [
+        "fire",
+        "water"
+      ],
+      "sourceIds": [
+        "community-pokeza-catch-calc"
+      ],
+      "verificationStatus": "community-reference-not-individually-rechecked"
     }
   ],
   "moves": [
@@ -335,8 +4117,9 @@
         "max": 1.5
       },
       "effects": [],
-      "sourceUrl": "https://stats.serebii.net/attackdex-sv/tackle.shtml",
-      "dataStatus": "source-checked"
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/tackle.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "ember",
@@ -355,7 +4138,8 @@
         "May burn the target"
       ],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/ember.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "vine-whip",
@@ -372,7 +4156,8 @@
       },
       "effects": [],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/vinewhip.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "water-gun",
@@ -389,7 +4174,8 @@
       },
       "effects": [],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/watergun.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "bite",
@@ -408,7 +4194,8 @@
         "May cause flinching"
       ],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/bite.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "quick-attack",
@@ -427,7 +4214,8 @@
         "Rapid lunge toward the target"
       ],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/quickattack.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "flame-charge",
@@ -447,7 +4235,8 @@
       ],
       "effectDurationSeconds": 8,
       "sourceUrl": "https://www.serebii.net/attackdex-sv/flamecharge.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "shadow-ball",
@@ -466,7 +4255,8 @@
         "May lower the target's Special Defense"
       ],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/shadowball.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "thunderbolt",
@@ -485,7 +4275,8 @@
         "May paralyze the target"
       ],
       "sourceUrl": "https://serebii.net/attackdex-sv/thunderbolt.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "drain-punch",
@@ -504,7 +4295,8 @@
         "Restores HP based on damage dealt"
       ],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/drainpunch.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "thunder",
@@ -523,7 +4315,8 @@
         "May paralyze the target"
       ],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/thunder.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "earthquake",
@@ -542,8 +4335,9 @@
       "effects": [
         "Attacks a wide area"
       ],
-      "sourceUrl": "https://ftp.serebii.net/attackdex-sv/earthquake.shtml",
-      "dataStatus": "source-checked"
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/earthquake.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "gust",
@@ -560,7 +4354,8 @@
       },
       "effects": [],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/gust.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "ominous-wind",
@@ -579,7 +4374,8 @@
         "May raise the user's stats"
       ],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/ominouswind.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "blizzard",
@@ -598,7 +4394,8 @@
         "May freeze the target"
       ],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/blizzard.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "power-whip",
@@ -615,7 +4412,8 @@
       },
       "effects": [],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/powerwhip.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     },
     {
       "id": "razor-wind",
@@ -634,7 +4432,243 @@
         "Heightened critical-hit chance"
       ],
       "sourceUrl": "https://www.serebii.net/attackdex-sv/razorwind.shtml",
-      "dataStatus": "source-checked"
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "absorb",
+      "name": "Absorb",
+      "type": "grass",
+      "category": "special",
+      "basePower": 20,
+      "baseCooldownSeconds": 7,
+      "windUpFrames": 10,
+      "attackLoopFrames": 25,
+      "distance": {
+        "min": 0.5,
+        "max": 3
+      },
+      "effects": [
+        "Restores some HP based on damage dealt"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/absorb.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "air-slash",
+      "name": "Air Slash",
+      "type": "flying",
+      "category": "special",
+      "basePower": 75,
+      "baseCooldownSeconds": 7,
+      "windUpFrames": 20,
+      "attackLoopFrames": 20,
+      "distance": {
+        "min": 0,
+        "max": 99
+      },
+      "effects": [
+        "May cause flinching"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/airslash.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "bulldoze",
+      "name": "Bulldoze",
+      "type": "ground",
+      "category": "physical",
+      "basePower": 60,
+      "baseCooldownSeconds": 6,
+      "windUpFrames": 15,
+      "attackLoopFrames": 20,
+      "distance": {
+        "min": 0.5,
+        "max": 2
+      },
+      "effects": [
+        "Slows targets for 8 seconds"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/bulldoze.shtml",
+      "effectDurationSeconds": 8,
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "disarming-voice",
+      "name": "Disarming Voice",
+      "type": "fairy",
+      "category": "special",
+      "basePower": 40,
+      "baseCooldownSeconds": 6,
+      "windUpFrames": 10,
+      "attackLoopFrames": 15,
+      "distance": {
+        "min": 0.5,
+        "max": 3
+      },
+      "effects": [],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/disarmingvoice.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "dragon-claw",
+      "name": "Dragon Claw",
+      "type": "dragon",
+      "category": "physical",
+      "basePower": 80,
+      "baseCooldownSeconds": 8,
+      "windUpFrames": 10,
+      "attackLoopFrames": 20,
+      "distance": {
+        "min": 0.5,
+        "max": 2
+      },
+      "effects": [],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/dragonclaw.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "flamethrower",
+      "name": "Flamethrower",
+      "type": "fire",
+      "category": "special",
+      "basePower": 90,
+      "baseCooldownSeconds": 8,
+      "windUpFrames": 20,
+      "attackLoopFrames": 30,
+      "distance": {
+        "min": 0.5,
+        "max": 99
+      },
+      "effects": [
+        "May burn targets"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/flamethrower.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "ice-beam",
+      "name": "Ice Beam",
+      "type": "ice",
+      "category": "special",
+      "basePower": 90,
+      "baseCooldownSeconds": 8,
+      "windUpFrames": 30,
+      "attackLoopFrames": 45,
+      "distance": {
+        "min": 0,
+        "max": 99
+      },
+      "effects": [
+        "May freeze targets"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/icebeam.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "iron-head",
+      "name": "Iron Head",
+      "type": "steel",
+      "category": "physical",
+      "basePower": 80,
+      "baseCooldownSeconds": 8,
+      "windUpFrames": 15,
+      "attackLoopFrames": 20,
+      "distance": {
+        "min": 0.5,
+        "max": 2
+      },
+      "effects": [
+        "30% flinch rate"
+      ],
+      "effectChancePercent": 30,
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/ironhead.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "rock-tomb",
+      "name": "Rock Tomb",
+      "type": "rock",
+      "category": "physical",
+      "basePower": 60,
+      "baseCooldownSeconds": 10,
+      "windUpFrames": 25,
+      "attackLoopFrames": 30,
+      "distance": {
+        "min": 0.5,
+        "max": 8
+      },
+      "effects": [
+        "Slows targets for 8 seconds; missed boulders remain on the field"
+      ],
+      "effectDurationSeconds": 8,
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/rocktomb.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "swift",
+      "name": "Swift",
+      "type": "normal",
+      "category": "special",
+      "basePower": 60,
+      "baseCooldownSeconds": 5,
+      "windUpFrames": 10,
+      "attackLoopFrames": 15,
+      "distance": {
+        "min": 1,
+        "max": 99
+      },
+      "effects": [],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/swift.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "water-pulse",
+      "name": "Water Pulse",
+      "type": "water",
+      "category": "special",
+      "basePower": 60,
+      "baseCooldownSeconds": 6,
+      "windUpFrames": 15,
+      "attackLoopFrames": 15,
+      "distance": {
+        "min": 1,
+        "max": 99
+      },
+      "effects": [
+        "May confuse targets"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/waterpulse.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
+    },
+    {
+      "id": "x-scissor",
+      "name": "X-Scissor",
+      "type": "bug",
+      "category": "physical",
+      "basePower": 80,
+      "baseCooldownSeconds": 8,
+      "windUpFrames": 10,
+      "attackLoopFrames": 20,
+      "distance": {
+        "min": 0.5,
+        "max": 2
+      },
+      "effects": [],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/x-scissor.shtml",
+      "dataStatus": "source-checked",
+      "sourceId": "serebii-attackdex"
     }
   ]
 }

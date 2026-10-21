@@ -377,11 +377,15 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - The existing Battle/Cozy appearance choice remains independent; the game palette updates immediately when the game selector changes.
 
 
-## ZA Battle Advisor data foundation (catalog schema 1)
+## ZA Battle Advisor data foundation (catalog schema 1.1)
 
-The file `za-battle-catalog.json` introduces a game-specific, provenance-aware data model for the planned Legends: Z-A Battle Advisor. It currently contains:
-- A starter slice of Lumiose Pokédex entries 001–026 with species names and types.
-- 17 individually checked move records with ZA base power, base cooldown, wind-up and attack-loop frame values, reported distance ranges, effects where confirmed, and source URLs.
-- Explicit coverage flags for forms, learnsets, Mega Evolution, and overall completeness. These remain incomplete and the catalog is **not yet connected to the Battle Advisor UI**.
+The file `za-battle-catalog.json` now maps all 232 Lumiose regional Pokédex numbers to at least one species/type record and includes separate rows for some alternate forms. It contains 29 individually source-linked Legends: Z-A move records with base power, base cooldown, distance, frame data, and effects where the reference lists them.
 
-Data references include [Pokémon Database's Legends: Z-A Pokédex](https://pokemondb.net/pokedex/game/legends-z-a), Serebii's individual Legends: Z-A AttackDex sections (linked per move in the JSON), [Bulbapedia's Z-A move list](https://bulbapedia.bulbagarden.net/wiki/List_of_moves_in_Pok%C3%A9mon_Legends:_Z-A), and [Nintendo's Z-A battle tips](https://www.nintendo.com/us/whatsnew/12-tips-and-tricks-for-pokemon-legends-z-a/). The move index flags incomplete identification of Mega Dimension version 2.0.0 additions, so DLC entries and all learnsets will be added only after verification. The catalog stores base cooldown values and raw frame counts; the advisor will need to account for speed-adjusted cooldown mechanics rather than present base cooldown as a guaranteed in-battle timer.
+**Important coverage limits:** this is not a complete form catalogue, learnset database, Mega Evolution database, or move roster. Several supplementary community-source species/form rows remain marked as not individually rechecked. A move's presence does not establish that a particular Pokémon can learn it in ZA, so the catalog remains `readyForAutomaticRanking: false` until learnsets and form coverage are verified.
+
+Sources recorded in the catalog:
+- [Bulbapedia's Lumiose Pokédex list](https://bulbapedia.bulbagarden.net/wiki/ZAdex) and [Serebii's Lumiose Pokédex](https://www.serebii.net/legendsz-a/availablepokemon.shtml) for regional numbers, species names and types.
+- Serebii's individual AttackDex pages for ZA move values; each move record links to its own page.
+- [PokeZACatchCalc community reference](https://github.com/TheFauxDreamer/PokeZACatchCalc) as a supplementary name/form/type checklist. That repository declares no license, so its descriptions, images, stat blocks and calculations are not copied into this catalog.
+
+The catalog stores cooldowns as base values and distance/frame data in the units reported by the source. It does not yet convert frames to seconds, predict exact in-game damage, or infer learnability.
