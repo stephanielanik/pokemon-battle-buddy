@@ -471,3 +471,21 @@ html[data-game] .party-box-toggle button.active{background:var(--game-accent2);b
 html[data-game] .evolution-step.current,html[data-game] .bank-row:focus-within{border-color:var(--game-accent)}
 html[data-game] .update-banner{border-color:var(--game-accent)}
 html[data-game] .update-banner button{background:var(--game-accent2);border-color:var(--game-accent);color:#fff}
+
+
+/* v1.22.0 — Legends: Z-A Battle Advisor */
+.za-advisor{padding:18px;max-width:100%;min-width:0}.za-advisor[hidden]{display:none!important}
+.za-advisor-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:22px}.za-advisor-heading h2{margin:0 0 6px}
+.za-game-tag{white-space:nowrap;font-size:10px;letter-spacing:.11em;font-weight:900;color:var(--game-accent);border:1px solid var(--game-accent);border-radius:100px;padding:7px 9px}
+.za-opponent-selected{border:1px solid var(--border);background:var(--input);padding:14px;border-radius:16px;margin-top:12px}.za-opponent-selected h3{margin:0 0 5px;font-size:20px}.za-opponent-selected p{margin:0 0 10px}
+.za-opponent-option{display:flex!important;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.za-opponent-option .sub{margin-left:auto;max-width:60%;text-align:right}
+.za-advisor-results{display:grid;gap:12px;margin-top:14px;min-width:0}.za-recommendation{border:1px solid var(--border);border-radius:17px;background:var(--surface);padding:14px;min-width:0;overflow-wrap:anywhere}
+.za-recommendation-best{border-color:var(--game-accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--game-accent) 25%,transparent)}
+.za-recommendation-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px}.za-recommendation-header h3{margin:0;font-size:17px}.za-rank-tag{flex:0 0 auto;color:var(--game-accent);font-size:9px;font-weight:900;letter-spacing:.08em}
+.za-recommended-move{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:17px;margin-bottom:6px}.za-recommended-move .pill{font-size:11px;padding:5px 9px}
+.za-why{margin:8px 0 12px;font-size:13px;line-height:1.55;color:var(--muted)}.za-move-details{border-top:1px solid var(--border);padding-top:10px}.za-move-details summary,.za-more-options summary{font-weight:800;cursor:pointer;padding:6px 0;min-height:36px}
+.za-move-facts{display:grid;gap:1px;margin-top:8px}.za-fact{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}.za-fact span{color:var(--muted)}.za-fact strong{text-align:right;font-variant-numeric:tabular-nums}
+.za-source-link{display:inline-block;margin-top:10px;font-size:12px;color:var(--game-accent)}.za-defensive-risk{font-size:12px;color:var(--muted);margin:12px 0 0;line-height:1.5}
+.za-more-options{margin-top:6px;border-top:1px solid var(--border);padding-top:8px}.za-more-options .za-recommendation{margin-top:10px}
+.za-data-note,.za-coverage-note{font-size:12px;line-height:1.55;color:var(--muted);margin:14px 0 0}
+@media(max-width:460px){.za-advisor{padding:15px}.za-advisor-heading{gap:8px}.za-game-tag{font-size:9px;padding:6px 7px}.za-recommendation-header{gap:5px}.za-recommendation-header h3{font-size:16px}.za-opponent-option .sub{max-width:100%;margin-left:0;text-align:left}.za-fact{font-size:11px}}

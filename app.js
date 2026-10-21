@@ -7,6 +7,7 @@ let game=localStorage.getItem('battleBuddyGame')||'shield';
 if(!GAME_KEYS.includes(game))game='shield';
 $('game').value=game;
 let current=null,allNames=[],collectionView='party';
+let zaCatalog=null,zaCatalogPromise=null,selectedZAOpponent=null,zaAdvisorRun=0;
 function readStoredArray(key){try{const value=JSON.parse(localStorage.getItem(key)||'[]');return Array.isArray(value)?value:[]}catch(e){return []}}
 function emptyGameCollections(){return Object.fromEntries(GAME_KEYS.map(key=>[key,{team:[],box:[]}]))}
 let gameCollections;
@@ -132,6 +133,7 @@ $('game').addEventListener('change',()=>{
   ensureRecordIds([...team,...box]);
   saveGameCollections();
   updateGameLabel();setGameSkin();
+  updateAdvisorGameMode();
   $('analyzerResults').replaceChildren();
   $('boxRecommendations').hidden=true;
   $('analyzerStatus').textContent='Switched games. Analyze Party for recommendations for this game.';
@@ -488,6 +490,142 @@ function setBattleMode(mode){
 }
 $('modeRaid').addEventListener('click',()=>setBattleMode('raid'));
 $('modeGym').addEventListener('click',()=>setBattleMode('gym'));
+function normalizeZAKey(value){return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')}
+async function loadZABattleCatalog(){
+  if(zaCatalog)return zaCatalog;
+  if(!zaCatalogPromise){
+    const url=new URL('za-battle-catalog.json',window.location.href);
+    url.searchParams.set('_catalog','1.1.0');
+    zaCatalogPromise=fetch(url.toString(),{cache:'no-store'}).then(response=>{
+      if(!response.ok)throw Error('ZA battle catalog request failed ('+response.status+')');
+      return response.json();
+    }).then(data=>{
+      if(data.game!=='legends-za'||!Array.isArray(data.species)||!Array.isArray(data.moves))throw Error('ZA battle catalog has an unexpected structure.');
+      zaCatalog=data;return data;
+    }).catch(error=>{zaCatalogPromise=null;throw error});
+  }
+  return zaCatalogPromise;
+}
+function zaDisplayName(pokemon){return pokemon.displayName||title(pokemon.name||'Pokémon')}
+function zaSpeciesTypes(pokemon){
+  if(Array.isArray(pokemon?.types)&&pokemon.types.length)return pokemon.types.map(x=>String(x).toLowerCase());
+  const key=normalizeZAKey(pokemon?.name);
+  const match=zaCatalog?.species.find(x=>normalizeZAKey(x.name)===key||normalizeZAKey(x.displayName)===key);
+  return match?.types||[];
+}
+function zaRecordedMove(pokemonMove){
+  const key=normalizeZAKey(pokemonMove);
+  return zaCatalog?.moves.find(move=>normalizeZAKey(move.id)===key||normalizeZAKey(move.name)===key)||null;
+}
+function updateZAOpponentSuggestions(query){
+  const list=$('zaOpponentSuggestions');list.replaceChildren();
+  const q=normalizeZAKey(query);
+  if(!zaCatalog||!q){list.hidden=true;return []}
+  const options=zaCatalog.species.filter(p=>p.inLumioseDex!==false&&[p.name,p.displayName,p.formKey].some(value=>normalizeZAKey(value).includes(q)))
+    .sort((a,b)=>(a.lumioseDex??999)-(b.lumioseDex??999)||zaDisplayName(a).localeCompare(zaDisplayName(b)))
+    .slice(0,8);
+  options.forEach(p=>{
+    const button=document.createElement('button');button.type='button';button.className='za-opponent-option';
+    const name=document.createElement('strong');name.textContent=zaDisplayName(p);
+    const meta=document.createElement('span');meta.className='sub';meta.textContent=(Number.isInteger(p.lumioseDex)?'Ldex #'+String(p.lumioseDex).padStart(3,'0')+' · ':'')+p.types.map(title).join(' / ');
+    button.append(name,meta);button.addEventListener('click',()=>selectZAOpponent(p));list.append(button);
+  });
+  list.hidden=!options.length;return options;
+}
+function selectZAOpponent(pokemon){selectedZAOpponent=pokemon;$('zaOpponentSearch').value=zaDisplayName(pokemon);$('zaOpponentSuggestions').hidden=true;renderZABattleAdvice()}
+function clearZAOpponent(){selectedZAOpponent=null;$('zaOpponentSearch').value='';$('zaOpponentSuggestions').hidden=true;$('zaOpponentSelected').hidden=true;$('zaAdvisorResults').replaceChildren();$('zaAdvisorStatus').textContent='Search for the Pokémon you are fighting.'}
+function makeZATypePill(type){const pill=document.createElement('span');pill.className='pill';pill.textContent=title(type);pill.style.background=colors[type]||'#6c667b';return pill}
+function appendZAMoveDetails(container,move,effectiveness,stab){
+  const details=document.createElement('details');details.className='za-move-details';
+  const summary=document.createElement('summary');summary.textContent='Cooldown, reach & timing';details.append(summary);
+  const facts=document.createElement('div');facts.className='za-move-facts';
+  const lines=[
+    ['Base power',String(move.basePower)],
+    ['Type effectiveness','×'+effectiveness],
+    ['STAB',stab>1?'Yes (×1.5)':'No'],
+    ['Base cooldown',move.baseCooldownSeconds+' s'],
+    ['Reported distance',move.distance.min+'–'+move.distance.max+' (source units)'],
+    ['Wind-up',move.windUpFrames+' frames'],
+    ['Attack loop',move.attackLoopFrames+' frames']
+  ];
+  lines.forEach(([label,value])=>{const row=document.createElement('div');row.className='za-fact';const l=document.createElement('span');l.textContent=label;const v=document.createElement('strong');v.textContent=value;row.append(l,v);facts.append(row)});
+  if(Array.isArray(move.effects)&&move.effects.length){const effect=document.createElement('p');effect.className='hint';effect.textContent='Effects: '+move.effects.join('; ');facts.append(effect)}
+  if(move.sourceUrl){const link=document.createElement('a');link.href=move.sourceUrl;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Open move data source';link.className='za-source-link';facts.append(link)}
+  details.append(facts);container.append(details);
+}
+function renderZABattleAdvice(){
+  const selected=$('zaOpponentSelected'),results=$('zaAdvisorResults'),status=$('zaAdvisorStatus');
+  zaAdvisorRun++;results.replaceChildren();
+  if(!selectedZAOpponent){selected.hidden=true;status.textContent='Search for the Pokémon you are fighting.';return}
+  const opponent=selectedZAOpponent,types=opponent.types||[];
+  selected.replaceChildren();selected.hidden=false;
+  const titleEl=document.createElement('h3');titleEl.textContent=zaDisplayName(opponent);selected.append(titleEl);
+  const meta=document.createElement('p');meta.className='hint';meta.textContent=(Number.isInteger(opponent.lumioseDex)?'Lumiose Dex #'+String(opponent.lumioseDex).padStart(3,'0')+' · ':'')+types.map(title).join(' / ');selected.append(meta);
+  const pills=document.createElement('div');pills.className='types';types.forEach(type=>pills.append(makeZATypePill(type)));selected.append(pills);
+  if(!team.length){status.textContent='Your Legends: Z-A Party is empty. Add your Pokémon in My Pokémon to get battle advice.';return}
+  const ranked=[];let unsupportedMoves=0,recordedMoves=0;
+  team.forEach(pokemon=>{
+    const ownTypes=zaSpeciesTypes(pokemon);
+    const knownMoves=(Array.isArray(pokemon.moves)?pokemon.moves:[]).filter(move=>typeof move==='string'&&move.trim());
+    recordedMoves+=knownMoves.length;
+    const moves=knownMoves.map(name=>({recordedName:name,move:zaRecordedMove(name)}));
+    unsupportedMoves+=moves.filter(x=>!x.move).length;
+    const candidates=moves.filter(x=>x.move&&x.move.basePower>0).map(({recordedName,move})=>{
+      const effectiveness=types.reduce((value,type)=>value*(rules[move.type]?.[type]??1),1);
+      const stab=ownTypes.includes(move.type)?1.5:1;
+      const risk=ownTypes.length?defensiveRisk({types:ownTypes},types).worst:1;
+      const riskWeight=risk>=4?.2:risk>=2?.55:risk===0?1.35:risk<1?1.2:1;
+      const relativeScore=effectiveness===0?0:(move.basePower*effectiveness*stab/Math.max(1,move.baseCooldownSeconds))*riskWeight;
+      return {recordedName,move,effectiveness,stab,risk,relativeScore,pokemon};
+    }).filter(x=>x.effectiveness>0).sort((a,b)=>b.relativeScore-a.relativeScore);
+    if(candidates.length)ranked.push(candidates[0]);
+  });
+  ranked.sort((a,b)=>b.relativeScore-a.relativeScore);
+  if(!ranked.length){
+    status.textContent=recordedMoves===0?'Record the moves your ZA Pokémon actually know in their profiles to get recommendations.':'None of the recorded Party moves are in the current ZA move catalog yet. We will not substitute a move from another game or guess learnability.';
+    return;
+  }
+  status.textContent='Ranked from your recorded Party moves using type effectiveness, same-type bonus, base power/base cooldown, and type-based defensive risk.';
+  function renderChoice(choice,index){
+    const card=document.createElement('article');card.className='za-recommendation'+(index===0?' za-recommendation-best':'');
+    const header=document.createElement('div');header.className='za-recommendation-header';
+    const name=document.createElement('h3');name.textContent=(index===0?'★ ':'')+(choice.pokemon.nickname||title(choice.pokemon.name))+(choice.pokemon.level?' · Lv. '+choice.pokemon.level:'');
+    const tag=document.createElement('span');tag.className='za-rank-tag';tag.textContent=index===0?'TOP PICK':'ALTERNATIVE';header.append(name,tag);card.append(header);
+    const moveTitle=document.createElement('div');moveTitle.className='za-recommended-move';
+    const moveName=document.createElement('strong');moveName.textContent=choice.move.name;moveTitle.append(moveName,makeZATypePill(choice.move.type));card.append(moveTitle);
+    const why=document.createElement('p');why.className='za-why';
+    const reason=choice.effectiveness>1?'Super effective (×'+choice.effectiveness+')':choice.effectiveness===1?'Neutral type damage':'Reduced type damage (×'+choice.effectiveness+')';
+    why.textContent=reason+(choice.stab>1?' · Same-type bonus':'')+' · Best cataloged move in this Pokémon’s recorded moves';card.append(why);
+    appendZAMoveDetails(card,choice.move,choice.effectiveness,choice.stab);
+    const risk=document.createElement('p');risk.className='za-defensive-risk';risk.textContent='Defensive matchup: '+(choice.risk>=4?'4× vulnerable':choice.risk>=2?'weak to an opponent type':choice.risk===0?'immune to an opponent type':choice.risk<1?'resists opponent typing':'no special type modifier');card.append(risk);
+    return card;
+  }
+  ranked.slice(0,3).forEach((choice,index)=>results.append(renderChoice(choice,index)));
+  if(ranked.length>3){const more=document.createElement('details');more.className='za-more-options';const summary=document.createElement('summary');summary.textContent='Other Party options ('+(ranked.length-3)+')';more.append(summary);ranked.slice(3).forEach((choice,index)=>more.append(renderChoice(choice,index+3)));results.append(more)}
+  if(unsupportedMoves){const note=document.createElement('p');note.className='hint za-coverage-note';note.textContent=unsupportedMoves+' recorded move(s) are not in the current ZA catalog and were excluded. Move and learnset coverage is incomplete.';results.append(note)}
+}
+function updateAdvisorGameMode(){
+  const isZA=game==='legends-za';
+  const tab=document.querySelector('.tab[data-tab="raid"]');
+  tab.textContent=isZA?'⚔️ Battle Advisor':'⚔️ Type Matchup';
+  $('zaAdvisor').hidden=!isZA;document.querySelector('.raid-panel').hidden=isZA;
+  if(!isZA){if(!$('raid').hidden)refreshRaidMatchup();return}
+  loadZABattleCatalog().then(()=>{
+    if(game!=='legends-za')return;
+    updateZAOpponentSuggestions($('zaOpponentSearch').value);
+    if(selectedZAOpponent)renderZABattleAdvice();else $('zaAdvisorStatus').textContent='Search for the Pokémon you are fighting.';
+  }).catch(error=>{$('zaAdvisorStatus').textContent='Unable to load ZA battle data. Check your connection and try again.';console.error(error)});
+}
+$('zaOpponentSearch').addEventListener('input',()=>{
+  selectedZAOpponent=null;$('zaOpponentSelected').hidden=true;$('zaAdvisorResults').replaceChildren();
+  if(!zaCatalog){$('zaOpponentSuggestions').hidden=true;return}
+  const options=updateZAOpponentSuggestions($('zaOpponentSearch').value);
+  $('zaAdvisorStatus').textContent=options.length?'Choose the opponent from the results below.':'No matching entry in the current ZA catalog.';
+});
+$('zaOpponentSearch').addEventListener('keydown',event=>{
+  if(event.key==='Enter'){const first=$('zaOpponentSuggestions').querySelector('button');if(first){event.preventDefault();first.click()}}
+});
+$('zaOpponentClear').addEventListener('click',clearZAOpponent);
 async function refreshRaidMatchup(){
   const run=++raidRun,types=[raidFirst.value,raidSecond.value].filter(Boolean);
   const output=$('raidResults');output.replaceChildren();
@@ -721,7 +859,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));
   $('lookup').hidden=b.dataset.tab!=='lookup';
   $('raid').hidden=b.dataset.tab!=='raid';
-  if(b.dataset.tab==='raid')refreshRaidMatchup();
+  if(b.dataset.tab==='raid')updateAdvisorGameMode();
   $('team').hidden=b.dataset.tab!=='team';
   $('bank').hidden=b.dataset.tab!=='bank';
   $('items').hidden=b.dataset.tab!=='items';
@@ -729,6 +867,7 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
   $('profile').hidden=true;
   if(b.dataset.tab==='bank')renderMachineBank();
 });
+updateAdvisorGameMode();
 renderTeam();fetch('https://pokeapi.co/api/v2/pokemon?limit=1025').then(r=>r.json()).then(d=>allNames=d.results.map(x=>x.name)).catch(()=>{});
 
 // Theme is device-local, just like the team and game selector.
@@ -808,7 +947,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.21.0';
+const APP_VERSION='1.22.0';
 // Display the version of this JavaScript bundle, not a stale value baked into HTML.
 $('installedVersion').textContent=APP_VERSION;
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;

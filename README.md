@@ -389,3 +389,10 @@ Sources recorded in the catalog:
 - [PokeZACatchCalc community reference](https://github.com/TheFauxDreamer/PokeZACatchCalc) as a supplementary name/form/type checklist. That repository declares no license, so its descriptions, images, stat blocks and calculations are not copied into this catalog.
 
 The catalog stores cooldowns as base values and distance/frame data in the units reported by the source. It does not yet convert frames to seconds, predict exact in-game damage, or infer learnability.
+
+## Version 1.22.0 — ZA Battle Advisor prototype
+- In Legends: Z-A mode, the existing Type Matchup tab becomes Battle Advisor. Other games retain the existing Type Matchup experience.
+- The advisor searches the local ZA catalog for an opponent first, then ranks the current ZA Party using only recorded moves that exist in the current catalog.
+- Recommendations use type effectiveness, same-type bonus, relative base-power/base-cooldown efficiency, and type-based defensive risk. The UI explains that this is a relative estimate, not a precise damage prediction.
+- Move details show source-reported base cooldown, distance units, wind-up frames, attack-loop frames, effects and an individual source link.
+- Moves outside the catalog are excluded rather than guessed. Move, learnset and form coverage remains incomplete; the prototype does not claim comprehensive rankings.
