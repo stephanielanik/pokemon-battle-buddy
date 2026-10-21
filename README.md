@@ -375,3 +375,13 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 ## Version 1.21.0 — Game-reactive visual themes
 - The selected game now controls the UI accent palette: Shield crimson/magenta, Sword cyan/blue, Let's Go Pikachu gold, Let's Go Eevee caramel, and Legends: Z-A violet/neon pink/teal.
 - The existing Battle/Cozy appearance choice remains independent; the game palette updates immediately when the game selector changes.
+
+
+## ZA Battle Advisor data foundation (catalog schema 1)
+
+The file `za-battle-catalog.json` introduces a game-specific, provenance-aware data model for the planned Legends: Z-A Battle Advisor. It currently contains:
+- A starter slice of Lumiose Pokédex entries 001–026 with species names and types.
+- 17 individually checked move records with ZA base power, base cooldown, wind-up and attack-loop frame values, reported distance ranges, effects where confirmed, and source URLs.
+- Explicit coverage flags for forms, learnsets, Mega Evolution, and overall completeness. These remain incomplete and the catalog is **not yet connected to the Battle Advisor UI**.
+
+Data references include [Pokémon Database's Legends: Z-A Pokédex](https://pokemondb.net/pokedex/game/legends-z-a), Serebii's individual Legends: Z-A AttackDex sections (linked per move in the JSON), [Bulbapedia's Z-A move list](https://bulbapedia.bulbagarden.net/wiki/List_of_moves_in_Pok%C3%A9mon_Legends:_Z-A), and [Nintendo's Z-A battle tips](https://www.nintendo.com/us/whatsnew/12-tips-and-tricks-for-pokemon-legends-z-a/). The move index flags incomplete identification of Mega Dimension version 2.0.0 additions, so DLC entries and all learnsets will be added only after verification. The catalog stores base cooldown values and raw frame counts; the advisor will need to account for speed-adjusted cooldown mechanics rather than present base cooldown as a guaranteed in-battle timer.

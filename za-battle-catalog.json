@@ -1,0 +1,640 @@
+{
+  "schemaVersion": 1,
+  "game": "legends-za",
+  "catalogVersion": "1.0.0",
+  "checkedAt": "2026-10-21",
+  "description": "Curated foundation data for a Pokémon Legends: Z-A Battle Advisor. This is intentionally a partial, source-tracked catalog; it is not yet the complete ZA move, species, form, or learnset database.",
+  "coverage": {
+    "pokemonAvailability": {
+      "status": "starter-slice",
+      "complete": false,
+      "recordCount": 26,
+      "scope": "Lumiose Pokédex entries 001-026 only"
+    },
+    "forms": {
+      "status": "not-yet-populated",
+      "complete": false,
+      "recordCount": 0
+    },
+    "learnsets": {
+      "status": "not-yet-populated",
+      "complete": false,
+      "recordCount": 0
+    },
+    "moves": {
+      "status": "curated-slice",
+      "complete": false,
+      "recordCount": 17,
+      "scope": "Selected moves with ZA power, cooldown, distance and frame data checked against individual move references"
+    },
+    "megaEvolutionData": {
+      "status": "not-yet-populated",
+      "complete": false,
+      "recordCount": 0
+    },
+    "readyForAutomaticRanking": false
+  },
+  "dataNotes": [
+    "Cooldown values are the base cooldown listed by the source. Legends: Z-A cooldown can be modified by the Pokémon's Speed and certain status/effects; no final cooldown calculator is included in this data foundation.",
+    "Distances are stored as reported game-distance values. Do not label them near/far or infer hitbox geometry without further verification.",
+    "Wind-up and attack-loop values are raw frame values as reported by the source. Conversion to seconds depends on the game's frame rate and needs to be implemented consistently before user-facing calculations.",
+    "Do not recommend a move solely because it exists in this catalog. The owning Pokémon's ZA learnset or the user's recorded moveset must be checked.",
+    "The community move index flags incomplete coverage for the Mega Dimension version 2.0.0 update. DLC-specific moves/forms must be individually verified before adding.",
+    "The starter species slice records species and types only; it does not imply a complete form list or learnset."
+  ],
+  "sources": [
+    {
+      "id": "pokemondb-lumiose-pokedex",
+      "name": "Pokémon Database — Legends: Z-A Pokédex",
+      "url": "https://pokemondb.net/pokedex/game/legends-z-a",
+      "supports": "Lumiose Pokédex numbers, species names, and types for the starter slice.",
+      "scope": "Community reference. Only entries 001-026 were entered in this initial catalog."
+    },
+    {
+      "id": "serebii-attackdex",
+      "name": "Serebii — AttackDex Legends: Z-A move data",
+      "url": "https://www.serebii.net/attackdex-sv/",
+      "supports": "Move type/category, Z-A base power, base cooldown, distance, wind-up and attack-loop frames where listed.",
+      "scope": "Values were checked on individual move pages; listed data can change and should be reverified for major game updates."
+    },
+    {
+      "id": "bulbapedia-za-move-index",
+      "name": "Bulbapedia — List of moves in Pokémon Legends: Z-A",
+      "url": "https://bulbapedia.bulbagarden.net/wiki/List_of_moves_in_Pok%C3%A9mon_Legends:_Z-A",
+      "supports": "Cross-check for the game's move roster and the existence of move variants.",
+      "scope": "The article itself notes that the version 2.0.0 Mega Dimension additions are not fully identified; not used as a complete DLC source."
+    },
+    {
+      "id": "nintendo-za-tips",
+      "name": "Nintendo — 12 tips and tricks for Pokémon Legends: Z-A",
+      "url": "https://www.nintendo.com/us/whatsnew/12-tips-and-tricks-for-pokemon-legends-z-a/",
+      "supports": "General battle behavior such as real-time positioning, recalling Pokémon to avoid attacks, and move-area considerations."
+    }
+  ],
+  "species": [
+    {
+      "lumioseDex": 1,
+      "name": "chikorita",
+      "types": [
+        "grass"
+      ],
+      "formKey": "chikorita",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 2,
+      "name": "bayleef",
+      "types": [
+        "grass"
+      ],
+      "formKey": "bayleef",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 3,
+      "name": "meganium",
+      "types": [
+        "grass"
+      ],
+      "formKey": "meganium",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 4,
+      "name": "tepig",
+      "types": [
+        "fire"
+      ],
+      "formKey": "tepig",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 5,
+      "name": "pignite",
+      "types": [
+        "fire",
+        "fighting"
+      ],
+      "formKey": "pignite",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 6,
+      "name": "emboar",
+      "types": [
+        "fire",
+        "fighting"
+      ],
+      "formKey": "emboar",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 7,
+      "name": "totodile",
+      "types": [
+        "water"
+      ],
+      "formKey": "totodile",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 8,
+      "name": "croconaw",
+      "types": [
+        "water"
+      ],
+      "formKey": "croconaw",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 9,
+      "name": "feraligatr",
+      "types": [
+        "water"
+      ],
+      "formKey": "feraligatr",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 10,
+      "name": "fletchling",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "formKey": "fletchling",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 11,
+      "name": "fletchinder",
+      "types": [
+        "fire",
+        "flying"
+      ],
+      "formKey": "fletchinder",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 12,
+      "name": "talonflame",
+      "types": [
+        "fire",
+        "flying"
+      ],
+      "formKey": "talonflame",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 13,
+      "name": "bunnelby",
+      "types": [
+        "normal"
+      ],
+      "formKey": "bunnelby",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 14,
+      "name": "diggersby",
+      "types": [
+        "normal",
+        "ground"
+      ],
+      "formKey": "diggersby",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 15,
+      "name": "scatterbug",
+      "types": [
+        "bug"
+      ],
+      "formKey": "scatterbug",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 16,
+      "name": "spewpa",
+      "types": [
+        "bug"
+      ],
+      "formKey": "spewpa",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 17,
+      "name": "vivillon",
+      "types": [
+        "bug",
+        "flying"
+      ],
+      "formKey": "vivillon",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 18,
+      "name": "weedle",
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "formKey": "weedle",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 19,
+      "name": "kakuna",
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "formKey": "kakuna",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 20,
+      "name": "beedrill",
+      "types": [
+        "bug",
+        "poison"
+      ],
+      "formKey": "beedrill",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 21,
+      "name": "pidgey",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "formKey": "pidgey",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 22,
+      "name": "pidgeotto",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "formKey": "pidgeotto",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 23,
+      "name": "pidgeot",
+      "types": [
+        "normal",
+        "flying"
+      ],
+      "formKey": "pidgeot",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 24,
+      "name": "mareep",
+      "types": [
+        "electric"
+      ],
+      "formKey": "mareep",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 25,
+      "name": "flaaffy",
+      "types": [
+        "electric"
+      ],
+      "formKey": "flaaffy",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    },
+    {
+      "lumioseDex": 26,
+      "name": "ampharos",
+      "types": [
+        "electric"
+      ],
+      "formKey": "ampharos",
+      "sourceId": "pokemondb-lumiose-pokedex"
+    }
+  ],
+  "moves": [
+    {
+      "id": "tackle",
+      "name": "Tackle",
+      "type": "normal",
+      "category": "physical",
+      "basePower": 40,
+      "baseCooldownSeconds": 4,
+      "windUpFrames": 1,
+      "attackLoopFrames": 20,
+      "distance": {
+        "min": 0.5,
+        "max": 1.5
+      },
+      "effects": [],
+      "sourceUrl": "https://stats.serebii.net/attackdex-sv/tackle.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "ember",
+      "name": "Ember",
+      "type": "fire",
+      "category": "special",
+      "basePower": 40,
+      "baseCooldownSeconds": 6,
+      "windUpFrames": 20,
+      "attackLoopFrames": 15,
+      "distance": {
+        "min": 1,
+        "max": 99
+      },
+      "effects": [
+        "May burn the target"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/ember.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "vine-whip",
+      "name": "Vine Whip",
+      "type": "grass",
+      "category": "physical",
+      "basePower": 45,
+      "baseCooldownSeconds": 6,
+      "windUpFrames": 10,
+      "attackLoopFrames": 20,
+      "distance": {
+        "min": 0.5,
+        "max": 2
+      },
+      "effects": [],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/vinewhip.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "water-gun",
+      "name": "Water Gun",
+      "type": "water",
+      "category": "special",
+      "basePower": 40,
+      "baseCooldownSeconds": 6,
+      "windUpFrames": 20,
+      "attackLoopFrames": 15,
+      "distance": {
+        "min": 1,
+        "max": 99
+      },
+      "effects": [],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/watergun.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "bite",
+      "name": "Bite",
+      "type": "dark",
+      "category": "physical",
+      "basePower": 60,
+      "baseCooldownSeconds": 6,
+      "windUpFrames": 10,
+      "attackLoopFrames": 20,
+      "distance": {
+        "min": 0.5,
+        "max": 2
+      },
+      "effects": [
+        "May cause flinching"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/bite.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "quick-attack",
+      "name": "Quick Attack",
+      "type": "normal",
+      "category": "physical",
+      "basePower": 30,
+      "baseCooldownSeconds": 3,
+      "windUpFrames": 0,
+      "attackLoopFrames": 20,
+      "distance": {
+        "min": 0.5,
+        "max": 6.5
+      },
+      "effects": [
+        "Rapid lunge toward the target"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/quickattack.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "flame-charge",
+      "name": "Flame Charge",
+      "type": "fire",
+      "category": "physical",
+      "basePower": 50,
+      "baseCooldownSeconds": 6,
+      "windUpFrames": 20,
+      "attackLoopFrames": 18,
+      "distance": {
+        "min": 0,
+        "max": 6
+      },
+      "effects": [
+        "Temporarily increases movement speed"
+      ],
+      "effectDurationSeconds": 8,
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/flamecharge.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "shadow-ball",
+      "name": "Shadow Ball",
+      "type": "ghost",
+      "category": "special",
+      "basePower": 80,
+      "baseCooldownSeconds": 8,
+      "windUpFrames": 10,
+      "attackLoopFrames": 30,
+      "distance": {
+        "min": 1,
+        "max": 99
+      },
+      "effects": [
+        "May lower the target's Special Defense"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/shadowball.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "thunderbolt",
+      "name": "Thunderbolt",
+      "type": "electric",
+      "category": "special",
+      "basePower": 90,
+      "baseCooldownSeconds": 8,
+      "windUpFrames": 25,
+      "attackLoopFrames": 20,
+      "distance": {
+        "min": 1,
+        "max": 99
+      },
+      "effects": [
+        "May paralyze the target"
+      ],
+      "sourceUrl": "https://serebii.net/attackdex-sv/thunderbolt.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "drain-punch",
+      "name": "Drain Punch",
+      "type": "fighting",
+      "category": "physical",
+      "basePower": 75,
+      "baseCooldownSeconds": 7,
+      "windUpFrames": 10,
+      "attackLoopFrames": 20,
+      "distance": {
+        "min": 0.5,
+        "max": 2
+      },
+      "effects": [
+        "Restores HP based on damage dealt"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/drainpunch.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "thunder",
+      "name": "Thunder",
+      "type": "electric",
+      "category": "special",
+      "basePower": 110,
+      "baseCooldownSeconds": 10,
+      "windUpFrames": 30,
+      "attackLoopFrames": 10,
+      "distance": {
+        "min": 1,
+        "max": 99
+      },
+      "effects": [
+        "May paralyze the target"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/thunder.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "earthquake",
+      "name": "Earthquake",
+      "type": "ground",
+      "category": "physical",
+      "basePower": 100,
+      "baseCooldownSeconds": 10,
+      "windUpFrames": 18,
+      "attackLoopFrames": 33,
+      "distance": {
+        "min": 0.5,
+        "max": 2
+      },
+      "targetShape": "wide-area",
+      "effects": [
+        "Attacks a wide area"
+      ],
+      "sourceUrl": "https://ftp.serebii.net/attackdex-sv/earthquake.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "gust",
+      "name": "Gust",
+      "type": "flying",
+      "category": "special",
+      "basePower": 40,
+      "baseCooldownSeconds": 6,
+      "windUpFrames": 12,
+      "attackLoopFrames": 10,
+      "distance": {
+        "min": 1,
+        "max": 99
+      },
+      "effects": [],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/gust.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "ominous-wind",
+      "name": "Ominous Wind",
+      "type": "ghost",
+      "category": "special",
+      "basePower": 60,
+      "baseCooldownSeconds": 6,
+      "windUpFrames": 15,
+      "attackLoopFrames": 33,
+      "distance": {
+        "min": 0.5,
+        "max": 2
+      },
+      "effects": [
+        "May raise the user's stats"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/ominouswind.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "blizzard",
+      "name": "Blizzard",
+      "type": "ice",
+      "category": "special",
+      "basePower": 110,
+      "baseCooldownSeconds": 12,
+      "windUpFrames": 35,
+      "attackLoopFrames": 30,
+      "distance": {
+        "min": 1,
+        "max": 99
+      },
+      "effects": [
+        "May freeze the target"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/blizzard.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "power-whip",
+      "name": "Power Whip",
+      "type": "grass",
+      "category": "physical",
+      "basePower": 120,
+      "baseCooldownSeconds": 12,
+      "windUpFrames": 20,
+      "attackLoopFrames": 0,
+      "distance": {
+        "min": 0.5,
+        "max": 2
+      },
+      "effects": [],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/powerwhip.shtml",
+      "dataStatus": "source-checked"
+    },
+    {
+      "id": "razor-wind",
+      "name": "Razor Wind",
+      "type": "normal",
+      "category": "special",
+      "basePower": 40,
+      "baseCooldownSeconds": 12,
+      "windUpFrames": 70,
+      "attackLoopFrames": 15,
+      "distance": {
+        "min": 1,
+        "max": 99
+      },
+      "effects": [
+        "Heightened critical-hit chance"
+      ],
+      "sourceUrl": "https://www.serebii.net/attackdex-sv/razorwind.shtml",
+      "dataStatus": "source-checked"
+    }
+  ]
+}
