@@ -369,3 +369,5 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - TM/TR tracking and teaching recommendations remain supported for Sword and Shield only; this change does not claim complete Legends: Z-A learnset support.
 
 - v1.20.2: bump asset cache keys, add HTML cache directives, and retain the GitHub-source version check to recover from stale Pages responses.
+
+- v1.20.4: show the installed app version from the running JavaScript bundle rather than hard-coding a stale value in the HTML; use uniquely named versioned assets.
