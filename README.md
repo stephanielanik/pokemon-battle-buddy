@@ -367,3 +367,5 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - Game switching saves the current profile and loads the selected game's collections without mixing saved Pokémon or item inventories.
 - Export backups use schema v5 and include all game profiles. Import remains compatible with schema v1–v4 backups; older backups restore their records into the game identified by the backup.
 - TM/TR tracking and teaching recommendations remain supported for Sword and Shield only; this change does not claim complete Legends: Z-A learnset support.
+
+- v1.20.2: bump asset cache keys, add HTML cache directives, and retain the GitHub-source version check to recover from stale Pages responses.
