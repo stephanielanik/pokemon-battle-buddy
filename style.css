@@ -415,3 +415,59 @@ nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px
 
 /* v1.19.3: let iOS Safari naturally anchor focused edit fields when the keyboard opens. */
 #profile input:focus,#profile textarea:focus{scroll-margin-top:16px;scroll-margin-bottom:90px}
+
+
+/* v1.21.0: game-reactive visual skins. Game changes accents, not the saved theme mode. */
+html[data-game="shield"]{
+  --game-accent:#ff426f;--game-accent2:#b51f40;--game-focus:#ff8ca7;--game-glow:#451326;--game-glow-light:#ffeaf0;
+}
+html[data-game="sword"]{
+  --game-accent:#50ccff;--game-accent2:#1c63cb;--game-focus:#80e5ff;--game-glow:#092c57;--game-glow-light:#e8f7ff;
+}
+html[data-game="lets-go-pikachu"]{
+  --game-accent:#ffd34e;--game-accent2:#956000;--game-focus:#ffe27b;--game-glow:#433308;--game-glow-light:#fff7d9;
+}
+html[data-game="lets-go-eevee"]{
+  --game-accent:#e9b47b;--game-accent2:#92522c;--game-focus:#f4d5ae;--game-glow:#3b2418;--game-glow-light:#fff0df;
+}
+html[data-game="legends-za"]{
+  --game-accent:#ff4dad;--game-accent2:#7052d1;--game-focus:#31d6d2;--game-glow:#281548;--game-glow-light:#f7eaff;
+}
+/* Keep game color tokens independent from Battle/Cozy mode. */
+html[data-game]{
+  --accent:var(--game-accent);--accent2:var(--game-accent2);--focus:var(--game-focus);
+}
+html[data-theme="battle"][data-game] body{
+  background:radial-gradient(circle at 15% 0%,var(--game-glow) 0,transparent 38%),
+             radial-gradient(circle at 95% 10%,var(--game-glow) 0,transparent 42%),var(--bg);
+}
+html[data-theme="cozy"][data-game] body{
+  background:radial-gradient(circle at 5% 0%,var(--game-glow-light) 0,transparent 42%),
+             radial-gradient(circle at 100% 15%,var(--game-glow-light) 0,transparent 46%),#faf8ff;
+}
+html[data-game] header:before{background:linear-gradient(90deg,transparent,var(--game-accent),transparent)}
+html[data-game] h1 span{color:var(--game-accent);text-shadow:0 0 22px color-mix(in srgb,var(--game-accent) 35%,transparent)}
+html[data-theme="cozy"][data-game] h1 span{color:var(--game-accent2);text-shadow:none}
+html[data-game] .eyebrow,html[data-game] a,html[data-game] footer a{color:var(--game-accent)}
+html[data-game] .tab.active,html[data-game] .primary,html[data-game] #go{
+  background:linear-gradient(115deg,var(--game-accent2),var(--game-accent));
+  border-color:var(--game-accent);color:#fff;
+  box-shadow:0 4px 22px color-mix(in srgb,var(--game-accent) 23%,transparent);
+}
+html[data-theme="cozy"][data-game] .tab.active,
+html[data-theme="cozy"][data-game] .primary,
+html[data-theme="cozy"][data-game] #go{
+  background:var(--game-accent2);border-color:var(--game-accent2);color:#fff;box-shadow:none;
+}
+html[data-game] input:focus,html[data-game] .gamebar select:focus,
+html[data-game] .themebar select:focus,html[data-game] .profile-fields input:focus,
+html[data-game] .profile-fields select:focus{outline-color:var(--game-focus);border-color:var(--game-focus)}
+html[data-game] .suggestions button:hover,
+html[data-game] button:hover{background:color-mix(in srgb,var(--game-accent) 17%,var(--button))}
+html[data-theme="cozy"][data-game] .suggestions button:hover,
+html[data-theme="cozy"][data-game] button:hover{background:color-mix(in srgb,var(--game-accent) 12%,white)}
+html[data-game] .item-bank-filters button.active{background:var(--game-accent2);border-color:var(--game-accent);color:#fff}
+html[data-game] .party-box-toggle button.active{background:var(--game-accent2);border-color:var(--game-accent);color:#fff}
+html[data-game] .evolution-step.current,html[data-game] .bank-row:focus-within{border-color:var(--game-accent)}
+html[data-game] .update-banner{border-color:var(--game-accent)}
+html[data-game] .update-banner button{background:var(--game-accent2);border-color:var(--game-accent);color:#fff}

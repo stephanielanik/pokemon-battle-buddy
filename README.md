@@ -371,3 +371,7 @@ Appearance and game settings are now in the gear dialog. The active game stays v
 - v1.20.2: bump asset cache keys, add HTML cache directives, and retain the GitHub-source version check to recover from stale Pages responses.
 
 - v1.20.4: show the installed app version from the running JavaScript bundle rather than hard-coding a stale value in the HTML; use uniquely named versioned assets.
+
+## Version 1.21.0 — Game-reactive visual themes
+- The selected game now controls the UI accent palette: Shield crimson/magenta, Sword cyan/blue, Let's Go Pikachu gold, Let's Go Eevee caramel, and Legends: Z-A violet/neon pink/teal.
+- The existing Battle/Cozy appearance choice remains independent; the game palette updates immediately when the game selector changes.

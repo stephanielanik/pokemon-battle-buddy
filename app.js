@@ -42,7 +42,8 @@ function ensureRecordIds(records){const seen=new Set();records.forEach(p=>{if(ty
 ensureRecordIds([...team,...box]);
 saveGameCollections();
 function updateGameLabel(){$('activeGame').textContent=$('game').selectedOptions[0]?.textContent||'Pokémon Shield'}
-updateGameLabel();
+function setGameSkin(){document.documentElement.dataset.game=game}
+updateGameLabel();setGameSkin();
 // All 25 Pokémon natures. Neutral natures do not change stats.
 const NATURES={
  hardy:[null,null],lonely:['attack','defense'],brave:['attack','speed'],adamant:['attack','special-attack'],naughty:['attack','special-defense'],
@@ -130,7 +131,7 @@ $('game').addEventListener('change',()=>{
   itemBank=gameItemBanks[game]||[];
   ensureRecordIds([...team,...box]);
   saveGameCollections();
-  updateGameLabel();
+  updateGameLabel();setGameSkin();
   $('analyzerResults').replaceChildren();
   $('boxRecommendations').hidden=true;
   $('analyzerStatus').textContent='Switched games. Analyze Party for recommendations for this game.';
@@ -807,7 +808,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.20.4';
+const APP_VERSION='1.21.0';
 // Display the version of this JavaScript bundle, not a stale value baked into HTML.
 $('installedVersion').textContent=APP_VERSION;
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
@@ -1105,7 +1106,7 @@ $('backupFile').addEventListener('change',async event=>{
     game=data.game;team=gameCollections[game].team;box=gameCollections[game].box;itemBank=gameItemBanks[game]||[];
     localStorage.setItem('battleBuddyGame',game);saveGameCollections();saveItemBank();
     localStorage.setItem('battleBuddyMachineBanks',JSON.stringify(importedBanks));
-    machineBanks=importedBanks;$('game').value=game;updateGameLabel();
+    machineBanks=importedBanks;$('game').value=game;updateGameLabel();setGameSkin();
     setTheme(data.theme);renderTeam();renderItemBank();editingRecordId=null;
     status.textContent='Restored all game profiles, TM/TR data, Item Banks, and preferences.';
   }catch(error){status.textContent='Import failed: '+error.message}
