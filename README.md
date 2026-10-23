@@ -401,3 +401,7 @@ The catalog stores cooldowns as base values and distance/frame data in the units
 - Captures the current scroll position before a Pokémon search and restores it after the result render.
 - Restores scroll position after suggestion selection dismisses the mobile keyboard, preventing iOS Safari from jumping to the page bottom.
 - Uses unique, versioned JavaScript and CSS asset names for deployment verification.
+
+## Version 1.22.2 — Preserve pre-blur scroll position
+- Repeated Pokémon search now passes the viewport position captured before the suggestion selection blurs the search field.
+- The asynchronous lookup restores that original position after the result is rendered; it no longer recaptures a possibly already-jumped position after keyboard dismissal.

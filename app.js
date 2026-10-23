@@ -181,8 +181,9 @@ function restoreSearchViewport(top){
   requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,top)));
   setTimeout(()=>window.scrollTo(0,top),260);
 }
-async function search(name,manual=false){
-  const lookupRun=++opponentLookupRun,searchScrollTop=window.scrollY;opponentAbilityInfo=null;
+async function search(name,manual=false,scrollTopOverride=null){
+  // When invoked from a suggestion, use the position captured before blur/keyboard dismissal.
+  const lookupRun=++opponentLookupRun,searchScrollTop=Number.isFinite(scrollTopOverride)?scrollTopOverride:window.scrollY;opponentAbilityInfo=null;
   $('editLookupBoxPokemon').hidden=true;
   name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-female').replace('♂','-male');
   if(!name)return;
@@ -458,11 +459,11 @@ let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=se
     const name=b.dataset.name;
     $('search').value=title(name);
     $('suggestions').hidden=true;
+    // Capture before blur: on iOS the keyboard dismissal itself can move the page.
     const scrollTop=window.scrollY;
     $('search').blur();
-    // Keep keyboard dismissal from causing iOS to jump to the document bottom.
     restoreSearchViewport(scrollTop);
-    search(name);
+    search(name,false,scrollTop);
   };
   // On iOS the first tap can dismiss the keyboard without delivering click.
   // Handle touch at pointerdown while the suggestion is still mounted.
@@ -956,7 +957,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.22.1';
+const APP_VERSION='1.22.2';
 // Display the version of this JavaScript bundle, not a stale value baked into HTML.
 $('installedVersion').textContent=APP_VERSION;
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
