@@ -957,10 +957,22 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.22.2';
+const APP_VERSION='1.22.3';
 // Display the version of this JavaScript bundle, not a stale value baked into HTML.
 $('installedVersion').textContent=APP_VERSION;
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
+function compareVersionStrings(left,right){
+  const parse=value=>String(value||'').trim().replace(/^[vV]/,'').split('.').map(part=>{
+    const number=parseInt(part,10);return Number.isFinite(number)?number:0;
+  });
+  const a=parse(left),b=parse(right),length=Math.max(a.length,b.length);
+  for(let i=0;i<length;i++){
+    const av=a[i]||0,bv=b[i]||0;
+    if(av>bv)return 1;
+    if(av<bv)return -1;
+  }
+  return 0;
+}
 async function checkForUpdates(manual=false){
   if(updateChecking)return;
   if(!manual && Date.now()-lastUpdateCheck<30000)return;
@@ -977,12 +989,16 @@ async function checkForUpdates(manual=false){
     const markup=await response.text();
     const doc=new DOMParser().parseFromString(markup,'text/html');
     const latest=doc.querySelector('meta[name="battle-buddy-version"]')?.content;
-    if(latest && latest!==APP_VERSION){
+    if(latest && compareVersionStrings(latest,APP_VERSION)>0){
       updateAvailable=true;$('updateBanner').hidden=false;
       status.textContent='Version '+latest+' is available.';
-    }else if(latest===APP_VERSION){
-      updateAvailable=false;
-      if(manual)status.textContent='You have the latest version.';
+    }else if(latest && compareVersionStrings(latest,APP_VERSION)<=0){
+      updateAvailable=false;$('updateBanner').hidden=true;
+      if(manual){
+        status.textContent=compareVersionStrings(latest,APP_VERSION)===0
+          ?'You have the latest version.'
+          :'Installed version '+APP_VERSION+' is newer than the published version marker ('+latest+'). No update is needed.';
+      }
     }else if(manual)status.textContent='Could not determine the latest version. Try again shortly.';
   }catch(e){if(manual)status.textContent='Unable to check GitHub for updates. Try opening the latest app page once, then check again.'}
   finally{updateChecking=false;button.disabled=false}

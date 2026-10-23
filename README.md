@@ -405,3 +405,8 @@ The catalog stores cooldowns as base values and distance/frame data in the units
 ## Version 1.22.2 — Preserve pre-blur scroll position
 - Repeated Pokémon search now passes the viewport position captured before the suggestion selection blurs the search field.
 - The asynchronous lookup restores that original position after the result is rendered; it no longer recaptures a possibly already-jumped position after keyboard dismissal.
+
+## Version 1.22.3 — Prevent downgrade update prompts
+- The updater now compares numeric version components and only offers an update when the published version is newer than the installed version.
+- Equal or older published version markers cannot show an update banner or be applied as an update.
+- If the published marker is older than the running app during a deployment mismatch, Settings explains that the installed app is newer instead of suggesting a downgrade.
