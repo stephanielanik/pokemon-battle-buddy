@@ -175,8 +175,14 @@ function showMatch(types){
 }
 
 async function api(path){let r=await fetch('https://pokeapi.co/api/v2/'+path);if(!r.ok)throw Error('Pokémon not found. Try its name or Pokédex number.');return r.json()}
+function restoreSearchViewport(top){
+  // iOS Safari may change document scroll while the keyboard is dismissed and results repaint.
+  requestAnimationFrame(()=>window.scrollTo(0,top));
+  requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,top)));
+  setTimeout(()=>window.scrollTo(0,top),260);
+}
 async function search(name,manual=false){
-  const lookupRun=++opponentLookupRun;opponentAbilityInfo=null;
+  const lookupRun=++opponentLookupRun,searchScrollTop=window.scrollY;opponentAbilityInfo=null;
   $('editLookupBoxPokemon').hidden=true;
   name=name.toLowerCase().trim().replace(/\s+/g,'-').replace('♀','-female').replace('♂','-male');
   if(!name)return;
@@ -186,7 +192,7 @@ async function search(name,manual=false){
   $('message').textContent='Finding your Pokémon…';$('result').hidden=true;$('suggestions').hidden=true;
   try{const p=await api('pokemon/'+name);if(lookupRun!==opponentLookupRun)return;
   opponentAbilityInfo=await resolveOpponentAbilities(p);let types=p.types.sort((a,b)=>a.slot-b.slot).map(x=>x.type.name);const artwork=requestedFemale?(p.sprites.other?.home?.front_female||p.sprites.front_female||'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/female/593.png'):(p.sprites.other['official-artwork'].front_default||p.sprites.front_default);current={id:p.id,name:p.name,gender:requestedFemale?'female':'male',types,artwork,ability:null,moves:[],heldItem:null,pokerus:'unknown',tags:[]};$('name').textContent=requestedFemale?'Jellicent Female':title(p.name);$('dex').textContent='#'+String(p.id).padStart(3,'0');$('art').src=artwork;$('types').innerHTML=types.map(pill).join('');$('hero').style.background=gradient(types);showMatch(types);refreshMoveAdvisor(types);$('forms').innerHTML='';const species=await api('pokemon-species/'+p.species.name);$('dex').textContent='#'+String(species.id).padStart(3,'0');const forms=species.varieties.filter(x=>x.is_default||/(galar|alola|hisui)/.test(x.pokemon.name));if(p.species.name==='jellicent'){forms.length=0;forms.push({pokemon:{name:'jellicent-male'}},{pokemon:{name:'jellicent-female'}})}
-  if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)'}}
+  if(forms.length>1)$('forms').innerHTML=forms.map(x=>`<button data-form="${x.pokemon.name}">${title(x.pokemon.name)}</button>`).join('');$('forms').querySelectorAll('button').forEach(b=>b.onclick=()=>search(b.dataset.form,true));$('result').hidden=false;$('message').textContent='';restoreSearchViewport(searchScrollTop);}catch(e){$('message').textContent=e.message+' (PokéAPI requires internet.)';restoreSearchViewport(searchScrollTop)}}
 
 function showCollection(view){
   collectionView=['party','box'].includes(view)?view:'party';
@@ -452,7 +458,10 @@ let timer;$('search').addEventListener('input',()=>{clearTimeout(timer);timer=se
     const name=b.dataset.name;
     $('search').value=title(name);
     $('suggestions').hidden=true;
+    const scrollTop=window.scrollY;
     $('search').blur();
+    // Keep keyboard dismissal from causing iOS to jump to the document bottom.
+    restoreSearchViewport(scrollTop);
     search(name);
   };
   // On iOS the first tap can dismiss the keyboard without delivering click.
@@ -947,7 +956,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.22.0';
+const APP_VERSION='1.22.1';
 // Display the version of this JavaScript bundle, not a stale value baked into HTML.
 $('installedVersion').textContent=APP_VERSION;
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;

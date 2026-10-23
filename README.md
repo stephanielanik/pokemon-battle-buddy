@@ -396,3 +396,8 @@ The catalog stores cooldowns as base values and distance/frame data in the units
 - Recommendations use type effectiveness, same-type bonus, relative base-power/base-cooldown efficiency, and type-based defensive risk. The UI explains that this is a relative estimate, not a precise damage prediction.
 - Move details show source-reported base cooldown, distance units, wind-up frames, attack-loop frames, effects and an individual source link.
 - Moves outside the catalog are excluded rather than guessed. Move, learnset and form coverage remains incomplete; the prototype does not claim comprehensive rankings.
+
+## Version 1.22.1 — Mobile search scroll fix
+- Captures the current scroll position before a Pokémon search and restores it after the result render.
+- Restores scroll position after suggestion selection dismisses the mobile keyboard, preventing iOS Safari from jumping to the page bottom.
+- Uses unique, versioned JavaScript and CSS asset names for deployment verification.
