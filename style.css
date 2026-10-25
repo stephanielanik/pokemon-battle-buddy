@@ -489,3 +489,11 @@ html[data-game] .update-banner button{background:var(--game-accent2);border-colo
 .za-more-options{margin-top:6px;border-top:1px solid var(--border);padding-top:8px}.za-more-options .za-recommendation{margin-top:10px}
 .za-data-note,.za-coverage-note{font-size:12px;line-height:1.55;color:var(--muted);margin:14px 0 0}
 @media(max-width:460px){.za-advisor{padding:15px}.za-advisor-heading{gap:8px}.za-game-tag{font-size:9px;padding:6px 7px}.za-recommendation-header{gap:5px}.za-recommendation-header h3{font-size:16px}.za-opponent-option .sub{max-width:100%;margin-left:0;text-align:left}.za-fact{font-size:11px}}
+
+
+/* v1.22.4 — Opponent Mega/form-aware type matchup selection */
+.za-form-picker{display:grid;gap:6px;margin-bottom:14px}
+.za-form-picker label{font-size:12px;font-weight:800;color:var(--muted)}
+.za-form-picker select{width:100%;min-width:0;border:1px solid var(--border);border-radius:12px;padding:11px 12px;background:var(--input);color:var(--text);font:inherit}
+.za-form-picker select:focus{outline:2px solid var(--game-focus);outline-offset:2px}
+.za-form-note{font-size:12px;line-height:1.5;color:var(--game-accent);margin:0 0 10px}

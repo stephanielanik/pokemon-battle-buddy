@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
   "game": "legends-za",
-  "catalogVersion": "1.1.0",
-  "checkedAt": "2026-10-21",
+  "catalogVersion": "1.2.0",
+  "checkedAt": "2026-10-25",
   "description": "Expanded, source-tracked foundation data for the Legends: Z-A Battle Advisor. The Lumiose regional-number map is populated for 001-232. Species forms and move coverage are partial; this is not yet a complete ZA learnset database.",
   "coverage": {
     "pokemonAvailability": {
@@ -32,9 +32,10 @@
       "scope": "29 move records with ZA power, base cooldown, distance, raw frame data and effects when listed in individual reference pages."
     },
     "megaEvolutionData": {
-      "status": "not-yet-populated",
+      "status": "starter-slice",
       "complete": false,
-      "recordCount": 0
+      "recordCount": 1,
+      "scope": "Mega Altaria form typing is explicitly modeled. Other Mega-capable species require individual form records before the selector is offered."
     },
     "readyForAutomaticRanking": false
   },
@@ -46,7 +47,8 @@
     "Distances and frame counts are stored as the reference reports them. Do not infer exact hitbox geometry or convert frames to seconds until the game timing basis is verified.",
     "A move in this catalog is not proof a Pokémon can learn it in ZA. The owning Pokémon's ZA learnset or the user's recorded moveset must be checked before recommending that move.",
     "The move catalog is a curated slice, not the full move roster. The current community index flags incomplete identification of Mega Dimension version 2.0.0 additions; DLC moves and forms require additional verification.",
-    "Volcanion is retained as a non-Lumiose-Dex community-reference entry with lumioseDex null. Its in-game availability needs confirmation before it is shown as normally obtainable."
+    "Volcanion is retained as a non-Lumiose-Dex community-reference entry with lumioseDex null. Its in-game availability needs confirmation before it is shown as normally obtainable.",
+    "Species records may optionally define battleForms. The standard species types remain unchanged; the advisor selects a form's own types only when the user explicitly changes the opponent battle form. Mega Altaria's type record is based on the Legends: Z-A Mega Altaria reference. This feature is currently populated for Altaria only."
   ],
   "sources": [
     {
@@ -83,6 +85,13 @@
       "url": "https://www.nintendo.com/us/whatsnew/12-tips-and-tricks-for-pokemon-legends-z-a/",
       "supports": "General real-time battle behavior, movement and recalling Pokémon to avoid attacks.",
       "scope": "General game-behavior reference; not used as a move-stat table."
+    },
+    {
+      "id": "rotomlabs-legends-za-mega-altaria",
+      "name": "RotomLabs — Mega Altaria in Pokémon Legends: Z-A",
+      "url": "https://rotomlabs.net/dex/legends-z-a/altaria/mega",
+      "supports": "Mega Altaria's Dragon/Fairy typing and type-effectiveness chart for Legends: Z-A.",
+      "scope": "Used for the Mega Altaria battle form record; separate from regular Altaria's Dragon/Flying typing."
     }
   ],
   "species": [
@@ -1723,7 +1732,23 @@
       "sourceIds": [
         "community-pokeza-catch-calc"
       ],
-      "verificationStatus": "community-reference-not-individually-rechecked"
+      "verificationStatus": "community-reference-not-individually-rechecked",
+      "battleForms": [
+        {
+          "key": "mega",
+          "displayName": "Mega Altaria",
+          "types": [
+            "dragon",
+            "fairy"
+          ],
+          "formType": "mega",
+          "sourceIds": [
+            "rotomlabs-legends-za-mega-altaria"
+          ],
+          "verificationStatus": "cross-checked",
+          "notes": "Type changes from Dragon/Flying to Dragon/Fairy while Mega-Evolved."
+        }
+      ]
     },
     {
       "id": "audino::standard",

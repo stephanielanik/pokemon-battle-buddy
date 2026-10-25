@@ -410,3 +410,9 @@ The catalog stores cooldowns as base values and distance/frame data in the units
 - The updater now compares numeric version components and only offers an update when the published version is newer than the installed version.
 - Equal or older published version markers cannot show an update banner or be applied as an update.
 - If the published marker is older than the running app during a deployment mismatch, Settings explains that the installed app is newer instead of suggesting a downgrade.
+
+## Version 1.22.4 — Mega/form-aware opponent matchups
+- The ZA Battle Advisor supports an explicit opponent battle-form selector for species that define alternate battle typings.
+- Altaria offers regular Dragon/Flying and Mega Altaria Dragon/Fairy forms. Choosing a form recalculates move effectiveness and defensive matchups using the selected form's types.
+- The regular Altaria catalog typing remains unchanged. The selector is data-driven, but Mega Altaria is the only Mega form populated so far; other Mega-capable species require verified form data before they appear as options.
+- The app does not assume an opponent is Mega-Evolved; the player chooses its current form.

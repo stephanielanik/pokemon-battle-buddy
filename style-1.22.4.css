@@ -1,0 +1,499 @@
+:root{font-family:ui-rounded,system-ui,-apple-system,sans-serif;color:#29243b;background:#f8f5ff}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 5% 0%,#f3e5ff,transparent 40%),radial-gradient(circle at 100% 15%,#dcf7f4,transparent 45%),#faf8ff}main{max-width:850px;margin:auto;padding:25px 18px 60px}header{padding:16px 0 24px}.eyebrow{font-size:11px;letter-spacing:.2em;font-weight:800;color:#805cb1}h1{font-size:clamp(29px,6vw,48px);margin:9px 0}h1 span{color:#9a63bf}header p{color:#6e6580;margin:0}nav{display:flex;gap:10px;margin:10px 0 24px}.tab,button{border:0;border-radius:16px;padding:13px 17px;font-weight:750;cursor:pointer;background:white;color:#53436f;box-shadow:0 3px 12px #493b6312}.tab.active,.primary,#go{background:#7655a9;color:white}label{font-weight:800;display:block;margin-bottom:12px}.searchrow{display:flex;gap:8px}input{min-width:0;flex:1;border:2px solid #e5dcef;border-radius:15px;padding:15px;font-size:16px;outline:none}input:focus{border-color:#9a75cc}#message{color:#6d6579;padding:20px 4px}.suggestions{background:white;border-radius:12px;box-shadow:0 8px 25px #48395a22;max-height:250px;overflow:auto;margin-top:7px}.suggestions button{display:block;width:100%;text-align:left;border-radius:0;box-shadow:none}.suggestions button:hover{background:#f1eafc}.hero{display:flex;align-items:center;gap:24px;padding:24px;border-radius:25px;min-height:230px;background:linear-gradient(120deg,#b3ebc6,#d9a5dc)}.hero img{width:40%;max-width:210px;min-height:130px;object-fit:contain;filter:drop-shadow(0 10px 9px #0002)}.hero h2{font-size:clamp(24px,5vw,40px);margin:5px 0 14px;text-transform:capitalize}.types{display:flex;gap:8px;flex-wrap:wrap}.pill{display:inline-block;border-radius:30px;color:white;font-weight:800;font-size:13px;padding:8px 12px;text-transform:capitalize}.panel{background:#fff;border-radius:22px;padding:23px;margin-top:16px;box-shadow:0 6px 24px #47386212}.panel h3{margin-top:0}.group{margin:18px 0}.group h4{font-size:14px;margin:0 0 9px;color:#625674}.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{padding:8px 12px;border-radius:12px;font-size:13px;font-weight:800;color:white;text-transform:capitalize}.hint{font-size:13px;color:#746c82;line-height:1.6}.primary{margin-top:12px}#forms{margin-top:15px}#forms button{margin:3px;padding:8px 11px;font-size:12px;background:#ffffffb8}.teamgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.teamcard{padding:15px;border-radius:20px;min-height:185px;position:relative}.teamcard img{height:110px;width:110px;object-fit:contain;display:block;margin:auto}.teamcard strong{display:block;text-transform:capitalize}.teamcard button{padding:6px 10px;margin-top:8px;font-size:12px}.empty{border:2px dashed #d8cde8;border-radius:20px;padding:35px;text-align:center;color:#817590}footer{margin-top:50px;font-size:12px;color:#81798c;text-align:center}a{color:#7555a7}@media(max-width:460px){.hero{gap:10px;padding:14px}.hero img{width:43%}.panel{padding:16px}}
+
+.gamebar{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:20px}.gamebar label{margin:0;font-size:14px}.gamebar select{background:#fff;border:2px solid #ddcfef;border-radius:13px;padding:10px 12px;color:#48375f;font-size:15px;font-weight:700;max-width:100%}.gamebar small{flex-basis:100%;color:#746c82}.suggestions button{display:flex;align-items:center;gap:10px;border-bottom:1px solid #f1eaf7}.suggestions img{height:36px;width:36px;object-fit:contain}.suggestions .sub{font-size:11px;color:#746c82;margin-left:auto}.suggestions button:focus-visible,.gamebar select:focus-visible{outline:3px solid #a47bdf;outline-offset:2px}
+
+/* v0.3 theme system: dark battle default, original cozy optional */
+:root{color-scheme:dark;--bg:#080f1e;--text:#eaf4ff;--muted:#9bb1ce;--surface:#101c30;--border:#2a4160;--accent:#19b9ff;--accent2:#3975ff;--shadow:#05aaff22;--input:#14253b;--button:#182b46;--focus:#55d7ff}
+body{color:var(--text);background:radial-gradient(circle at 15% 0%,#063d69 0,transparent 36%),radial-gradient(circle at 95% 10%,#11214c 0,transparent 38%),var(--bg);min-height:100vh}
+header{position:relative}header:before{content:'';position:absolute;inset:-18px -18px auto;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.eyebrow{color:var(--accent);letter-spacing:.23em}h1 span{color:#6bdcff;text-shadow:0 0 22px #16baff55}header p,.gamebar small,.hint,#message,footer{color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--border);box-shadow:0 10px 32px #0005}
+.group h4{color:#c3d8ef}
+button,.tab{background:var(--button);color:var(--text);border:1px solid var(--border);box-shadow:none;transition:transform .15s,background .15s}
+button:hover{transform:translateY(-1px);background:#24405f}
+.tab.active,.primary,#go{background:linear-gradient(115deg,#067bbf,#2157db);border-color:#35baff;color:#fff;box-shadow:0 4px 22px #009dff3a}
+input,.gamebar select,.themebar select{background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:13px;padding:12px;font-size:15px}
+input{padding:15px;border-width:2px}input::placeholder{color:#8da5bf}input:focus,.gamebar select:focus,.themebar select:focus{outline:2px solid var(--focus);outline-offset:2px;border-color:var(--focus)}
+.suggestions{background:#15243a;border:1px solid var(--border);box-shadow:0 12px 35px #0008}.suggestions button{border-color:#2b405c}.suggestions button:hover{background:#234465}.suggestions .sub{color:#a9c7e6}
+.hero{border:1px solid #ffffff33;box-shadow:inset 0 0 70px #0002,0 10px 28px #0005;color:#091525}
+.hero .pill,.teamcard .pill{box-shadow:0 2px 9px #0003}
+#forms button{background:#0c1c31d9;color:#f2faff;border:1px solid #ffffff66}
+.teamcard{border:1px solid #ffffff33;box-shadow:0 8px 25px #0004;color:#091525}
+.teamcard button{background:#10243be8;color:white;border-color:#b6e4ff66}
+.empty{border-color:#345475;color:#8daacb}footer a{color:#64d6ff}
+.themebar{display:flex;align-items:center;gap:12px;margin-top:20px}.themebar label{margin:0;font-size:14px}.themebar select{font-weight:750}
+.gamebar{margin-top:12px}
+/* Cozy restores the original look without affecting saved teams. */
+html[data-theme="cozy"]{color-scheme:light;--bg:#faf8ff;--text:#29243b;--muted:#746c82;--surface:#fff;--border:#e5dcef;--accent:#805cb1;--accent2:#9a63bf;--input:#fff;--button:#fff;--focus:#9a75cc}
+html[data-theme="cozy"] body{background:radial-gradient(circle at 5% 0%,#f3e5ff,transparent 40%),radial-gradient(circle at 100% 15%,#dcf7f4,transparent 45%),#faf8ff}
+html[data-theme="cozy"] header:before{background:linear-gradient(90deg,transparent,#caa2eb,transparent)}
+html[data-theme="cozy"] h1 span{color:#9a63bf;text-shadow:none}
+html[data-theme="cozy"] .panel{box-shadow:0 6px 24px #47386212}
+html[data-theme="cozy"] .group h4{color:#625674}
+html[data-theme="cozy"] button:hover{background:#f1eafc}
+html[data-theme="cozy"] .tab.active,html[data-theme="cozy"] .primary,html[data-theme="cozy"] #go{background:#7655a9;border-color:#7655a9;box-shadow:none}
+html[data-theme="cozy"] .suggestions{background:#fff;box-shadow:0 8px 25px #48395a22}
+html[data-theme="cozy"] .suggestions button{border-color:#f1eaf7}
+html[data-theme="cozy"] .suggestions .sub{color:#746c82}
+html[data-theme="cozy"] #forms button{background:#ffffffb8;color:#53436f;border-color:#ffffffaa}
+html[data-theme="cozy"] .teamcard button{background:#ffffffc9;color:#53436f;border-color:#fff}
+html[data-theme="cozy"] .empty{border-color:#d8cde8;color:#817590}
+html[data-theme="cozy"] footer a{color:#7555a7}
+@media(max-width:460px){.themebar,.gamebar{align-items:stretch}.themebar select{flex:1;min-width:0}}
+
+/* v0.4: uncluttered header and accessible settings overlay */
+header{padding-right:66px}
+.settings-toggle{position:absolute;right:0;top:12px;width:48px;height:48px;display:grid;place-items:center;padding:0;font-size:23px;border-radius:15px;background:var(--button);border:1px solid var(--border);color:var(--text)}
+.settings-toggle:focus-visible,.settings-heading button:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.game-indicator{display:inline-flex;align-items:center;gap:10px;margin-top:20px;border:1px solid var(--border);background:var(--surface);border-radius:100px;padding:9px 14px;color:var(--text);font-weight:800;font-size:14px}
+.game-indicator-label{font-size:10px;letter-spacing:.12em;color:var(--muted)}
+.settings-overlay[hidden]{display:none!important}
+.settings-overlay{position:fixed;inset:0;z-index:1000;background:#000b;display:flex;align-items:flex-start;justify-content:center;padding:clamp(20px,10vh,90px) 18px 20px}
+.settings-panel{width:min(100%,440px);background:var(--surface);border:1px solid var(--border);border-radius:22px;padding:24px;box-shadow:0 20px 80px #0009;color:var(--text)}
+.settings-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
+.settings-heading h2{margin:0;font-size:24px}.settings-heading button{font-size:20px;padding:8px 12px}
+.settings-field{margin-top:20px}.settings-field label{margin-bottom:9px}.settings-field select{width:100%;background:var(--input);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:16px;padding:13px}.settings-field p{font-size:13px;line-height:1.5;color:var(--muted)}
+@media(max-width:460px){header{padding-right:54px}.game-indicator{gap:7px;flex-wrap:wrap}.game-indicator-label{font-size:9px}.settings-toggle{right:0;top:10px}}
+
+/* v0.6 Pokémon profile editor */
+.back-button{margin:0 0 16px;padding:11px 15px}
+.profile-panel{margin-top:0}
+.profile-heading{display:flex;align-items:center;gap:20px;margin-bottom:22px}
+.profile-heading img{width:120px;height:120px;object-fit:contain}
+.profile-heading h2{margin:6px 0 12px;font-size:clamp(22px,5vw,34px)}
+.profile-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.profile-fields label{font-size:14px;margin:0}
+.profile-fields input,.profile-fields select{display:block;width:100%;margin-top:8px;background:var(--input);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:12px;font:inherit;font-weight:500}
+.profile-fields input:focus,.profile-fields select:focus{outline:2px solid var(--focus);outline-offset:2px}
+.move-fields{border:1px solid var(--border);border-radius:16px;margin:24px 0 0;padding:18px}
+.move-fields legend{font-weight:800;padding:0 7px}
+.move-fields .hint{margin-top:0}
+.profile-actions{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:18px}
+.profile-actions .primary{margin:0}
+#profileStatus{font-size:14px;color:var(--muted)}
+@media(max-width:520px){.profile-fields{grid-template-columns:1fr}.profile-heading{gap:12px}.profile-heading img{width:90px;height:90px}.move-fields{padding:12px}}
+
+/* v0.6.1: keep all views within the iPhone viewport. */
+html{width:100%;max-width:100%;overflow-x:clip}
+body{width:100%;max-width:100%;overflow-x:clip}
+main{width:100%;min-width:0}
+header,nav,section,.panel,.settings-panel,.profile-panel,.profile-heading,.profile-fields,.profile-fields label{min-width:0;max-width:100%}
+header{overflow-wrap:anywhere}
+header h1{overflow-wrap:normal;word-break:normal}
+nav{flex-wrap:wrap}
+.searchrow{min-width:0}
+.profile-heading>div{min-width:0}
+.profile-fields input,.profile-fields select{min-width:0;max-width:100%}
+.update-banner[hidden]{display:none!important}
+.update-banner{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:1100;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px;border:1px solid var(--accent);border-radius:15px;background:var(--surface);box-shadow:0 8px 30px #0009;color:var(--text);font-size:14px;font-weight:700}
+.update-banner button{white-space:nowrap;background:var(--accent2);color:#fff}
+@media(max-width:520px){main{padding-left:16px;padding-right:16px}header{padding-right:58px}.settings-toggle{right:0}.profile-panel{padding:16px}.profile-fields{grid-template-columns:minmax(0,1fr)}.profile-heading{gap:10px}.profile-heading img{flex:0 0 82px;width:82px;height:82px}}
+
+/* v0.6.2: width fixes for iPhone standalone web app and backup controls. */
+html,body{margin:0;min-width:0;width:100%;max-width:100%;overflow-x:hidden}
+main{box-sizing:border-box;width:100%;max-width:850px;margin-inline:auto;overflow-x:clip}
+main>*,header,nav,.hero,.panel,.teamgrid,.profile-panel,.settings-panel{box-sizing:border-box;min-width:0;max-width:100%}
+header::before{left:0;right:0}
+header h1{font-size:clamp(27px,7vw,48px);line-height:1.17;overflow-wrap:break-word}
+header .eyebrow{overflow-wrap:anywhere}
+header .game-indicator{max-width:100%;flex-wrap:wrap}
+#lookup,#team,#profile{width:100%}
+.hero>div{min-width:0;flex:1}
+.hero img{flex-shrink:0}
+.hero h2,.profile-heading h2{overflow-wrap:anywhere}
+.teamgrid{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))}
+.profile-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+.move-fields{min-width:0;max-width:100%}
+.settings-overlay{box-sizing:border-box;max-width:100vw;overflow-x:hidden;overflow-y:auto}
+.backup-actions{display:flex;flex-wrap:wrap;gap:9px}
+.backup-actions button{flex:1 1 145px}
+@media(max-width:520px){
+  main{padding-inline:16px}
+  header{padding-right:58px}
+  .profile-fields{grid-template-columns:minmax(0,1fr)}
+  .searchrow{width:100%;min-width:0}
+  .searchrow input{min-width:0;width:0;flex:1 1 auto}
+  .searchrow button{flex:0 0 auto}
+  .settings-panel{padding:18px}
+}
+
+/* v0.6.3: iOS search focus zoom and autocomplete width containment. */
+#lookup,.searchrow,.suggestions{box-sizing:border-box;width:100%;min-width:0;max-width:100%}
+.searchrow{display:flex;align-items:stretch;flex-wrap:nowrap;gap:8px}
+.searchrow input,#search{font-size:16px!important;flex:1 1 0%;width:0;min-width:0;max-width:100%;-webkit-text-size-adjust:100%}
+.searchrow #go{flex:0 0 auto;white-space:nowrap}
+.suggestions{overflow-x:hidden;overflow-y:auto}
+.suggestions button{display:flex;align-items:center;box-sizing:border-box;width:100%;max-width:100%;min-width:0;gap:10px;overflow:hidden}
+.suggestions button img{flex:0 0 36px;width:36px;height:36px}
+.suggestions button strong{min-width:0;flex:1 1 auto;overflow-wrap:anywhere;text-align:left}
+.suggestions button .sub{flex:0 1 auto;min-width:0;max-width:42%;white-space:normal;text-align:right;overflow-wrap:anywhere}
+@media(max-width:390px){.searchrow{gap:6px}.searchrow #go{padding:12px 13px}}
+
+/* v0.6.4: prevent iOS Safari focus zoom in team profile and settings. */
+#profile input,#profile select,#profile textarea,
+.settings-panel input,.settings-panel select,.settings-panel textarea,
+#search{font-size:16px!important}
+.profile-fields,.profile-fields label,.profile-fields input,.profile-fields select,
+.move-fields,.move-fields .profile-fields,.profile-heading,.profile-heading>div{
+  box-sizing:border-box;min-width:0;max-width:100%
+}
+.profile-fields input,.profile-fields select{width:100%;-webkit-text-size-adjust:100%}
+#profileForm{width:100%;min-width:0;max-width:100%}
+.profile-heading h2{overflow-wrap:anywhere}
+
+/* v0.7 Move Advisor */
+.move-advisor{margin-top:22px;padding-top:18px;border-top:1px solid var(--border);min-width:0;max-width:100%}
+.move-advisor h3{margin:0 0 10px}
+.advisor-card{padding:13px 14px;margin:9px 0;border:1px solid var(--border);border-radius:13px;background:var(--input);min-width:0;overflow-wrap:anywhere}
+.advisor-card strong{display:block;font-size:15px;line-height:1.5}
+.advisor-card p{margin:5px 0 0}
+
+/* v0.7.1 compact battle results */
+.result-actions{margin:12px 0 4px}
+.result-actions .primary{margin:0}
+.advisor-panel{margin-top:14px}
+.advisor-panel h3{margin:0 0 8px}
+.advisor-card.advisor-extra{display:none}
+#advisorResults.show-all .advisor-card.advisor-extra{display:block}
+.advisor-more{margin:8px 0;padding:10px 14px;font-size:14px}
+.matchup-panel{margin-top:14px}
+.matchup-panel>summary,.matchup-group>summary{cursor:pointer;font-weight:800;list-style:none;display:flex;align-items:center;gap:8px;min-height:44px}
+.matchup-panel>summary::-webkit-details-marker,.matchup-group>summary::-webkit-details-marker{display:none}
+.matchup-panel>summary:after,.matchup-group>summary:after{content:'▾';margin-left:auto}
+.matchup-panel[open]>summary:after,.matchup-group[open]>summary:after{content:'▴'}
+.summary-hint{font-size:12px;font-weight:500;color:var(--muted);margin-left:auto}
+.matchup-panel>summary:after{margin-left:0}
+.matchup-group{border-top:1px solid var(--border);padding:5px 0}
+.matchup-group .chips{padding:8px 0 12px}
+.matchup-count{font-size:12px;color:var(--muted);font-weight:600}
+.matchup-group>summary:focus-visible,.matchup-panel>summary:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+
+/* v0.7.2: integrated type matchups and move recommendations. */
+.combined-matchups{margin-top:14px}
+.combined-matchups h3{margin:0 0 9px}
+.combined-matchups>.hint{margin:8px 0 13px}
+.combined-matchups .matchup-group{padding:7px 0}
+.combined-matchups .matchup-group .chips{padding:6px 0 8px}
+.category-moves{min-width:0;max-width:100%;padding:2px 0 10px}
+.category-moves-title{font-size:13px;color:var(--muted);margin:9px 0 6px}
+.category-moves .advisor-card{margin:7px 0;padding:10px 12px}
+.category-moves .advisor-extra{display:none}
+.category-moves.show-all .advisor-extra{display:block}
+.category-moves .advisor-more{margin:7px 0}
+
+/* v0.8 Party and Box */
+.party-box-toggle{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 12px}
+.party-box-toggle button{flex:1 1 130px}
+.party-box-toggle button.active{background:var(--accent2);border-color:var(--accent);color:white}
+#boxCards[hidden],#teamCards[hidden]{display:none!important}
+.teamcard small{display:block;min-height:1em;font-size:12px}
+.teamcard button{margin-right:6px}
+
+/* v0.9 evolution tracker */
+.evolution-tracker{border:1px solid var(--border);border-radius:16px;margin:24px 0 0;padding:16px;min-width:0}
+.evolution-tracker h3{margin:0 0 12px}
+.evolution-path{display:grid;gap:8px;min-width:0}
+.evolution-step{padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--input);overflow-wrap:anywhere}
+.evolution-step.current{border-color:var(--accent)}
+.evolution-step .hint{margin:5px 0 0}
+.evolution-progress{margin:6px 0 0;color:var(--accent);font-weight:800;font-size:13px}
+
+/* v1.0 party team analyzer */
+.team-analyzer[hidden]{display:none!important}
+.team-analyzer{margin-top:16px}
+.analyzer-header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.analyzer-header h3{margin:0}
+.analyzer-header button{padding:10px 13px}
+.analyzer-section{border-top:1px solid var(--border);margin-top:10px;padding-top:7px}
+.analyzer-section>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-weight:800;list-style:none}
+.analyzer-section>summary::-webkit-details-marker{display:none}
+.analyzer-section>summary:after{content:'▾';margin-left:auto}
+.analyzer-section[open]>summary:after{content:'▴'}
+.analyzer-row{padding:9px 11px;margin:6px 0;border-radius:10px;background:var(--input);min-width:0;overflow-wrap:anywhere}
+.analyzer-row strong{display:block;font-size:14px}
+.analyzer-row span{display:block;font-size:12px;line-height:1.5;color:var(--muted);margin-top:3px}
+.analyzer-header button:disabled{opacity:.6}
+
+/* v1.1 TM/TR bank */
+#machineBank[hidden],#machineBankControls[hidden]{display:none!important}
+.machine-bank{margin-top:14px}
+.machine-bank h3{margin:0 0 10px}
+.bank-filters{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.bank-filters button{flex:1 1 60px;padding:10px 9px;font-size:13px}
+.bank-filters button.active{background:var(--accent2);color:#fff;border-color:var(--accent)}
+#bankSearch{display:block;width:100%;font-size:16px;margin:7px 0 10px}
+.bank-items{display:grid;gap:7px;max-width:100%;min-width:0}
+.bank-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--border);background:var(--input);padding:10px 12px;border-radius:12px;min-width:0}
+.bank-description{display:flex;align-items:center;gap:11px;min-width:0;flex:1;font-size:14px;font-weight:700;margin:0;overflow-wrap:anywhere}
+.bank-description input{flex:0 0 20px;width:20px;height:20px;accent-color:var(--accent)}
+.bank-description span{min-width:0}
+.bank-quantity{flex:0 0 66px;width:66px;max-width:66px;padding:9px 6px;font-size:16px!important;text-align:center}
+@media(max-width:420px){.party-box-toggle button{flex:1 1 85px;padding:11px 8px;font-size:13px}.bank-row{padding:9px}.bank-description{font-size:13px}}
+
+/* v1.1.1 compact horizontal party and Box cards */
+.teamgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+.compact-teamcard{display:grid;grid-template-columns:100px minmax(0,1fr);align-items:center;gap:14px;min-height:0;padding:14px;border-radius:18px;max-width:100%;min-width:0}
+.compact-teamcard img{width:100px;height:100px;max-width:100%;margin:0;object-fit:contain}
+.compact-teamcard .teamcard-info{min-width:0}
+.compact-teamcard strong{font-size:18px;line-height:1.25;overflow-wrap:anywhere}
+.compact-teamcard small{min-height:0;margin:2px 0 6px}
+.compact-teamcard .types{gap:5px;margin:8px 0}
+.compact-teamcard .pill{padding:5px 9px;font-size:12px}
+.compact-teamcard .teamcard-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.compact-teamcard .teamcard-actions button{margin:0;padding:9px 10px;font-size:12px;min-height:38px;white-space:normal}
+@media(max-width:390px){.compact-teamcard{grid-template-columns:76px minmax(0,1fr);gap:10px;padding:11px}.compact-teamcard img{width:76px;height:76px}.compact-teamcard strong{font-size:16px}.compact-teamcard .teamcard-actions button{padding:8px 9px}}
+
+/* v1.2 TM/TR improvement suggestions */
+.move-improvement{margin-top:20px;padding:14px 16px;border:1px solid var(--border);border-radius:16px;min-width:0}
+.move-improvement>summary{font-weight:800;cursor:pointer;min-height:36px}
+.machine-suggestion{padding:10px 12px;margin:7px 0;background:var(--input);border:1px solid var(--border);border-radius:12px;overflow-wrap:anywhere}
+.machine-suggestion strong,.machine-suggestion span{display:block}
+.machine-suggestion span{margin-top:3px}
+#coverageSuggestions[hidden]{display:none!important}
+
+/* v1.3 move comparison */
+.compare-move{margin-top:9px;padding:8px 12px;font-size:13px}
+.move-comparison[hidden]{display:none!important}
+.move-comparison{margin-top:10px;border-top:1px solid var(--border);padding-top:10px}
+.move-comparison strong{font-size:13px}
+.move-comparison p{margin:6px 0}
+.comparison-advice{font-size:13px;line-height:1.5;color:var(--text)}
+
+/* v1.3.1: move type colors */
+.move-type-badge{display:inline-flex;align-items:center;vertical-align:middle;color:#0c1828;
+  font-size:11px;font-weight:850;line-height:1.2;padding:5px 9px;border-radius:999px;
+  white-space:nowrap;width:max-content;max-width:100%;margin:4px 5px 4px 0}
+.move-type-badge[hidden]{display:none!important}
+.bank-description{flex-wrap:wrap;gap:5px 9px}
+.profile-fields label>.move-type-badge{margin-top:7px}
+
+/* v1.4 compact Box recommendations */
+#boxRecommendations[hidden]{display:none!important}
+.box-recommendation{display:grid;grid-template-columns:65px minmax(0,1fr);gap:10px;
+  align-items:start;padding:11px 0;border-bottom:1px solid var(--border);min-width:0}
+.box-recommendation img{width:65px;height:65px;object-fit:contain}
+.box-recommendation-body{min-width:0;overflow-wrap:anywhere}
+.box-recommendation-body strong{display:block}
+.box-recommendation-body p{margin:5px 0;font-size:13px;line-height:1.4}
+.box-recommendation-body button{padding:8px 11px;margin-top:5px;font-size:12px}
+
+/* v1.4.1 quick-add Box search */
+#boxAdd[hidden],#boxAddPreview[hidden],#boxPokemonSuggestions[hidden]{display:none!important}
+.box-add{margin:12px 0 16px;padding:14px;border:1px solid var(--border);border-radius:16px;background:var(--surface);min-width:0}
+.box-add label{margin-bottom:8px}
+.box-add .searchrow input{font-size:16px!important}
+.box-add .searchrow button{white-space:nowrap}
+.box-add-preview{display:grid;grid-template-columns:82px minmax(0,1fr);gap:12px;align-items:center;margin-top:12px;min-width:0}
+.box-add-preview img{width:82px;height:82px;object-fit:contain}
+.box-add-preview>div{min-width:0}
+.box-add-preview strong{display:block;margin-bottom:7px}
+.box-add-preview .primary{margin-top:8px}
+#boxPreviewForms{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+#boxPreviewForms button{padding:6px 8px;font-size:12px}
+#boxPreviewForms .selected-form{outline:2px solid var(--accent)}
+
+/* v1.5 Learn New Move */
+.learn-move-helper{margin-top:16px;padding:14px;border:1px solid var(--border);border-radius:16px;min-width:0}
+.learn-move-helper>summary{font-weight:800;cursor:pointer;min-height:40px}
+.learn-move-helper label{margin:12px 0 8px}
+.learn-move-helper .searchrow input{font-size:16px!important;min-width:0}
+.learn-move-helper .searchrow button{white-space:nowrap}
+#learnMoveResults[hidden]{display:none!important}
+#learnMoveSummary{padding:12px 0}
+#learnMoveSummary>strong{display:block}
+#learnMoveSummary p{font-size:13px;line-height:1.5;margin:7px 0}
+.learn-existing-row{padding:9px 0;border-bottom:1px solid var(--border)}
+.learn-existing-row strong{display:inline-block}
+.learn-existing-row small{display:block;color:var(--muted);font-size:12px;margin-top:4px}
+#forgetMove{display:block;width:100%;min-width:0;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--input);color:var(--text);font-size:16px}
+
+/* v1.5.2 evolution section is collapsed at the bottom. */
+.evolution-tracker>summary{cursor:pointer;font-weight:800;min-height:36px;list-style:none;display:flex;align-items:center}
+.evolution-tracker>summary::-webkit-details-marker{display:none}
+.evolution-tracker>summary:after{content:'▾';margin-left:auto}
+.evolution-tracker[open]>summary:after{content:'▴'}
+.evolution-tracker:not([open]){padding-bottom:14px}
+
+/* v1.6 offensive + defensive battle recommendations */
+.battle-picks[hidden]{display:none!important}
+.battle-picks{padding:12px 0 16px;margin:12px 0;border-bottom:1px solid var(--border)}
+.battle-picks h4{margin:0 0 8px}
+.battle-pick{padding:11px 12px;margin:8px 0;background:var(--input);border:1px solid var(--border);border-radius:12px;overflow-wrap:anywhere}
+.battle-pick strong{display:block;font-size:14px}
+.battle-pick p{margin:5px 0 0;font-size:12px}
+.battle-risk{color:var(--text);font-size:12px;line-height:1.45;margin:6px 0 0}
+
+/* v1.7 manual evolution */
+.evolution-action{display:block;margin:10px 0;padding:10px 13px;min-height:42px}
+
+/* v1.7.2 Lookup action buttons */
+.result-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.result-actions button{margin:0;min-height:44px;white-space:normal}
+@media(max-width:390px){.result-actions button{flex:1 1 130px;padding:10px 12px;font-size:13px}}
+
+/* v1.7.3: tappable autocomplete while iOS keyboard is open */
+#suggestions{position:relative;z-index:20;max-height:min(220px,35dvh);overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#suggestions button{min-height:48px;touch-action:manipulation;cursor:pointer}
+#search{scroll-margin-top:20px}
+
+/* v1.7.4 quick edit after saving to Box */
+#editLookupBoxPokemon[hidden],#editQuickBoxPokemon[hidden]{display:none!important}
+#editQuickBoxPokemon{margin-top:8px;min-height:44px}
+
+/* v1.8 simplified mobile navigation */
+nav{display:flex;gap:7px;flex-wrap:wrap}nav .tab{flex:1 1 110px;padding:11px 8px;font-size:14px}
+.collection-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:16px 0}
+.collection-heading h2{margin:0}.collection-count{margin:4px 0 0;color:var(--muted);font-size:13px}
+#toggleBoxAdd{padding:10px 12px;min-height:44px;font-size:13px}
+.party-box-toggle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+#boxAdd[hidden],#analyzerDisclosure:not([open]) .analyzer-header{display:none!important}
+#analyzerDisclosure>summary{cursor:pointer;list-style:none;font-weight:800;min-height:44px;display:flex;align-items:center}
+#analyzerDisclosure>summary::-webkit-details-marker{display:none}
+#analyzerDisclosure>summary:after{content:'▾';margin-left:auto}
+#analyzerDisclosure[open]>summary:after{content:'▴'}
+#analyzerDisclosure .analyzer-header{justify-content:flex-end}
+#bank[hidden]{display:none!important}
+@media(max-width:390px){nav .tab{font-size:12px;flex-basis:95px}.collection-heading{flex-wrap:wrap}}
+
+/* v1.9.1 readiness labels in Box recommendations */
+.box-recommendation-body strong{line-height:1.4}
+
+/* v1.9.3 Box-only removal action */
+.compact-teamcard .teamcard-actions .remove-box-pokemon{background:transparent;border:1px solid var(--border);color:var(--text);font-weight:650}
+
+/* v1.10.1 compact inline level editor */
+.compact-card-heading{display:flex;align-items:center;justify-content:space-between;gap:6px;min-width:0}
+.compact-card-heading>strong{min-width:0;overflow-wrap:anywhere}
+.quick-level{display:inline-flex;align-items:center;flex:0 0 auto;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.65);border-radius:999px;overflow:hidden;color:#29243b}
+.quick-level button{border:0!important;background:transparent!important;box-shadow:none!important;color:inherit!important;margin:0!important;border-radius:0!important;font-size:12px!important;font-weight:800!important;line-height:1.1!important}
+.quick-level-value{padding:10px 3px 10px 10px!important;min-height:40px}
+.quick-level-plus{min-width:36px;min-height:40px;padding:8px 10px 8px 4px!important;font-size:17px!important}
+.quick-level-plus:disabled{opacity:.35}
+@media(max-width:390px){.compact-card-heading{gap:4px}.quick-level-value{padding-left:7px!important}.quick-level-plus{min-width:32px;padding-right:6px!important}}
+
+/* v1.10.2: compact, handle-only reorder on touch and mouse */
+.compact-teamcard{position:relative}
+.compact-teamcard .card-drag-handle{position:absolute;top:7px;left:7px;z-index:2;display:flex;align-items:center;justify-content:center;width:36px;height:40px;padding:0;border:0;border-radius:12px;background:rgba(255,255,255,.55);color:#342b48;font-size:25px;line-height:1;box-shadow:none;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.compact-teamcard .card-drag-handle:active{cursor:grabbing}
+.compact-teamcard.card-reordering{outline:3px solid rgba(125,84,169,.8);outline-offset:1px;opacity:.88;z-index:3}
+
+/* v1.11: unidentified Max Raid type matchup */
+.raid-panel{padding:18px}.raid-selectors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 20px}.raid-selectors label{display:grid;gap:6px;font-weight:700}.raid-selectors select{width:100%;min-width:0;padding:12px;border:2px solid #ddcfef;border-radius:12px;background:#fff;color:#29243b;font-size:16px}.raid-group{border-top:1px solid #ddcfef;padding:12px 0}.raid-group summary{cursor:pointer;font-weight:800}.raid-group .chips{margin-top:12px}.raid-panel h3{margin:22px 0 10px}@media(max-width:390px){.raid-selectors{grid-template-columns:1fr}}
+
+/* v1.13: compact Box filters */
+.box-filters{margin:12px 0;padding:12px 14px;border:1px solid #e1d7ed;border-radius:16px;background:rgba(255,255,255,.72)}
+.box-filters summary{cursor:pointer;font-weight:800;min-height:34px}.box-filter-controls{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:12px 0}
+.box-filter-controls label{display:grid;gap:5px;font-size:13px;font-weight:700;min-width:0}.box-filter-controls input,.box-filter-controls select{width:100%;min-width:0;padding:10px 8px;border:1px solid #d7cbe5;border-radius:10px;background:#fff;color:#29243b;font-size:14px}
+#boxFilterReset{min-height:38px;padding:8px 12px}.card-drag-handle:disabled{opacity:.3;cursor:not-allowed}
+@media(max-width:480px){.box-filter-controls{grid-template-columns:repeat(2,minmax(0,1fr))}.box-filter-controls label:first-child{grid-column:1/-1}}
+
+/* v1.14 Box recommendations for type-only raid matchup */
+.raid-box-options{margin-top:16px;border:1px solid #dfd5eb;border-radius:15px;padding:12px 14px}.raid-box-options summary{font-weight:800;cursor:pointer;min-height:38px}.raid-box-content{padding-top:12px}.raid-box-content .battle-pick{margin-bottom:10px}.raid-box-content button{min-height:42px;margin-top:7px}
+
+/* v1.15 Battle Planner modes */
+.battle-mode{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+.battle-mode button{min-height:46px;padding:10px 8px;min-width:0}
+.battle-mode button.active{background:#7952a5;color:#fff;border-color:#7952a5}
+
+/* v1.17: readable nature effects beneath the profile dropdown */
+#profileNatureHint{display:block;margin-top:5px;line-height:1.35;font-size:12px}
+
+/* v1.17.1: compact collapsible Add Pokémon to Box */
+#boxAdd{margin:12px 0}#boxAdd summary{cursor:pointer;font-weight:800;min-height:40px;display:list-item}#boxAdd form{margin-top:14px}#boxAdd .box-add-search-label{display:block;margin-bottom:8px;font-size:13px;font-weight:650}
+
+/* v1.17.2: iOS Safari zooms focused form controls with fonts below 16px. */
+#boxFilterSearch,.box-filter-controls input,.box-filter-controls select{font-size:16px!important;-webkit-text-size-adjust:100%}
+
+/* v1.19 Item Bank */
+.item-bank-panel{margin-top:16px}.item-bank-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.item-bank-heading h2{margin-top:0}.item-add-form{margin:12px 0 18px}.item-add-form>label{display:block;font-weight:750;margin-bottom:8px}.item-add-controls{display:flex;gap:8px}.item-add-controls select{flex:1;min-width:0;font-size:16px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--input);color:var(--text)}.item-bank-filters{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}.item-bank-filters button{font-size:13px;padding:9px 12px}.item-bank-filters button.active{background:#7952a5;color:#fff}.item-bank-panel>label[for="itemBankSearch"]{display:block;margin-bottom:7px;font-weight:700}.item-bank-panel>#itemBankSearch{width:100%;font-size:16px!important}.item-bank-items{display:grid;gap:10px;margin-top:12px}.item-bank-row{padding:13px;border:1px solid var(--border);border-radius:14px;background:var(--surface);min-width:0}.item-bank-row-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.item-bank-item-info{min-width:0;overflow-wrap:anywhere}.item-bank-item-info strong{font-size:15px}.item-bank-item-info p{margin:4px 0 0}.item-bank-qty{display:flex;align-items:center;gap:9px;flex-shrink:0}.item-bank-qty span{min-width:22px;text-align:center;font-weight:850;font-variant-numeric:tabular-nums}.item-bank-qty button{width:36px;height:38px;padding:0;font-size:19px}.item-assign{margin-top:10px;border-top:1px solid var(--border);padding-top:8px}.item-assign summary{cursor:pointer;font-size:13px;font-weight:750;padding:6px 0}.item-assign select{width:100%;margin:8px 0;font-size:16px;padding:11px;border:1px solid var(--border);border-radius:10px;background:var(--input);color:var(--text)}.item-assign button{min-height:40px;width:100%}
+@media(min-width:650px){.item-bank-items{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* v1.19.1: Item Bank accepts catalog suggestions or custom item names. */
+.item-add-controls input{flex:1;min-width:0;font-size:16px;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--input);color:var(--text)}
+
+/* v1.19.2: keyboard focus must not trigger scripted document jumps. */#suggestions{max-height:min(250px,32vh,220px);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+
+/* v1.19.3: let iOS Safari naturally anchor focused edit fields when the keyboard opens. */
+#profile input:focus,#profile textarea:focus{scroll-margin-top:16px;scroll-margin-bottom:90px}
+
+
+/* v1.21.0: game-reactive visual skins. Game changes accents, not the saved theme mode. */
+html[data-game="shield"]{
+  --game-accent:#ff426f;--game-accent2:#b51f40;--game-focus:#ff8ca7;--game-glow:#451326;--game-glow-light:#ffeaf0;
+}
+html[data-game="sword"]{
+  --game-accent:#50ccff;--game-accent2:#1c63cb;--game-focus:#80e5ff;--game-glow:#092c57;--game-glow-light:#e8f7ff;
+}
+html[data-game="lets-go-pikachu"]{
+  --game-accent:#ffd34e;--game-accent2:#956000;--game-focus:#ffe27b;--game-glow:#433308;--game-glow-light:#fff7d9;
+}
+html[data-game="lets-go-eevee"]{
+  --game-accent:#e9b47b;--game-accent2:#92522c;--game-focus:#f4d5ae;--game-glow:#3b2418;--game-glow-light:#fff0df;
+}
+html[data-game="legends-za"]{
+  --game-accent:#ff4dad;--game-accent2:#7052d1;--game-focus:#31d6d2;--game-glow:#281548;--game-glow-light:#f7eaff;
+}
+/* Keep game color tokens independent from Battle/Cozy mode. */
+html[data-game]{
+  --accent:var(--game-accent);--accent2:var(--game-accent2);--focus:var(--game-focus);
+}
+html[data-theme="battle"][data-game] body{
+  background:radial-gradient(circle at 15% 0%,var(--game-glow) 0,transparent 38%),
+             radial-gradient(circle at 95% 10%,var(--game-glow) 0,transparent 42%),var(--bg);
+}
+html[data-theme="cozy"][data-game] body{
+  background:radial-gradient(circle at 5% 0%,var(--game-glow-light) 0,transparent 42%),
+             radial-gradient(circle at 100% 15%,var(--game-glow-light) 0,transparent 46%),#faf8ff;
+}
+html[data-game] header:before{background:linear-gradient(90deg,transparent,var(--game-accent),transparent)}
+html[data-game] h1 span{color:var(--game-accent);text-shadow:0 0 22px color-mix(in srgb,var(--game-accent) 35%,transparent)}
+html[data-theme="cozy"][data-game] h1 span{color:var(--game-accent2);text-shadow:none}
+html[data-game] .eyebrow,html[data-game] a,html[data-game] footer a{color:var(--game-accent)}
+html[data-game] .tab.active,html[data-game] .primary,html[data-game] #go{
+  background:linear-gradient(115deg,var(--game-accent2),var(--game-accent));
+  border-color:var(--game-accent);color:#fff;
+  box-shadow:0 4px 22px color-mix(in srgb,var(--game-accent) 23%,transparent);
+}
+html[data-theme="cozy"][data-game] .tab.active,
+html[data-theme="cozy"][data-game] .primary,
+html[data-theme="cozy"][data-game] #go{
+  background:var(--game-accent2);border-color:var(--game-accent2);color:#fff;box-shadow:none;
+}
+html[data-game] input:focus,html[data-game] .gamebar select:focus,
+html[data-game] .themebar select:focus,html[data-game] .profile-fields input:focus,
+html[data-game] .profile-fields select:focus{outline-color:var(--game-focus);border-color:var(--game-focus)}
+html[data-game] .suggestions button:hover,
+html[data-game] button:hover{background:color-mix(in srgb,var(--game-accent) 17%,var(--button))}
+html[data-theme="cozy"][data-game] .suggestions button:hover,
+html[data-theme="cozy"][data-game] button:hover{background:color-mix(in srgb,var(--game-accent) 12%,white)}
+html[data-game] .item-bank-filters button.active{background:var(--game-accent2);border-color:var(--game-accent);color:#fff}
+html[data-game] .party-box-toggle button.active{background:var(--game-accent2);border-color:var(--game-accent);color:#fff}
+html[data-game] .evolution-step.current,html[data-game] .bank-row:focus-within{border-color:var(--game-accent)}
+html[data-game] .update-banner{border-color:var(--game-accent)}
+html[data-game] .update-banner button{background:var(--game-accent2);border-color:var(--game-accent);color:#fff}
+
+
+/* v1.22.0 — Legends: Z-A Battle Advisor */
+.za-advisor{padding:18px;max-width:100%;min-width:0}.za-advisor[hidden]{display:none!important}
+.za-advisor-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:22px}.za-advisor-heading h2{margin:0 0 6px}
+.za-game-tag{white-space:nowrap;font-size:10px;letter-spacing:.11em;font-weight:900;color:var(--game-accent);border:1px solid var(--game-accent);border-radius:100px;padding:7px 9px}
+.za-opponent-selected{border:1px solid var(--border);background:var(--input);padding:14px;border-radius:16px;margin-top:12px}.za-opponent-selected h3{margin:0 0 5px;font-size:20px}.za-opponent-selected p{margin:0 0 10px}
+.za-opponent-option{display:flex!important;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.za-opponent-option .sub{margin-left:auto;max-width:60%;text-align:right}
+.za-advisor-results{display:grid;gap:12px;margin-top:14px;min-width:0}.za-recommendation{border:1px solid var(--border);border-radius:17px;background:var(--surface);padding:14px;min-width:0;overflow-wrap:anywhere}
+.za-recommendation-best{border-color:var(--game-accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--game-accent) 25%,transparent)}
+.za-recommendation-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:12px}.za-recommendation-header h3{margin:0;font-size:17px}.za-rank-tag{flex:0 0 auto;color:var(--game-accent);font-size:9px;font-weight:900;letter-spacing:.08em}
+.za-recommended-move{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:17px;margin-bottom:6px}.za-recommended-move .pill{font-size:11px;padding:5px 9px}
+.za-why{margin:8px 0 12px;font-size:13px;line-height:1.55;color:var(--muted)}.za-move-details{border-top:1px solid var(--border);padding-top:10px}.za-move-details summary,.za-more-options summary{font-weight:800;cursor:pointer;padding:6px 0;min-height:36px}
+.za-move-facts{display:grid;gap:1px;margin-top:8px}.za-fact{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}.za-fact span{color:var(--muted)}.za-fact strong{text-align:right;font-variant-numeric:tabular-nums}
+.za-source-link{display:inline-block;margin-top:10px;font-size:12px;color:var(--game-accent)}.za-defensive-risk{font-size:12px;color:var(--muted);margin:12px 0 0;line-height:1.5}
+.za-more-options{margin-top:6px;border-top:1px solid var(--border);padding-top:8px}.za-more-options .za-recommendation{margin-top:10px}
+.za-data-note,.za-coverage-note{font-size:12px;line-height:1.55;color:var(--muted);margin:14px 0 0}
+@media(max-width:460px){.za-advisor{padding:15px}.za-advisor-heading{gap:8px}.za-game-tag{font-size:9px;padding:6px 7px}.za-recommendation-header{gap:5px}.za-recommendation-header h3{font-size:16px}.za-opponent-option .sub{max-width:100%;margin-left:0;text-align:left}.za-fact{font-size:11px}}
+
+
+/* v1.22.4 — Opponent Mega/form-aware type matchup selection */
+.za-form-picker{display:grid;gap:6px;margin-bottom:14px}
+.za-form-picker label{font-size:12px;font-weight:800;color:var(--muted)}
+.za-form-picker select{width:100%;min-width:0;border:1px solid var(--border);border-radius:12px;padding:11px 12px;background:var(--input);color:var(--text);font:inherit}
+.za-form-picker select:focus{outline:2px solid var(--game-focus);outline-offset:2px}
+.za-form-note{font-size:12px;line-height:1.5;color:var(--game-accent);margin:0 0 10px}
