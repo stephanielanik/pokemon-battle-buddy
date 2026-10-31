@@ -972,7 +972,7 @@ $('profileForm').addEventListener('submit',e=>{
 
 // v0.6.1: update checks use a fresh HTML request, not cached JS.
 // Existing localStorage data (team, game, theme) is never cleared.
-const APP_VERSION='1.22.4';
+const APP_VERSION='1.23.0';
 // Display the version of this JavaScript bundle, not a stale value baked into HTML.
 $('installedVersion').textContent=APP_VERSION;
 let updateChecking=false,updateAvailable=false,lastUpdateCheck=0;
