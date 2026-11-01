@@ -1,0 +1,31 @@
+/* Donut Lab styles — Battle Buddy 1.24.0 */
+.donut-lab-panel{padding:18px}
+.donut-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
+.donut-heading h2{margin:0 0 5px}
+.donut-controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end;margin:14px 0}
+.donut-controls label{display:grid;gap:7px;font-weight:600}
+.donut-controls select{width:100%;min-height:42px;padding:9px;border:1px solid var(--border,#34445e);border-radius:9px;background:var(--surface,#101b2d);color:inherit}
+.donut-controls button{grid-column:1/-1;min-height:44px}
+.donut-inventory-summary{padding:12px 14px;border:1px solid var(--border,#34445e);border-radius:10px;background:rgba(70,120,180,.09);margin:12px 0}
+.donut-inventory-summary strong{font-size:1.25rem;margin-right:6px}
+.donut-inventory-summary span{display:block;color:var(--muted,#9aa9bd);font-size:.86rem;margin-top:3px}
+.donut-results h3,.donut-selected h3{margin:20px 0 8px}
+.donut-recipe-card{border:1px solid var(--border,#34445e);border-radius:11px;padding:12px;margin:10px 0;background:rgba(255,255,255,.025)}
+.donut-recipe-top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.donut-recipe-top span{font-size:.88rem;color:var(--muted,#aab7c8);text-align:right}
+.donut-recipe-card p,.donut-recipe{line-height:1.5;overflow-wrap:anywhere}
+.donut-recipe-card button{min-height:38px;padding:7px 12px}
+.donut-selected{margin-top:18px;padding:14px;border:1px solid var(--accent,#4f9cff);border-radius:12px}
+.donut-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:14px 0}
+.donut-metrics>div{padding:10px 6px;text-align:center;background:rgba(70,120,180,.10);border-radius:9px;min-width:0}
+.donut-metrics strong{display:block;font-size:1.35rem;font-variant-numeric:tabular-nums}
+.donut-metrics span{display:block;color:var(--muted,#aab7c8);font-size:.75rem;margin-top:3px}
+.donut-stars{font-size:1.15rem;color:#f3c75c;letter-spacing:2px}
+.donut-stars small{font-size:.78rem;color:var(--muted,#aab7c8);letter-spacing:0}
+.donut-dominant{font-size:.9rem;color:var(--muted,#aab7c8)}
+#donutMake{width:100%;min-height:46px;margin-top:8px}
+.donut-help{margin-top:18px;padding-top:12px;border-top:1px solid var(--border,#34445e)}
+.donut-help summary{font-weight:700;cursor:pointer}
+.donut-help p{font-size:.9rem;line-height:1.55}
+@media(min-width:680px){.donut-controls{grid-template-columns:1fr 1fr auto}.donut-controls button{grid-column:auto}.donut-controls label{min-width:160px}}
+@media(max-width:420px){.donut-heading{display:block}.donut-heading .za-game-tag{display:inline-block;margin-top:8px}.donut-recipe-top{align-items:flex-start;flex-direction:column}.donut-recipe-top span{text-align:left}.donut-metrics strong{font-size:1.15rem}}

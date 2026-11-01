@@ -8,7 +8,8 @@
     "Chilan":6,"Roseli":1,
     "Hyper Cheri":4,"Hyper Chesto":7,"Hyper Pecha":14,"Hyper Rawst":8,"Hyper Aspear":4,
     "Hyper Oran":3,"Hyper Persim":1,"Hyper Lum":3,"Hyper Sitrus":3,
-    "Hyper Pomeg":1,"Hyper Kelpsy":1,"Hyper Qualot":1,"Hyper Hondew":1
+    "Hyper Pomeg":1,"Hyper Kelpsy":1,"Hyper Qualot":1,"Hyper Hondew":1,
+    "Hyper Grepa":1,"Hyper Tamato":1,"Hyper Occa":1,"Hyper Passho":1,"Hyper Wacan":1
   };
   const regular=Object.keys(START).filter(name=>!name.startsWith('Hyper '));
   const hyper=Object.keys(START).filter(name=>name.startsWith('Hyper '));
@@ -88,5 +89,7 @@
     section.hidden=false;
   });
   document.querySelectorAll('.tab:not([data-tab="berries"])').forEach(button=>button.addEventListener('click',()=>{section.hidden=true}));
+  window.addEventListener('battleBuddyBerryInventoryChanged',()=>{try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved&&typeof saved==='object'){for(const name of Object.keys(START)){const n=Number(saved[name]);if(Number.isInteger(n)&&n>=0&&n<=9999)counts[name]=n;}render();}}catch(error){console.warn('Could not refresh berry inventory:',error)}});
+  document.querySelector('[data-tab="donuts"]').addEventListener('click',()=>{['lookup','raid','team','bank','items','profile','berries'].forEach(id=>{const el=$(id);if(el)el.hidden=true});const lab=$('donuts');if(lab)lab.hidden=false;});
   render();
 })();
