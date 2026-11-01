@@ -2,15 +2,16 @@
 (()=>{
   const KEY='battleBuddyZABerryInventory';
   // Player's latest reported inventory snapshot (2026-11-01). Existing saved device counts are preserved.
+  // Latest player-reported inventory snapshot (2026-11-01). Existing saved device counts are preserved.
   const START={
     "Cheri":14,"Chesto":33,"Pecha":35,"Rawst":38,"Aspear":37,"Oran":36,"Persim":20,"Lum":18,"Sitrus":42,
     "Kelpsy":22,"Pomeg":8,"Qualot":1,"Hondew":5,"Grepa":0,"Tamato":20,"Occa":8,"Wacan":7,"Rindo":5,"Yache":3,
     "Kebia":3,"Shuca":2,"Coba":7,"Tanga":2,"Charti":2,"Kasib":7,"Haban":5,"Colbur":3,"Babiri":1,
     "Chilan":3,"Roseli":1,
-    "Hyper Cheri":8,"Hyper Chesto":12,"Hyper Pecha":17,"Hyper Rawst":7,"Hyper Aspear":9,
-    "Hyper Oran":2,"Hyper Persim":7,"Hyper Lum":9,"Hyper Sitrus":6,
-    "Hyper Pomeg":0,"Hyper Kelpsy":1,"Hyper Qualot":8,"Hyper Hondew":1,
-    "Hyper Grepa":1,"Hyper Tamato":1,"Hyper Occa":1,"Hyper Passho":1,"Hyper Wacan":1
+    "Hyper Cheri":8,"Hyper Chesto":8,"Hyper Pecha":17,"Hyper Rawst":7,"Hyper Aspear":9,
+    "Hyper Oran":4,"Hyper Persim":9,"Hyper Lum":10,"Hyper Sitrus":7,
+    "Hyper Pomeg":2,"Hyper Kelpsy":1,"Hyper Qualot":10,"Hyper Hondew":3,
+    "Hyper Grepa":1,"Hyper Tamato":0,"Hyper Occa":1,"Hyper Passho":1,"Hyper Wacan":1
   };
   const regular=Object.keys(START).filter(name=>!name.startsWith('Hyper '));
   const hyper=Object.keys(START).filter(name=>name.startsWith('Hyper '));
