@@ -1,13 +1,14 @@
-/* Pokémon Battle Buddy v1.23.0 — ZA Berry Inventory */
+/* Pokémon Battle Buddy v1.23.2 — ZA Berry Inventory */
 (()=>{
   const KEY='battleBuddyZABerryInventory';
   const START={
     "Cheri":14,"Chesto":32,"Pecha":33,"Rawst":36,"Aspear":37,"Oran":36,"Persim":20,"Lum":16,"Sitrus":42,
-    "Kelpsy":17,"Qualot":8,"Hondew":12,"Grepa":4,"Tamato":13,"Occa":8,"Wacan":7,"Rindo":5,"Yache":3,
+    "Kelpsy":17,"Qualot":4,"Hondew":8,"Grepa":0,"Tamato":13,"Occa":8,"Wacan":7,"Rindo":5,"Yache":3,
     "Kebia":3,"Shuca":2,"Coba":7,"Tanga":1,"Charti":1,"Kasib":2,"Haban":5,"Colbur":3,"Babiri":1,
-    "Chilan":10,"Roseli":1,
-    "Hyper Cheri":2,"Hyper Chesto":3,"Hyper Pecha":7,"Hyper Rawst":3,"Hyper Aspear":1,
-    "Hyper Oran":0,"Hyper Persim":0,"Hyper Lum":0,"Hyper Sitrus":0
+    "Chilan":6,"Roseli":1,
+    "Hyper Cheri":4,"Hyper Chesto":7,"Hyper Pecha":14,"Hyper Rawst":8,"Hyper Aspear":4,
+    "Hyper Oran":3,"Hyper Persim":1,"Hyper Lum":3,"Hyper Sitrus":3,
+    "Hyper Pomeg":1,"Hyper Kelpsy":1,"Hyper Qualot":1,"Hyper Hondew":1
   };
   const regular=Object.keys(START).filter(name=>!name.startsWith('Hyper '));
   const hyper=Object.keys(START).filter(name=>name.startsWith('Hyper '));
