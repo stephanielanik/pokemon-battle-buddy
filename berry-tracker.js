@@ -1,9 +1,9 @@
-/* Pokémon Battle Buddy v1.23.2 — ZA Berry Inventory */
+/* Pokémon Battle Buddy v1.23.3 — ZA Berry Inventory */
 (()=>{
   const KEY='battleBuddyZABerryInventory';
   const START={
     "Cheri":14,"Chesto":32,"Pecha":33,"Rawst":36,"Aspear":37,"Oran":36,"Persim":20,"Lum":16,"Sitrus":42,
-    "Kelpsy":17,"Qualot":4,"Hondew":8,"Grepa":0,"Tamato":13,"Occa":8,"Wacan":7,"Rindo":5,"Yache":3,
+    "Kelpsy":17,"Pomeg":0,"Qualot":4,"Hondew":8,"Grepa":0,"Tamato":13,"Occa":8,"Wacan":7,"Rindo":5,"Yache":3,
     "Kebia":3,"Shuca":2,"Coba":7,"Tanga":1,"Charti":1,"Kasib":2,"Haban":5,"Colbur":3,"Babiri":1,
     "Chilan":6,"Roseli":1,
     "Hyper Cheri":4,"Hyper Chesto":7,"Hyper Pecha":14,"Hyper Rawst":8,"Hyper Aspear":4,
