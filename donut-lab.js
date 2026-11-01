@@ -104,7 +104,7 @@
     $('donutMakeStatus').textContent='Donut marked as made. Ingredients deducted and berry tracker updated.';
     selected=null;$('donutSelected').hidden=true;renderSummary(getInventory());optimize();
   }
-  $('donutOptimize').addEventListener('click',optimize);
+  // Integrate with the app's existing tab navigation without changing its core handler.\n  document.querySelectorAll('.tab').forEach(button=>{\n    if(button.dataset.tab==='donuts'){button.addEventListener('click',()=>{['lookup','raid','team','bank','items','profile','berries'].forEach(id=>{const el=$(id);if(el)el.hidden=true});section.hidden=false;});}\n    else button.addEventListener('click',()=>{section.hidden=true;});\n  });\n  $('donutOptimize').addEventListener('click',optimize);
   $('donutSlots').addEventListener('change',()=>{renderSummary(getInventory());$('donutResults').innerHTML='<p class="hint">Capacity changed. Tap Find best recipes to recalculate.</p>';});
   $('donutMake').addEventListener('click',makeSelected);
   renderSummary(getInventory());
