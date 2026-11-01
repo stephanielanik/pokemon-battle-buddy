@@ -41,8 +41,7 @@
       const row=document.createElement('article');row.className='berry-row';
       const info=document.createElement('div');info.className='berry-row-info';
       const strong=document.createElement('strong');strong.textContent=name;
-      const small=document.createElement('small');small.textContent=name.startsWith('Hyper ')?'Hyper berry':'Regular berry';
-      info.append(strong,small);
+      info.append(strong);
       const controls=document.createElement('div');controls.className='berry-row-qty';
       const minus=document.createElement('button');minus.type='button';minus.textContent='−';minus.disabled=counts[name]===0;minus.setAttribute('aria-label','Use one '+name);
       minus.addEventListener('click',()=>change(name,-1));

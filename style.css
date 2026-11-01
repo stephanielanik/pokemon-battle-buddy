@@ -514,15 +514,15 @@ html[data-game] .update-banner button{background:var(--game-accent2);border-colo
 .berry-view-toggle button{padding:10px 5px;font-size:12px;min-height:42px}
 .berry-view-toggle button.active{background:var(--game-accent2);border-color:var(--game-accent);color:#fff}
 .berry-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}
-.berry-row{display:flex;align-items:center;justify-content:space-between;gap:7px;padding:10px;border:1px solid var(--border);border-radius:13px;background:var(--surface);min-width:0}
-.berry-row-info{min-width:0;overflow-wrap:anywhere}
-.berry-row-info strong{display:block;font-size:13px;line-height:1.35}
-.berry-row-info small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
+.berry-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid var(--border);border-radius:13px;background:var(--surface);min-width:0}
+.berry-row-info{min-width:0;flex:1 1 auto;overflow:hidden;white-space:nowrap}
+.berry-row-info strong{display:block;font-size:14px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.berry-row-info small{display:none}
 .berry-row-qty{display:flex;align-items:center;gap:5px;flex:0 0 auto}
 .berry-row-qty button{width:32px;height:36px;padding:0;font-size:18px;border-radius:10px}
 .berry-row-qty button:disabled{opacity:.35;cursor:not-allowed}
 .berry-row-qty output{min-width:20px;text-align:center;font-weight:900;font-size:15px;font-variant-numeric:tabular-nums}
 .berry-footer-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:17px}
 .berry-footer-actions button{min-height:44px}
-@media(max-width:390px){.berry-list{grid-template-columns:1fr}.berry-summary-card{padding:9px}.berry-summary-card strong{font-size:20px}}
+@media(max-width:700px){.berry-list{grid-template-columns:1fr}.berry-summary-card{padding:9px}.berry-summary-card strong{font-size:20px}}
 @media(min-width:650px){.berry-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
