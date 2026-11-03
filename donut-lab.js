@@ -1,11 +1,11 @@
-/* Pokémon Battle Buddy v1.24.0 — Legends: Z-A Donut Lab */
+/* Pokémon Battle Buddy v1.24.2 — Legends: Z-A Donut Lab */
 (()=> {
   'use strict';
   const INVENTORY_KEY='battleBuddyZABerryInventory';
   const HISTORY_KEY='battleBuddyDonutHistory';
   const FLAVORS=['Sweet','Spicy','Sour','Bitter','Fresh'];
   // Ingredient values: [sweet, spicy, sour, bitter, fresh, level boost, calories].
-  // Regular and Hyper Berry values are sourced from Serebii's Ansha's Donuts reference.
+  // Regular and Regular and Hyper Berry values are sourced from Serebii's Ansha's Donuts reference.
   const BERRIES=[
     ['Cheri',[0,10,0,0,0],1,60],['Chesto',[0,0,0,0,10],1,60],['Pecha',[10,0,0,0,0],1,60],
     ['Rawst',[0,0,0,10,0],1,60],['Aspear',[0,0,10,0,0],1,60],['Oran',[0,5,5,5,5],1,60],
@@ -35,7 +35,12 @@
     ['Hyper Tamato',[5,25,0,0,60],6,180],
     ['Hyper Occa',[60,0,0,5,25],5,180],
     ['Hyper Passho',[25,0,5,60,0],6,200],
-    ['Hyper Wacan',[0,5,60,25,0],7,160]
+    ['Hyper Wacan',[0,5,60,25,0],7,160],
+    ['Hyper Rindo',[15,55,0,5,25],9,210],
+    ['Hyper Yache',[25,0,5,15,55],7,250],
+    ['Hyper Chople',[55,5,15,25,0],6,250],
+    ['Hyper Kebia',[0,15,25,55,5],7,270],
+    ['Hyper Shuca',[5,25,55,0,15],8,230]
   ].map(([name,flavor,level,calories])=>({name,flavor,level,calories,hyper:name.startsWith('Hyper '),score:flavor.reduce((a,b)=>a+b,0)}));
   const $=id=>document.getElementById(id);
   const section=$('donuts');
