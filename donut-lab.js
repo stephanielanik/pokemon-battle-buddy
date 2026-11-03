@@ -65,65 +65,81 @@
     return {total,baseLevel,baseCalories,flavorScore,stars,multiplier,level:Math.floor(baseLevel*multiplier),calories:Math.floor(baseCalories*multiplier),totals,dominant};
   }
   function recipeLabel(counts){return BERRIES.filter(b=>counts[b.name]>0).map(b=>'×'+counts[b.name]+' '+b.name).join(' + ')}
-  function* enumerateExact(capacity,inventory,pool){
-    const available=pool.filter(item=>(inventory[item.name]||0)>0),counts={};
-    let nodes=0;
-    function* walk(index,remaining){
-      nodes++;
-      if(nodes%8000===0)yield null;
-      if(remaining===0){yield {counts:{...counts},...analyze(counts)};return}
-      if(index>=available.length)return;
-      const berry=available[index],max=Math.min(inventory[berry.name]||0,remaining);
-      for(let n=0;n<=max;n++){
-        if(n)counts[berry.name]=n;else delete counts[berry.name];
-        yield* walk(index+1,remaining-n);
-      }
-      delete counts[berry.name];
-    }
-    yield* walk(0,capacity);
+  function candidateCompare(a,b,goal){
+    if(goal==='cost')return a.resourceCost-b.resourceCost||b.baseLevel-a.baseLevel||b.calories-a.calories||b.flavorScore-a.flavorScore;
+    if(goal==='energy')return b.calories-a.calories||b.flavorScore-a.flavorScore||b.baseLevel-a.baseLevel;
+    return b.baseLevel-a.baseLevel||b.calories-a.calories||b.flavorScore-a.flavorScore;
   }
-  function unitCost(berry,stock){
-    return berry.hyper?15+(45/(stock+1)):1+(6/(stock+1));
+  function addCandidate(map,key,candidate,goal,limit=12){
+    let list=map.get(key);
+    if(!list){list=[];map.set(key,list)}
+    list.push(candidate);
+    list.sort((a,b)=>candidateCompare(a,b,goal));
+    if(list.length>limit)list.length=limit;
   }
-  function* enumerateCheapest(capacity,inventory){
-    const available=BERRIES.filter(item=>(inventory[item.name]||0)>0)
-      .sort((a,b)=>unitCost(a,inventory[a.name])-unitCost(b,inventory[b.name]));
-    const counts={},limit=12;
-    const dp=Array.from({length:available.length+1},()=>Array(capacity+1).fill(-Infinity));
-    dp[available.length][0]=0;
-    for(let i=available.length-1;i>=0;i--){
-      const item=available[i],stock=Math.min(capacity,inventory[item.name]||0);
-      for(let k=0;k<=capacity;k++)for(let n=0;n<=Math.min(stock,k);n++){
-        const tail=dp[i+1][k-n];
-        if(tail>-Infinity)dp[i][k]=Math.max(dp[i][k],tail+n*item.score);
+  async function findTopRecipes(capacity,inventory,goal,onProgress){
+    const available=(goal==='cost'?BERRIES:BERRIES.filter(item=>item.hyper))
+      .filter(item=>(inventory[item.name]||0)>0);
+    if(!available.length)return [];
+    const maxItemScore=Math.max(...available.map(item=>item.score));
+    const scoreLimit=goal==='cost'?350:maxItemScore*capacity;
+    // Dynamic programming by berry count and accumulated flavor score.
+    // Keep only the best 12 partial recipes per state; future ingredients affect
+    // candidates in the same state identically, so discarded paths cannot enter the top 12.
+    let states=new Map([[0,[{used:0,score:0,baseLevel:0,calories:0,counts:{},resourceCost:0}]]]);
+    for(let index=0;index<available.length;index++){
+      const item=available[index],stock=Math.min(capacity,inventory[item.name]||0);
+      const next=new Map();
+      for(const [key,list] of states){
+        const used=Math.floor(key/(scoreLimit+1)),score=key%(scoreLimit+1);
+        for(const candidate of list){
+          const max=Math.min(stock,capacity-used);
+          for(let n=0;n<=max;n++){
+            const nextUsed=used+n;
+            const actualScore=score+n*item.score;
+            const nextScore=goal==='cost'?Math.min(scoreLimit,actualScore):actualScore;
+            const nextKey=nextUsed*(scoreLimit+1)+nextScore;
+            const counts=n?{...candidate.counts,[item.name]:n}:candidate.counts;
+            addCandidate(next,nextKey,{
+              used:nextUsed,score:nextScore,baseLevel:candidate.baseLevel+n*item.level,
+              calories:candidate.calories+n*item.calories,counts,
+              resourceCost:candidate.resourceCost+(goal==='cost'?n*unitCost(item,inventory[item.name]):0)
+            },goal);
+          }
+        }
+      }
+      states=next;
+      if(onProgress)onProgress(index+1,available.length);
+      // Give mobile browsers a chance to paint progress and handle input.
+      if(index%3===2)await new Promise(resolve=>setTimeout(resolve,0));
+    }
+    const candidates=[];
+    for(const [key,list] of states){
+      const used=Math.floor(key/(scoreLimit+1)),score=key%(scoreLimit+1);
+      if(goal==='cost'){
+        if(score<350||used<1||used>capacity)continue;
+      }else if(used!==capacity)continue;
+      for(const candidate of list){
+        const result=analyze(candidate.counts);
+        if(result.stars<3)continue;
+        candidates.push({...result,counts:candidate.counts,resourceCost:candidate.resourceCost});
       }
     }
-    let nodes=0;
-    function* walk(index,used,flavorScore,cost){
-      nodes++;
-      if(nodes%8000===0)yield null;
-      if(flavorScore>=350){
-        const result=analyze(counts);
-        if(result.stars>=3)yield {counts:{...counts},...result,resourceCost:cost};
-        return;
-      }
-      if(used>=capacity||index>=available.length)return;
-      // Upper bound for the remaining slots. All ingredient flavor scores are positive.
-      if(flavorScore+dp[index][capacity-used]<350)return;
-      const item=available[index],max=Math.min(inventory[item.name]||0,capacity-used);
-      const each=unitCost(item,inventory[item.name]);
-      for(let n=0;n<=max;n++){
-        if(n)counts[item.name]=n;else delete counts[item.name];
-        yield* walk(index+1,used+n,flavorScore+n*item.score,cost+n*each);
-      }
-      delete counts[item.name];
-    }
-    yield* walk(0,0,0,0);
+    const finalCompare=(a,b)=>{
+      if(goal==='cost')return a.resourceCost-b.resourceCost||b.level-a.level||b.calories-a.calories||b.flavorScore-a.flavorScore;
+      const score=r=>goal==='energy'?r.calories:goal==='stars'?r.stars*100000+r.level*100+r.calories:r.level*100000+r.calories;
+      return score(b)-score(a)||b.flavorScore-a.flavorScore||b.calories-a.calories;
+    };
+    candidates.sort(finalCompare);
+    return candidates.slice(0,12);
   }
   function renderSummary(inventory){
-    const total=Object.values(inventory).reduce((a,b)=>a+b,0);
-    const available=BERRIES.filter(b=>inventory[b.name]>0).length;
-    $('donutInventorySummary').innerHTML='<strong>'+total+'</strong> Hyper Berries available <span>· '+available+' ingredient types · '+$('donutSlots').value+' slots selected</span>';
+    const hyper=BERRIES.filter(b=>b.hyper);
+    const regular=BERRIES.filter(b=>!b.hyper);
+    const hyperTotal=hyper.reduce((sum,b)=>sum+(inventory[b.name]||0),0);
+    const regularTotal=regular.reduce((sum,b)=>sum+(inventory[b.name]||0),0);
+    const hyperTypes=hyper.filter(b=>(inventory[b.name]||0)>0).length;
+    $('donutInventorySummary').innerHTML='<strong>'+hyperTotal+'</strong> Hyper Berries available <span>· '+hyperTypes+' Hyper types · '+regularTotal+' regular berries · '+$('donutSlots').value+' slots selected</span>';
   }
   function statsMarkup(r){
     const stars='★'.repeat(r.stars)+'☆'.repeat(5-r.stars);
@@ -140,36 +156,14 @@
     button.disabled=true;
     const originalLabel=button.textContent;
     button.textContent='Searching recipes…';
-    resultsEl.innerHTML='<p class="hint" role="status">Searching berry combinations. Supreme Butter has many possibilities; this may take a few seconds.</p>';
+    resultsEl.innerHTML='<p class="hint" role="status">Finding the best combinations with a fast recipe search…</p>';
     $('donutSelected').hidden=true;selected=null;
     try{
       const capacity=Number($('donutSlots').value),goal=$('donutGoal').value,inventory=getInventory();
       renderSummary(inventory);
-      const iterator=goal==='cost'
-        ?enumerateCheapest(capacity,inventory)
-        :enumerateExact(capacity,inventory,BERRIES.filter(item=>item.hyper));
-      const top=[];
-      const compare=goal==='cost'
-        ?(a,b)=>a.resourceCost-b.resourceCost||b.level-a.level||b.calories-a.calories
-        :(a,b)=>{
-          const score=r=>goal==='energy'?r.calories:goal==='stars'?r.stars*100000+r.level*100+r.calories:r.level*100000+r.calories;
-          return score(b)-score(a)||b.flavorScore-a.flavorScore||b.calories-a.calories;
-        };
-      let processed=0,lastYield=Date.now();
-      while(true){
-        const step=iterator.next();
-        if(step.done)break;
-        if(step.value){
-          top.push(step.value);top.sort(compare);
-          if(top.length>12)top.length=12;
-        }
-        processed++;
-        if(processed%8000===0||Date.now()-lastYield>80){
-          resultsEl.innerHTML='<p class="hint" role="status">Searching recipes… '+processed.toLocaleString()+' combinations checked.</p>';
-          await new Promise(resolve=>setTimeout(resolve,0));
-          lastYield=Date.now();
-        }
-      }
+      const top=await findTopRecipes(capacity,inventory,goal,(done,total)=>{
+        resultsEl.innerHTML='<p class="hint" role="status">Optimizing '+done+' of '+total+' available ingredient types…</p>';
+      });
       if(!top.length){
         resultsEl.innerHTML=goal==='cost'
           ?'<p class="hint">No recipe in your current inventory reaches 3 stars using up to '+capacity+' berries. Increase the butter capacity or collect more high-flavor ingredients.</p>'
