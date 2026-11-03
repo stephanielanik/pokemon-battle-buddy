@@ -66,9 +66,9 @@
   }
   function recipeLabel(counts){return BERRIES.filter(b=>counts[b.name]>0).map(b=>'×'+counts[b.name]+' '+b.name).join(' + ')}
   function candidateCompare(a,b,goal){
-    if(goal==='cost')return a.resourceCost-b.resourceCost||b.baseLevel-a.baseLevel||b.calories-a.calories||b.flavorScore-a.flavorScore;
-    if(goal==='energy')return b.calories-a.calories||b.flavorScore-a.flavorScore||b.baseLevel-a.baseLevel;
-    return b.baseLevel-a.baseLevel||b.calories-a.calories||b.flavorScore-a.flavorScore;
+    if(goal==='cost')return a.resourceCost-b.resourceCost||b.baseLevel-a.baseLevel||b.calories-a.calories||b.score-a.score;
+    if(goal==='energy')return b.calories-a.calories||b.score-a.score||b.baseLevel-a.baseLevel;
+    return b.baseLevel-a.baseLevel||b.calories-a.calories||b.score-a.score;
   }
   function addCandidate(map,key,candidate,goal,limit=12){
     let list=map.get(key);
@@ -126,9 +126,9 @@
       }
     }
     const finalCompare=(a,b)=>{
-      if(goal==='cost')return a.resourceCost-b.resourceCost||b.level-a.level||b.calories-a.calories||b.flavorScore-a.flavorScore;
+      if(goal==='cost')return a.resourceCost-b.resourceCost||b.level-a.level||b.calories-a.calories||b.score-a.score;
       const score=r=>goal==='energy'?r.calories:goal==='stars'?r.stars*100000+r.level*100+r.calories:r.level*100000+r.calories;
-      return score(b)-score(a)||b.flavorScore-a.flavorScore||b.calories-a.calories;
+      return score(b)-score(a)||b.score-a.score||b.calories-a.calories;
     };
     candidates.sort(finalCompare);
     return candidates.slice(0,12);
@@ -178,7 +178,12 @@
       showSelected(top[0]);
     }catch(error){
       console.error('Donut recipe search failed:',error);
-      resultsEl.innerHTML='<p class="hint" role="alert">The recipe search hit an error. Your berries have not been changed. Please try again or choose fewer berry slots.</p>';
+      const detail=String(error&&error.message||error);
+      const errorNotice=document.createElement('p');
+      errorNotice.className='hint';
+      errorNotice.setAttribute('role','alert');
+      errorNotice.textContent='The recipe search hit an error: '+detail+'. Your berries have not been changed. Please send me this error text.';
+      resultsEl.replaceChildren(errorNotice);
     }finally{
       button.disabled=false;
       button.textContent=originalLabel;
