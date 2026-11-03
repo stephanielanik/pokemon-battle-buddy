@@ -1,4 +1,4 @@
-/* Pokémon Battle Buddy v1.24.2 — Legends: Z-A Donut Lab */
+/* Pokémon Battle Buddy v1.24.5 — Legends: Z-A Donut Lab */
 (()=> {
   'use strict';
   const INVENTORY_KEY='battleBuddyZABerryInventory';
@@ -65,6 +65,9 @@
     return {total,baseLevel,baseCalories,flavorScore,stars,multiplier,level:Math.floor(baseLevel*multiplier),calories:Math.floor(baseCalories*multiplier),totals,dominant};
   }
   function recipeLabel(counts){return BERRIES.filter(b=>counts[b.name]>0).map(b=>'×'+counts[b.name]+' '+b.name).join(' + ')}
+  function unitCost(berry,stock){
+    return berry.hyper?15+(45/(stock+1)):1+(6/(stock+1));
+  }
   function candidateCompare(a,b,goal){
     if(goal==='cost')return a.resourceCost-b.resourceCost||b.baseLevel-a.baseLevel||b.calories-a.calories||b.score-a.score;
     if(goal==='energy')return b.calories-a.calories||b.score-a.score||b.baseLevel-a.baseLevel;
@@ -126,7 +129,7 @@
       }
     }
     const finalCompare=(a,b)=>{
-      if(goal==='cost')return a.resourceCost-b.resourceCost||b.level-a.level||b.calories-a.calories||b.score-a.score;
+      if(goal==='cost')return a.resourceCost-b.resourceCost||b.level-a.level||b.calories-a.calories||b.flavorScore-a.flavorScore;
       const score=r=>goal==='energy'?r.calories:goal==='stars'?r.stars*100000+r.level*100+r.calories:r.level*100000+r.calories;
       return score(b)-score(a)||b.score-a.score||b.calories-a.calories;
     };
