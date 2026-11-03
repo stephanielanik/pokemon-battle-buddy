@@ -65,24 +65,30 @@
     return {total,baseLevel,baseCalories,flavorScore,stars,multiplier,level:Math.floor(baseLevel*multiplier),calories:Math.floor(baseCalories*multiplier),totals,dominant};
   }
   function recipeLabel(counts){return BERRIES.filter(b=>counts[b.name]>0).map(b=>'×'+counts[b.name]+' '+b.name).join(' + ')}
-  function enumerateExact(capacity,inventory,pool){
-    const available=pool.filter(item=>(inventory[item.name]||0)>0),counts={},results=[];
-    function walk(index,remaining){
-      if(remaining===0){const result=analyze(counts);results.push({counts:{...counts},...result});return}
+  function* enumerateExact(capacity,inventory,pool){
+    const available=pool.filter(item=>(inventory[item.name]||0)>0),counts={};
+    let nodes=0;
+    function* walk(index,remaining){
+      nodes++;
+      if(nodes%8000===0)yield null;
+      if(remaining===0){yield {counts:{...counts},...analyze(counts)};return}
       if(index>=available.length)return;
       const berry=available[index],max=Math.min(inventory[berry.name]||0,remaining);
-      for(let n=0;n<=max;n++){if(n)counts[berry.name]=n;else delete counts[berry.name];walk(index+1,remaining-n)}
+      for(let n=0;n<=max;n++){
+        if(n)counts[berry.name]=n;else delete counts[berry.name];
+        yield* walk(index+1,remaining-n);
+      }
       delete counts[berry.name];
     }
-    walk(0,capacity);return results;
+    yield* walk(0,capacity);
   }
   function unitCost(berry,stock){
     return berry.hyper?15+(45/(stock+1)):1+(6/(stock+1));
   }
-  function enumerateCheapest(capacity,inventory){
+  function* enumerateCheapest(capacity,inventory){
     const available=BERRIES.filter(item=>(inventory[item.name]||0)>0)
       .sort((a,b)=>unitCost(a,inventory[a.name])-unitCost(b,inventory[b.name]));
-    const counts={},results=[],limit=12;
+    const counts={},limit=12;
     const dp=Array.from({length:available.length+1},()=>Array(capacity+1).fill(-Infinity));
     dp[available.length][0]=0;
     for(let i=available.length-1;i>=0;i--){
@@ -92,25 +98,27 @@
         if(tail>-Infinity)dp[i][k]=Math.max(dp[i][k],tail+n*item.score);
       }
     }
-    function saveResult(cost){
-      const result=analyze(counts);if(result.stars<3)return;
-      results.push({counts:{...counts},...result,resourceCost:cost});
-      results.sort((a,b)=>a.resourceCost-b.resourceCost||a.level-b.level||b.calories-a.calories);
-      if(results.length>limit)results.length=limit;
-    }
-    function walk(index,used,flavorScore,cost){
-      if(flavorScore>=350){saveResult(cost);return}
+    let nodes=0;
+    function* walk(index,used,flavorScore,cost){
+      nodes++;
+      if(nodes%8000===0)yield null;
+      if(flavorScore>=350){
+        const result=analyze(counts);
+        if(result.stars>=3)yield {counts:{...counts},...result,resourceCost:cost};
+        return;
+      }
       if(used>=capacity||index>=available.length)return;
+      // Upper bound for the remaining slots. All ingredient flavor scores are positive.
       if(flavorScore+dp[index][capacity-used]<350)return;
       const item=available[index],max=Math.min(inventory[item.name]||0,capacity-used);
       const each=unitCost(item,inventory[item.name]);
       for(let n=0;n<=max;n++){
         if(n)counts[item.name]=n;else delete counts[item.name];
-        walk(index+1,used+n,flavorScore+n*item.score,cost+n*each);
+        yield* walk(index+1,used+n,flavorScore+n*item.score,cost+n*each);
       }
       delete counts[item.name];
     }
-    walk(0,0,0,0);return results;
+    yield* walk(0,0,0,0);
   }
   function renderSummary(inventory){
     const total=Object.values(inventory).reduce((a,b)=>a+b,0);
@@ -126,28 +134,61 @@
     $('donutSelectedDetails').innerHTML='<p class="donut-recipe">'+recipeLabel(recipe.counts)+'</p>'+statsMarkup(recipe);
     $('donutMakeStatus').textContent='Preview only. No berries have been deducted.';
   }
-  function optimize(){
-    const capacity=Number($('donutSlots').value),goal=$('donutGoal').value,inventory=getInventory();
-    renderSummary(inventory);
-    let recipes=goal==='cost'?enumerateCheapest(capacity,inventory):enumerateExact(capacity,inventory,BERRIES.filter(item=>item.hyper));
-    if(!recipes.length){
-      $('donutResults').innerHTML=goal==='cost'
-        ?'<p class="hint">No recipe in your current inventory reaches 3 stars using up to '+capacity+' berries. Increase the butter capacity or collect more high-flavor ingredients.</p>'
-        :'<p class="hint">You do not have enough Hyper Berries for '+capacity+' slots. Lower the butter capacity or collect more berries.</p>';
-      $('donutSelected').hidden=true;selected=null;return;
+  async function optimize(){
+    const button=$('donutOptimize'),resultsEl=$('donutResults');
+    if(button.disabled)return;
+    button.disabled=true;
+    const originalLabel=button.textContent;
+    button.textContent='Searching recipes…';
+    resultsEl.innerHTML='<p class="hint" role="status">Searching berry combinations. Supreme Butter has many possibilities; this may take a few seconds.</p>';
+    $('donutSelected').hidden=true;selected=null;
+    try{
+      const capacity=Number($('donutSlots').value),goal=$('donutGoal').value,inventory=getInventory();
+      renderSummary(inventory);
+      const iterator=goal==='cost'
+        ?enumerateCheapest(capacity,inventory)
+        :enumerateExact(capacity,inventory,BERRIES.filter(item=>item.hyper));
+      const top=[];
+      const compare=goal==='cost'
+        ?(a,b)=>a.resourceCost-b.resourceCost||b.level-a.level||b.calories-a.calories
+        :(a,b)=>{
+          const score=r=>goal==='energy'?r.calories:goal==='stars'?r.stars*100000+r.level*100+r.calories:r.level*100000+r.calories;
+          return score(b)-score(a)||b.flavorScore-a.flavorScore||b.calories-a.calories;
+        };
+      let processed=0,lastYield=Date.now();
+      while(true){
+        const step=iterator.next();
+        if(step.done)break;
+        if(step.value){
+          top.push(step.value);top.sort(compare);
+          if(top.length>12)top.length=12;
+        }
+        processed++;
+        if(processed%8000===0||Date.now()-lastYield>80){
+          resultsEl.innerHTML='<p class="hint" role="status">Searching recipes… '+processed.toLocaleString()+' combinations checked.</p>';
+          await new Promise(resolve=>setTimeout(resolve,0));
+          lastYield=Date.now();
+        }
+      }
+      if(!top.length){
+        resultsEl.innerHTML=goal==='cost'
+          ?'<p class="hint">No recipe in your current inventory reaches 3 stars using up to '+capacity+' berries. Increase the butter capacity or collect more high-flavor ingredients.</p>'
+          :'<p class="hint">You do not have enough Hyper Berries for '+capacity+' slots. Lower the butter capacity or collect more berries.</p>';
+        $('donutSelected').hidden=true;selected=null;return;
+      }
+      const description=goal==='cost'
+        ?'Lowest estimated resource cost among 3-star recipes. Regular berries are preferred; scarce Hyper berries carry a higher cost. The optimizer may use fewer than '+capacity+' berries.'
+        :goal==='energy'?'Highest calories using Hyper Berries.':goal==='stars'?'Highest star tier, then level boost using Hyper Berries.':'Highest level boost using Hyper Berries.';
+      resultsEl.innerHTML='<h3>'+(goal==='cost'?'Cheapest qualifying recipes':'Best Hyper Berry recipes')+'</h3><p class="hint">'+description+' Nothing is spent until you mark a donut as made.</p>'+top.map((r,i)=>'<article class="donut-recipe-card"><div class="donut-recipe-top"><strong>#'+(i+1)+' · '+r.stars+'★</strong><span>+'+r.level+' levels · '+r.calories.toLocaleString()+' cal</span></div><p>'+recipeLabel(r.counts)+'</p>'+(r.resourceCost!==undefined?'<p class="hint">Estimated resource cost: '+r.resourceCost.toFixed(1)+' points</p>':'')+'<button type="button" data-recipe-index="'+i+'">Select recipe</button></article>').join('');
+      resultsEl.querySelectorAll('[data-recipe-index]').forEach(recipeButton=>recipeButton.addEventListener('click',()=>showSelected(top[Number(recipeButton.dataset.recipeIndex)])));
+      showSelected(top[0]);
+    }catch(error){
+      console.error('Donut recipe search failed:',error);
+      resultsEl.innerHTML='<p class="hint" role="alert">The recipe search hit an error. Your berries have not been changed. Please try again or choose fewer berry slots.</p>';
+    }finally{
+      button.disabled=false;
+      button.textContent=originalLabel;
     }
-    if(goal!=='cost'){
-      const score=r=>goal==='energy'?r.calories:goal==='stars'?r.stars*100000+r.level*100+r.calories:r.level*100000+r.calories;
-      recipes.sort((a,b)=>score(b)-score(a)||b.flavorScore-a.flavorScore||b.calories-a.calories);
-      recipes=recipes.slice(0,12);
-    }
-    const top=recipes.slice(0,12);
-    const description=goal==='cost'
-      ?'Lowest estimated resource cost among 3-star recipes. Regular berries are preferred; scarce Hyper berries carry a higher cost. The optimizer may use fewer than '+capacity+' berries.'
-      :goal==='energy'?'Highest calories using Hyper Berries.':goal==='stars'?'Highest star tier, then level boost using Hyper Berries.':'Highest level boost using Hyper Berries.';
-    $('donutResults').innerHTML='<h3>'+(goal==='cost'?'Cheapest qualifying recipes':'Best Hyper Berry recipes')+'</h3><p class="hint">'+description+' Nothing is spent until you mark a donut as made.</p>'+top.map((r,i)=>'<article class="donut-recipe-card"><div class="donut-recipe-top"><strong>#'+(i+1)+' · '+r.stars+'★</strong><span>+'+r.level+' levels · '+r.calories.toLocaleString()+' cal</span></div><p>'+recipeLabel(r.counts)+'</p>'+(r.resourceCost!==undefined?'<p class="hint">Estimated resource cost: '+r.resourceCost.toFixed(1)+' points</p>':'')+'<button type="button" data-recipe-index="'+i+'">Select recipe</button></article>').join('');
-    $('donutResults').querySelectorAll('[data-recipe-index]').forEach(button=>button.addEventListener('click',()=>showSelected(top[Number(button.dataset.recipeIndex)])));
-    showSelected(top[0]);
   }
   function makeSelected(){
     if(!selected)return;
@@ -173,6 +214,7 @@
   });
   $('donutOptimize').addEventListener('click',optimize);
   $('donutSlots').addEventListener('change',()=>{renderSummary(getInventory());$('donutResults').innerHTML='<p class="hint">Capacity changed. Tap Find best recipes to recalculate.</p>';});
+  $('donutGoal').addEventListener('change',()=>{$('donutResults').innerHTML='<p class="hint">Optimization goal changed. Tap Find best recipes to recalculate.</p>';});
   $('donutMake').addEventListener('click',makeSelected);
   renderSummary(getInventory());
 })();
